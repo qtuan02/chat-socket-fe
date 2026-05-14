@@ -1,4 +1,5 @@
 import { MessageSquare } from "lucide-react";
+import * as React from "react";
 import type { ChatMessage } from "../types/chat";
 import { MessageBubble } from "./message-bubble";
 
@@ -13,6 +14,15 @@ export function MessageList({
   currentUserId,
   messages,
 }: MessageListProps) {
+  const messageListRef = React.useRef<HTMLElement | null>(null);
+
+  React.useLayoutEffect(() => {
+    messageListRef.current?.scrollTo({
+      top: messageListRef.current.scrollHeight,
+      behavior: "smooth",
+    });
+  }, [messages]);
+
   if (messages.length === 0) {
     return (
       <section
@@ -32,7 +42,8 @@ export function MessageList({
 
   return (
     <section
-      className={`min-h-0 flex-1 overflow-y-auto px-4 py-5 md:px-6 ${className ?? ""}`}
+      ref={messageListRef}
+      className={`min-h-0 flex-1 overflow-y-auto scroll-smooth px-4 py-5 md:px-6 ${className ?? ""}`}
     >
       <div className="flex min-h-full flex-col gap-4">
         {messages.map((message) => (

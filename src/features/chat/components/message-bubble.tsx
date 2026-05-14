@@ -10,7 +10,7 @@ export function MessageBubble({ isOwnMessage, message }: MessageBubbleProps) {
   return (
     <div
       className={cn(
-        "flex max-w-[85%] flex-col gap-1",
+        "flex max-w-[84%] flex-col gap-1",
         isOwnMessage ? "items-end self-end" : "items-start",
       )}
     >
@@ -21,10 +21,10 @@ export function MessageBubble({ isOwnMessage, message }: MessageBubbleProps) {
       ) : null}
       <div
         className={cn(
-          "rounded-2xl px-3 py-2 text-sm leading-relaxed",
+          "rounded-2xl border px-3 py-2 text-sm leading-relaxed shadow-sm",
           isOwnMessage
-            ? "bg-primary text-primary-foreground"
-            : "bg-muted text-foreground",
+            ? "border-primary/40 bg-primary text-primary-foreground"
+            : "border-border bg-muted text-foreground",
         )}
       >
         {message.content}

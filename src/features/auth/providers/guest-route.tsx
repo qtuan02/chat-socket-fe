@@ -2,9 +2,9 @@ import { useQueryClient } from "@tanstack/react-query";
 import * as React from "react";
 import { Navigate, Outlet } from "react-router";
 
-import { currentUserQueryKeys } from "@/hooks/api/user";
-import { useRefreshTokenMutation } from "@/hooks/api/auth";
 import { APP_ROUTES } from "@/config/routes";
+import { useRefreshTokenMutation } from "@/hooks/api/auth";
+import { currentUserQueryKeys } from "@/hooks/api/user";
 import useAuthStore from "@/stores/useAuthStore";
 
 export function GuestRoute() {
