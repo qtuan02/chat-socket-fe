@@ -10,6 +10,7 @@ export enum ConversationTypeEnum {
 
 export interface ConversationParticipantDto {
   userId: string;
+  username?: string | null;
   firstName: string;
   lastName: string;
   avatarUrl?: string | null;
@@ -37,10 +38,12 @@ export interface ConversationMember {
   userId: string;
   id: string;
   displayName: string;
+  username?: string;
   avatarUrl?: string;
   isOnline?: boolean;
   role?: ParticipantRole;
   joinedAt: string;
+  lastActiveAt?: string;
 }
 
 export interface Conversation {
@@ -49,12 +52,17 @@ export interface Conversation {
   title: string;
   lastMessage: string;
   lastMessageAt: string;
+  lastMessageSenderId?: string;
+  lastMessageSenderName?: string;
   participantCount: number;
   unreadCount: number;
   avatarUrl?: string;
   members: ConversationMember[];
+  directMember?: ConversationMember;
+  currentUserId?: string;
   lastMessageId?: string | null;
   onlineUsersCount?: number;
+  updatedAt: string;
 }
 
 export interface GetConversationsParams {

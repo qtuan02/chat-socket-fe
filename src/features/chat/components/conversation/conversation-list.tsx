@@ -14,6 +14,7 @@ import {
   useChatConversations,
 } from "../../hooks/use-chat-conversations";
 import { ConversationListSkeleton } from "../skeleton/conversation-list-skeleton";
+import { ConversationAvatar } from "./conversation-avatar";
 
 type ConversationListProps = {
   className?: string;
@@ -30,29 +31,20 @@ const conversationFilterTabs: Array<{
   { label: "Direct", value: ConversationTypeEnum.DIRECT },
 ];
 
-function ConversationAvatar({ conversation }: { conversation: Conversation }) {
-  if (conversation.avatarUrl) {
-    return (
-      <img
-        alt={conversation.title}
-        className="size-10 rounded-full object-cover"
-        src={conversation.avatarUrl}
-      />
-    );
-  }
-
-  return (
-    <div className="inline-flex size-10 shrink-0 items-center justify-center rounded-full border bg-muted text-muted-foreground">
-      <span className="text-xs font-semibold">
-        {conversation.title[0]?.toUpperCase()}
-      </span>
-    </div>
-  );
-}
-
 function getErrorMessage(error: unknown) {
   if (error instanceof Error && error.message) return error.message;
   return "Unable to load conversations.";
+}
+
+function formatLastMessagePreview(conversation: Conversation) {
+  if (!conversation.lastMessageId) return conversation.lastMessage;
+
+  const senderLabel =
+    conversation.lastMessageSenderId === conversation.currentUserId
+      ? "You"
+      : conversation.lastMessageSenderName || "Unknown";
+
+  return `${senderLabel}: ${conversation.lastMessage}`;
 }
 
 export function ConversationList({
@@ -82,11 +74,13 @@ export function ConversationList({
 
     if (!normalizedSearchTerm) return conversations;
 
-    return conversations.filter((conversation) =>
-      `${conversation.title} ${conversation.lastMessage}`
+    return conversations.filter((conversation) => {
+      const preview = formatLastMessagePreview(conversation);
+
+      return `${conversation.title} ${preview}`
         .toLowerCase()
-        .includes(normalizedSearchTerm),
-    );
+        .includes(normalizedSearchTerm);
+    });
   }, [conversations, searchTerm]);
 
   const handleSelectConversation = (conversationId: string) => {
@@ -186,16 +180,17 @@ export function ConversationList({
             }}
             itemContent={(_, conversation) => {
               const isActive = conversation.id === activeConversationId;
+              const lastMessagePreview = formatLastMessagePreview(conversation);
 
               return (
                 <div className="px-1 pt-2">
                   <button
                     type="button"
                     className={cn(
-                      "w-full rounded-lg border p-3 text-left transition",
+                      "w-full rounded-lg border p-2 text-left transition",
                       "hover:border-primary/50 hover:bg-muted/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40",
                       isActive
-                        ? "border-primary/70 bg-primary/10"
+                        ? "border-primary/70! bg-primary/10!"
                         : "border-border/80 bg-background",
                     )}
                     aria-current={isActive ? "true" : undefined}
@@ -203,11 +198,11 @@ export function ConversationList({
                       handleSelectConversation(conversation.id);
                     }}
                   >
-                    <div className="flex items-start gap-3">
+                    <div className="flex items-start gap-3 min-h-12">
                       <ConversationAvatar conversation={conversation} />
                       <div className="min-w-0 flex-1">
                         <div className="flex items-center justify-between gap-3">
-                          <p className="m-0 truncate text-sm font-semibold">
+                          <p className="m-0 truncate text-sm font-medium">
                             {conversation.title}
                           </p>
                           <span className="text-[11px] text-muted-foreground">
@@ -215,7 +210,7 @@ export function ConversationList({
                           </span>
                         </div>
                         <p className="m-0 mt-1 truncate text-xs text-muted-foreground">
-                          {conversation.lastMessage}
+                          {lastMessagePreview}
                         </p>
                       </div>
                     </div>

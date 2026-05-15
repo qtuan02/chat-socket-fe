@@ -11,3 +11,12 @@ export function getFullName(user: User) {
   const fullName = [user.firstName, user.lastName].filter(Boolean).join(" ");
   return fullName || user.username;
 }
+
+export function parseToJson<T>(jsonString: string) {
+  try {
+    return JSON.parse(jsonString) as T;
+  } catch {
+    console.error("Unable to parse json string.");
+    return null;
+  }
+}

@@ -33,7 +33,7 @@ export function MessageComposer({
       await sendMessage(trimmedContent);
       setContent("");
     },
-    500,
+    300,
   );
 
   const isSubmitBlocked = isSending || isThrottling;

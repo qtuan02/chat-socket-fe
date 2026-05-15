@@ -76,7 +76,6 @@ export function ChatTemplate() {
                 <>
                   <ChatHeader
                     conversation={activeConversation}
-                    onlineUsersCount={activeConversation.participantCount}
                     onOpenDetails={() => {
                       setIsDetailsOpen((isOpen) => !isOpen);
                     }}

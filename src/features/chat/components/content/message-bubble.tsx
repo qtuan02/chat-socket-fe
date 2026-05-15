@@ -27,7 +27,7 @@ export function MessageBubble({
       ) : null}
       <div
         className={cn(
-          "rounded-lg border px-2 py-1 text-sm shadow-sm",
+          "rounded-lg border px-2 py-1 text-sm shadow-sm max-w-[50vw]",
           isOwnMessage
             ? "border-primary/40 bg-primary text-primary-foreground"
             : "border-border bg-muted text-foreground",

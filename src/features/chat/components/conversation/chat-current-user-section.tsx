@@ -24,23 +24,11 @@ import { currentUserQueryKeys, useCurrentUserQuery } from "@/hooks/api/user";
 import useAuthStore from "@/stores/useAuthStore";
 import type { User } from "@/types/user";
 import { cn } from "@/utils/cn";
+import { formatDateTime } from "@/utils/date";
 
 type ChatCurrentUserSectionProps = {
   className?: string;
 };
-
-function formatDate(value?: string) {
-  if (!value) {
-    return "-";
-  }
-
-  const parsed = new Date(value);
-  if (Number.isNaN(parsed.getTime())) {
-    return value;
-  }
-
-  return parsed.toLocaleString();
-}
 
 function ProfileField({
   label,
@@ -240,11 +228,11 @@ export function ChatCurrentUserSection({
             <ProfileField label="User ID" value={currentUser.id} />
             <ProfileField
               label="Created at"
-              value={formatDate(currentUser.createdAt)}
+              value={formatDateTime(currentUser.createdAt)}
             />
             <ProfileField
               label="Last updated"
-              value={formatDate(currentUser.updatedAt)}
+              value={formatDateTime(currentUser.updatedAt)}
             />
             <ProfileField label="Status" value={currentUser.status} />
           </section>
