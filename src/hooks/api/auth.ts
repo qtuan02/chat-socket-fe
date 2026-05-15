@@ -4,7 +4,7 @@ import {
   queryKeysFactory,
   type UseMutationOptionsWrapper,
 } from "@/libs/query-key-factory";
-import { authService } from "@/services/v1/auth-service";
+import { authService } from "@/services/auth-service";
 import type {
   SignInPayload,
   SignInResponse,

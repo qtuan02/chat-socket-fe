@@ -1,6 +1,7 @@
-import { CircleCheckBig, Info, Users } from "lucide-react";
+import { CircleCheckBig, Columns2Icon, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import type { Conversation } from "../types/chat";
+import type { Conversation } from "@/types/conversation";
+import { ConversationTypeEnum } from "@/types/conversation";
 
 type ChatHeaderProps = {
   conversation: Conversation;
@@ -13,7 +14,7 @@ export function ChatHeader({
   onlineUsersCount,
   onOpenDetails,
 }: ChatHeaderProps) {
-  const isGroup = conversation.kind === "group";
+  const isGroup = conversation.type === ConversationTypeEnum.GROUP;
   const onlineCount = onlineUsersCount ?? conversation.onlineUsersCount ?? 0;
 
   return (
@@ -46,7 +47,7 @@ export function ChatHeader({
             size="icon-xs"
             onClick={onOpenDetails}
           >
-            <Info className="size-4" />
+            <Columns2Icon className="size-4" />
           </Button>
         </div>
       </div>

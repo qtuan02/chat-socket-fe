@@ -1,7 +1,10 @@
 export const APP_ROUTES = {
   chat: "/",
+  chatConversation: "/conversation/:conversationId",
   signIn: "/sign-in",
   signUp: "/sign-up",
+  conversationById: (conversationId: string) =>
+    `/conversation/${conversationId}`,
 } as const;
 
 export const APP_API = {
@@ -15,6 +18,13 @@ export const APP_API = {
     },
     user: {
       me: "/user/me",
+    },
+    chat: {
+      conversations: "/conversation",
+      messages: (conversationId: string) =>
+        `/conversation/${conversationId}/messages`,
+      sendDirectMessage: "/message/direct",
+      sendGroupMessage: "/message/group",
     },
   },
 } as const;

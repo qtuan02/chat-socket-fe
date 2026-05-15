@@ -1,7 +1,7 @@
 import axios from "axios";
 
 import { env } from "@/config/env";
-import { authService } from "@/services/v1/auth-service";
+import { authService } from "@/services/auth-service";
 import useAuthStore from "@/stores/useAuthStore";
 
 const axiosClient = axios.create({

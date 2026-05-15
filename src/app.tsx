@@ -5,11 +5,11 @@ import { BrowserRouter, Route, Routes } from "react-router";
 import { Toaster } from "sonner";
 import { env } from "@/config/env";
 import { APP_ROUTES } from "@/config/routes";
+import { GuestRoute } from "@/features/auth/providers/guest-route";
+import { ProtectedRoute } from "@/features/auth/providers/protected-route";
 import { ChatPage } from "@/pages/chat-page";
 import { SignInPage } from "@/pages/sign-in-page";
 import { SignUpPage } from "@/pages/sign-up-page";
-import { GuestRoute } from "./features/auth/providers/guest-route";
-import { ProtectedRoute } from "./features/auth/providers/protected-route";
 
 const LazyReactQueryDevtools = React.lazy(async () => {
   const { ReactQueryDevtools } = await import("@tanstack/react-query-devtools");
@@ -37,8 +37,6 @@ export function App() {
     env.NODE_ENV === "development",
   );
 
-  console.log("showDevtools", env.PUBLIC_API_BASE_URL);
-
   React.useEffect(() => {
     (window as any).toggleDevtools = () => setShowDevtools((old) => !old);
   }, []);
@@ -56,6 +54,10 @@ export function App() {
 
             <Route element={<ProtectedRoute />}>
               <Route path={APP_ROUTES.chat} element={<ChatPage />} />
+              <Route
+                path={APP_ROUTES.chatConversation}
+                element={<ChatPage />}
+              />
             </Route>
           </Routes>
         </BrowserRouter>
