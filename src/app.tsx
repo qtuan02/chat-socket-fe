@@ -10,6 +10,8 @@ import { ProtectedRoute } from "@/features/auth/providers/protected-route";
 import { ChatPage } from "@/pages/chat-page";
 import { SignInPage } from "@/pages/sign-in-page";
 import { SignUpPage } from "@/pages/sign-up-page";
+import useAuthStore from "./stores/useAuthStore";
+import { useSocketStore } from "./stores/useSocketStore";
 
 const LazyReactQueryDevtools = React.lazy(async () => {
   const { ReactQueryDevtools } = await import("@tanstack/react-query-devtools");
@@ -36,6 +38,15 @@ export function App() {
   const [showDevtools, setShowDevtools] = React.useState(
     env.NODE_ENV === "development",
   );
+
+  const { accessToken } = useAuthStore();
+  const { connect: connectSocket, disconnect: disconnectSocket } =
+    useSocketStore();
+
+  React.useEffect(() => {
+    if (accessToken) connectSocket();
+    return () => disconnectSocket();
+  }, [accessToken]);
 
   React.useEffect(() => {
     (window as any).toggleDevtools = () => setShowDevtools((old) => !old);
