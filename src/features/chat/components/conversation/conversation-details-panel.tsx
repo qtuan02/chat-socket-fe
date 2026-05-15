@@ -1,13 +1,12 @@
-import { BadgeCheck, CircleDashed, CircleX, Users } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { BadgeCheck, Users } from "lucide-react";
+import type { Conversation, ConversationMember } from "@/types/conversation";
+import { ConversationTypeEnum } from "@/types/conversation";
 import { cn } from "@/utils/cn";
-import type { Conversation, ConversationMember } from "../types/chat";
 
 type ConversationDetailsPanelProps = {
   className?: string;
   conversation: Conversation;
   open: boolean;
-  onOpenChange: (open: boolean) => void;
 };
 
 function getMemberInitials(member: ConversationMember) {
@@ -61,10 +60,9 @@ function MemberListItem({ member }: { member: ConversationMember }) {
 export function ConversationDetailsPanel({
   className,
   conversation,
-  onOpenChange,
   open,
 }: ConversationDetailsPanelProps) {
-  const isGroup = conversation.kind === "group";
+  const isGroup = conversation.type === ConversationTypeEnum.GROUP;
   const members = conversation.members ?? [];
 
   return (
@@ -88,18 +86,6 @@ export function ConversationDetailsPanel({
             {isGroup ? "Group details" : "Direct message details"}
           </p>
         </div>
-        <Button
-          type="button"
-          variant="ghost"
-          size="icon-xs"
-          onClick={() => {
-            onOpenChange(false);
-          }}
-          className="shrink-0"
-          aria-label="Close details"
-        >
-          <CircleX className="size-4" />
-        </Button>
       </div>
       <div className="flex-1 min-h-0 overflow-y-auto px-4 py-4">
         <section className="grid gap-3">
@@ -133,17 +119,6 @@ export function ConversationDetailsPanel({
               </dt>
               <dd className="font-medium">{conversation.unreadCount}</dd>
             </div>
-            {conversation.statusText ? (
-              <div className="grid gap-1">
-                <dt className="text-xs uppercase tracking-wide text-muted-foreground">
-                  Status
-                </dt>
-                <dd className="inline-flex items-center gap-2 text-sm font-medium">
-                  <CircleDashed className="size-4 text-muted-foreground" />
-                  {conversation.statusText}
-                </dd>
-              </div>
-            ) : null}
           </dl>
           <div className="grid gap-2">
             <p className="text-xs uppercase tracking-wide text-muted-foreground">

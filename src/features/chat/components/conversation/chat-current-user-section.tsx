@@ -1,11 +1,7 @@
-import {
-  BellRing,
-  ChevronsUpDown,
-  Loader2,
-  LogOut,
-  UserRound,
-} from "lucide-react";
+import { useQueryClient } from "@tanstack/react-query";
+import { BellRing, ChevronsUpDown, LogOut, UserRound } from "lucide-react";
 import * as React from "react";
+import { useNavigate } from "react-router";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import {
@@ -21,14 +17,16 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { useCurrentUserQuery } from "@/hooks/api/user";
+import { Skeleton } from "@/components/ui/skeleton";
+import { APP_ROUTES } from "@/config/routes";
+import { useSignOutMutation } from "@/hooks/api/auth";
+import { currentUserQueryKeys, useCurrentUserQuery } from "@/hooks/api/user";
+import useAuthStore from "@/stores/useAuthStore";
 import type { User } from "@/types/user";
 import { cn } from "@/utils/cn";
 
 type ChatCurrentUserSectionProps = {
   className?: string;
-  isSignOutPending: boolean;
-  onSignOut: () => void;
 };
 
 function formatDate(value?: string) {
@@ -77,37 +75,54 @@ function getInitials(user: User) {
 
 export function ChatCurrentUserSection({
   className,
-  isSignOutPending,
-  onSignOut,
 }: ChatCurrentUserSectionProps) {
   const [isProfileDialogOpen, setIsProfileDialogOpen] = React.useState(false);
+  const navigate = useNavigate();
+  const queryClient = useQueryClient();
+  const clearAuthState = useAuthStore((state) => state.clearState);
   const {
     data: currentUser,
-    isError,
-    isFetching,
-    isLoading,
-    error,
+    error: currentUserError,
+    isError: isCurrentUserError,
+    isFetching: isCurrentUserFetching,
+    isLoading: isCurrentUserLoading,
     refetch,
   } = useCurrentUserQuery();
+  const { mutateAsync: signOut, isPending: isSignOutPending } =
+    useSignOutMutation({
+      onSuccess: () => {
+        clearAuthState();
+        void queryClient.removeQueries({
+          queryKey: currentUserQueryKeys.current(),
+        });
+        navigate(APP_ROUTES.signIn, { replace: true });
+      },
+    });
 
-  const submitError = isError
-    ? error instanceof Error && error.message
-      ? error.message
+  const submitError = isCurrentUserError
+    ? currentUserError instanceof Error && currentUserError.message
+      ? currentUserError.message
       : "Unable to load user profile."
     : null;
 
-  if (isLoading) {
+  if (isCurrentUserLoading) {
     return (
       <section className={cn("w-full p-4", className)}>
-        <div className="inline-flex w-full items-center gap-2 rounded-xl border border-dashed bg-background px-3 py-2.5 text-sm text-muted-foreground">
-          <Loader2 className="size-4 animate-spin" />
-          <span>Loading profile...</span>
+        <div className="inline-flex w-full items-center justify-between gap-2 rounded-xl border bg-background px-3 py-2.5 text-left">
+          <div className="flex min-w-0 items-center gap-2.5">
+            <Skeleton className="size-9 shrink-0 rounded-full" />
+            <div className="min-w-0 space-y-1.5">
+              <Skeleton className="h-4 w-28 rounded-md" />
+              <Skeleton className="h-3 w-36 rounded-md" />
+            </div>
+          </div>
+          <Skeleton className="size-4 rounded-md" />
         </div>
       </section>
     );
   }
 
-  if (isError || !currentUser) {
+  if (isCurrentUserError || !currentUser) {
     return (
       <section className={cn("w-full p-4", className)}>
         <div className="rounded-xl border border-destructive/30 bg-destructive/5 px-3 py-2.5 text-xs">
@@ -121,9 +136,9 @@ export function ChatCurrentUserSection({
             onClick={() => {
               void refetch();
             }}
-            disabled={isFetching}
+            disabled={isCurrentUserFetching}
           >
-            {isFetching ? "Retrying..." : "Retry"}
+            {isCurrentUserFetching ? "Retrying..." : "Retry"}
           </Button>
         </div>
       </section>
@@ -190,7 +205,7 @@ export function ChatCurrentUserSection({
           <DropdownMenuItem
             onSelect={() => {
               if (!isSignOutPending) {
-                onSignOut();
+                void signOut();
               }
             }}
             disabled={isSignOutPending}
