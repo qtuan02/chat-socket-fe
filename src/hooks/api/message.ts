@@ -1,39 +1,56 @@
-import { useInfiniteQuery, useMutation } from "@tanstack/react-query";
-import { toast } from "sonner";
-import type { UseMutationOptionsWrapper } from "@/libs/query-key-factory";
+import { useInfiniteQuery } from "@tanstack/react-query";
+import * as React from "react";
+import {
+  MESSAGE_LIST_FIRST_ITEM_INDEX,
+  MESSAGES_DEFAULT_LIMIT,
+} from "@/config/constant";
+import { useCurrentUserQuery } from "@/hooks/api/user";
 import { queryKeysFactory } from "@/libs/query-key-factory";
 import { messageService } from "@/services/message-service";
 import type {
-  GetMessagesParams,
+  Message,
   MessageDto,
   MessagePage,
-  SendDirectMessageRequest,
-  SendGroupMessageRequest,
+  UseMessagesInfiniteQueryParams,
 } from "@/types/message";
+import { MessageStatus } from "@/types/message";
 
-const messageQueryKeyFactory = queryKeysFactory<
-  "message",
-  { limit?: number },
-  string
->("message");
+const messageQueryKeyFactory = queryKeysFactory<"message">("message");
 
 export const messageQueryKeys = {
-  all: messageQueryKeyFactory.all,
-  conversations: () => messageQueryKeyFactory.details(),
-  messages: (conversationId: string, limit = 50) =>
-    messageQueryKeyFactory.detail(conversationId, { limit }),
+  ...messageQueryKeyFactory,
+  conversation: (conversationId: string) =>
+    messageQueryKeyFactory.detail(conversationId),
+  messages: (userId: string, conversationId: string, limit = 50) =>
+    messageQueryKeyFactory.detail(conversationId, { userId, limit }),
 };
 
-export const MESSAGES_DEFAULT_LIMIT = 50;
+function mapMessageToUiModel(
+  message: MessageDto,
+  senderNameById: Map<string, string>,
+): Message {
+  return {
+    id: message.id,
+    conversationId: message.conversationId,
+    senderId: message.senderId,
+    senderName: senderNameById.get(message.senderId) ?? "Unknown user",
+    content: message.content,
+    attachmentUrl: message.attachmentUrl ?? null,
+    type: message.type,
+    messageStatus: MessageStatus.Sent,
+    createdAt: message.createdAt,
+    updatedAt: message.updatedAt,
+  };
+}
 
-export function useMessagesInfiniteQuery(
-  params: Omit<GetMessagesParams, "cursor"> & {
-    limit?: number;
-  },
-) {
-  const { conversationId, limit = MESSAGES_DEFAULT_LIMIT } = params;
-
-  return useInfiniteQuery<
+export function useMessagesInfiniteQuery({
+  conversationId,
+  enabled = true,
+  members,
+  limit = MESSAGES_DEFAULT_LIMIT,
+}: UseMessagesInfiniteQueryParams) {
+  const { data: currentUser } = useCurrentUserQuery();
+  const query = useInfiniteQuery<
     MessagePage,
     Error,
     {
@@ -43,7 +60,11 @@ export function useMessagesInfiniteQuery(
     ReturnType<typeof messageQueryKeys.messages>,
     string | undefined
   >({
-    queryKey: messageQueryKeys.messages(conversationId, limit),
+    queryKey: messageQueryKeys.messages(
+      currentUser?.id ?? "",
+      conversationId,
+      limit,
+    ),
     queryFn: ({ pageParam }) =>
       messageService.getMessages({
         conversationId,
@@ -52,38 +73,32 @@ export function useMessagesInfiniteQuery(
       }),
     getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
     initialPageParam: undefined as string | undefined,
-    enabled: !!conversationId,
+    enabled: enabled && !!conversationId && !!currentUser?.id,
   });
-}
 
-export function useSendDirectMessageMutation(
-  options?: UseMutationOptionsWrapper<
-    SendDirectMessageRequest,
-    MessageDto,
-    Error
-  >,
-) {
-  return useMutation({
-    mutationFn: messageService.sendDirectMessage,
-    onError: (error) => {
-      toast.error(error?.message || "Unable to send direct message.");
-    },
-    ...options,
-  });
-}
+  const senderNameById = React.useMemo(() => {
+    return new Map(
+      members.map((member) => [member.userId, member.displayName]),
+    );
+  }, [members]);
 
-export function useSendGroupMessageMutation(
-  options?: UseMutationOptionsWrapper<
-    SendGroupMessageRequest,
-    MessageDto,
-    Error
-  >,
-) {
-  return useMutation({
-    mutationFn: messageService.sendGroupMessage,
-    onError: (error) => {
-      toast.error(error?.message || "Unable to send group message.");
-    },
-    ...options,
-  });
+  const messages = React.useMemo(() => {
+    const orderedPages = [...(query.data?.pages ?? [])].reverse();
+
+    return orderedPages.flatMap((page) =>
+      page.items.map((message) => mapMessageToUiModel(message, senderNameById)),
+    );
+  }, [query.data?.pages, senderNameById]);
+
+  const olderMessageCount =
+    query.data?.pages
+      .slice(1)
+      .reduce((count, page) => count + page.items.length, 0) ?? 0;
+  const firstItemIndex = MESSAGE_LIST_FIRST_ITEM_INDEX - olderMessageCount;
+
+  return {
+    ...query,
+    firstItemIndex,
+    messages,
+  };
 }

@@ -1,44 +1,12 @@
-import { useQueryClient } from "@tanstack/react-query";
-import * as React from "react";
 import { Navigate, Outlet } from "react-router";
-
 import { APP_ROUTES } from "@/config/routes";
-import { useRefreshTokenMutation } from "@/hooks/api/auth";
-import { currentUserQueryKeys } from "@/hooks/api/user";
-import useAuthStore from "@/stores/useAuthStore";
+import { useSessionCheck } from "../hooks/use-session-check";
 
 export function GuestRoute() {
-  const queryClient = useQueryClient();
-  const { accessToken, setAccessToken, clearState } = useAuthStore();
-  const [checkedSession, setCheckedSession] = React.useState(false);
+  const { accessToken, isCheckingSession, isSessionChecked } =
+    useSessionCheck();
 
-  const { mutate: refreshToken, isPending } = useRefreshTokenMutation({
-    onError: () => {
-      clearState();
-    },
-    onSuccess: (data) => {
-      setAccessToken(data.data.accessToken);
-      queryClient.invalidateQueries({
-        queryKey: currentUserQueryKeys.all,
-      });
-    },
-    onSettled: () => {
-      setCheckedSession(true);
-    },
-  });
-
-  React.useEffect(() => {
-    if (accessToken) {
-      setCheckedSession(true);
-      return;
-    }
-
-    if (!checkedSession) {
-      refreshToken();
-    }
-  }, [accessToken, checkedSession, refreshToken]);
-
-  if (!checkedSession || isPending) {
+  if (!isSessionChecked || isCheckingSession) {
     return <div className="flex h-screen items-center justify-center">...</div>;
   }
 

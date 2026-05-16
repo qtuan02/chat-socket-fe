@@ -1,20 +1,46 @@
 import type { BaseResponse } from "./base";
 import type { MessageDto } from "./message";
+import type { PresenceStatusEnum } from "./user";
 
-export type ParticipantRole = "ADMIN" | "MEMBER";
+export enum ParticipantRole {
+  Admin = "ADMIN",
+  Member = "MEMBER",
+}
+
+export const participantRoleLabels: Record<ParticipantRole, string> = {
+  [ParticipantRole.Admin]: "Admin",
+  [ParticipantRole.Member]: "Member",
+};
 
 export enum ConversationTypeEnum {
   DIRECT = "DIRECT",
   GROUP = "GROUP",
 }
 
+type ConversationParticipantIdentity = Pick<
+  ConversationParticipantDto,
+  | "userId"
+  | "username"
+  | "firstName"
+  | "lastName"
+  | "avatarUrl"
+  | "bio"
+  | "joinedAt"
+  | "lastReadMessageId"
+  | "lastReadAt"
+>;
+
 export interface ConversationParticipantDto {
   userId: string;
+  username?: string | null;
   firstName: string;
   lastName: string;
   avatarUrl?: string | null;
+  bio?: string;
   role: ParticipantRole;
   joinedAt: string;
+  lastReadMessageId?: string | null;
+  lastReadAt?: string | null;
 }
 
 export interface ConversationDto {
@@ -33,14 +59,13 @@ export interface ConversationDto {
   participants: ConversationParticipantDto[];
 }
 
-export interface ConversationMember {
-  userId: string;
+export interface ConversationMember extends ConversationParticipantIdentity {
   id: string;
   displayName: string;
-  avatarUrl?: string;
-  isOnline?: boolean;
+  bio?: string;
+  presenceStatus: PresenceStatusEnum;
   role?: ParticipantRole;
-  joinedAt: string;
+  lastActiveAt?: string;
 }
 
 export interface Conversation {
@@ -49,12 +74,33 @@ export interface Conversation {
   title: string;
   lastMessage: string;
   lastMessageAt: string;
+  lastMessageSenderId?: string;
+  lastMessageSenderName?: string;
   participantCount: number;
   unreadCount: number;
   avatarUrl?: string;
   members: ConversationMember[];
+  directMember?: ConversationMember;
+  currentUserId?: string;
   lastMessageId?: string | null;
   onlineUsersCount?: number;
+  updatedAt: string;
+}
+
+export interface ConversationEvent {
+  eventType: "conversation.updated";
+  conversationId: string;
+  lastMessage: MessageDto | null;
+  lastMessageAt: string;
+  unreadCount: number;
+}
+
+export interface ConversationSeenEvent {
+  eventType: "conversation.seen";
+  conversationId: string;
+  seenByUserId: string;
+  lastReadMessageId: string;
+  lastReadAt: string;
 }
 
 export interface GetConversationsParams {
@@ -67,6 +113,28 @@ export interface ConversationPage {
   items: ConversationDto[];
   nextCursor: string | null;
 }
+
+export type CreateGroupConversationRequest = {
+  type: "GROUP";
+  name: string;
+  memberIds: string[];
+};
+
+export type UpdateGroupRequest = {
+  name: string;
+};
+
+export type GroupMembersRequest = {
+  memberIds: string[];
+};
+
+export type ConversationMutationResponse = BaseResponse<ConversationDto>;
+
+export type CreateGroupConversationResponse = ConversationMutationResponse;
+export type UpdateGroupResponse = ConversationMutationResponse;
+export type AddGroupMembersResponse = ConversationMutationResponse;
+export type RemoveGroupMemberResponse = ConversationMutationResponse;
+export type LeaveGroupResponse = BaseResponse<null>;
 
 export type ConversationPageResponse = BaseResponse<{
   messages: ConversationDto[];

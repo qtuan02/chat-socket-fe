@@ -14,19 +14,12 @@ import { Input } from "@/components/ui/input";
 import { APP_ROUTES } from "@/config/routes";
 import { useSignUpMutation } from "@/hooks/api/auth";
 import { cn } from "@/utils/cn";
+import { getErrorMessage } from "@/utils/error";
 import { type SignUpFormValues, signUpFormSchema } from "../types/sign-up-form";
 
 type SignUpFormProps = {
   className?: string;
 };
-
-function getErrorMessage(error: unknown) {
-  if (error instanceof Error && error.message) {
-    return error.message;
-  }
-
-  return "Unable to sign up. Please try again.";
-}
 
 export function SignUpForm({ className }: SignUpFormProps) {
   const { isError, error, isPending, isSuccess, mutateAsync } =
@@ -50,7 +43,9 @@ export function SignUpForm({ className }: SignUpFormProps) {
   const onSubmit: SubmitHandler<SignUpFormValues> = async (values) => {
     await mutateAsync(values);
   };
-  const submitError = isError ? getErrorMessage(error) : null;
+  const submitError = isError
+    ? getErrorMessage(error, "Unable to sign up. Please try again.")
+    : null;
 
   if (isSuccess) {
     return (

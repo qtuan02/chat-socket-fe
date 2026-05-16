@@ -1,5 +1,5 @@
 import "./globals.css";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { QueryClientProvider } from "@tanstack/react-query";
 import * as React from "react";
 import { BrowserRouter, Route, Routes } from "react-router";
 import { Toaster } from "sonner";
@@ -7,9 +7,12 @@ import { env } from "@/config/env";
 import { APP_ROUTES } from "@/config/routes";
 import { GuestRoute } from "@/features/auth/providers/guest-route";
 import { ProtectedRoute } from "@/features/auth/providers/protected-route";
+import { queryClient } from "@/libs/query-client";
 import { ChatPage } from "@/pages/chat-page";
 import { SignInPage } from "@/pages/sign-in-page";
 import { SignUpPage } from "@/pages/sign-up-page";
+import useAuthStore from "./stores/useAuthStore";
+import { useSocketStore } from "./stores/useSocketStore";
 
 const LazyReactQueryDevtools = React.lazy(async () => {
   const { ReactQueryDevtools } = await import("@tanstack/react-query-devtools");
@@ -17,25 +20,18 @@ const LazyReactQueryDevtools = React.lazy(async () => {
 });
 
 export function App() {
-  const [queryClient] = React.useState(
-    new QueryClient({
-      defaultOptions: {
-        queries: {
-          staleTime: 60 * 1000,
-          gcTime: 5 * 60 * 1000,
-          retry: 1,
-          refetchOnWindowFocus: false,
-        },
-        mutations: {
-          retry: 0,
-        },
-      },
-    }),
-  );
-
   const [showDevtools, setShowDevtools] = React.useState(
     env.NODE_ENV === "development",
   );
+
+  const { accessToken } = useAuthStore();
+  const { connect: connectSocket, disconnect: disconnectSocket } =
+    useSocketStore();
+
+  React.useEffect(() => {
+    if (accessToken) connectSocket();
+    return () => disconnectSocket();
+  }, [accessToken]);
 
   React.useEffect(() => {
     (window as any).toggleDevtools = () => setShowDevtools((old) => !old);
@@ -54,6 +50,7 @@ export function App() {
 
             <Route element={<ProtectedRoute />}>
               <Route path={APP_ROUTES.chat} element={<ChatPage />} />
+              <Route path={APP_ROUTES.friends} element={<ChatPage />} />
               <Route
                 path={APP_ROUTES.chatConversation}
                 element={<ChatPage />}

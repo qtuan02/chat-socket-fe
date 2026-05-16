@@ -1,4 +1,5 @@
 import type { BaseResponse } from "./base";
+import type { ConversationMember } from "./conversation";
 
 export enum MessageTypeEnum {
   TEXT = "TEXT",
@@ -6,6 +7,18 @@ export enum MessageTypeEnum {
   FILE = "FILE",
   SYSTEM = "SYSTEM",
 }
+
+export enum MessageStatus {
+  Sending = "sending",
+  Sent = "sent",
+  Failed = "failed",
+}
+
+export const messageStatusLabels: Record<MessageStatus, string> = {
+  [MessageStatus.Sending]: "Sending",
+  [MessageStatus.Sent]: "Sent",
+  [MessageStatus.Failed]: "Failed",
+};
 
 export interface MessageDto {
   id: string;
@@ -19,6 +32,7 @@ export interface MessageDto {
 }
 
 export interface Message {
+  clientMessageId?: string;
   id: string;
   conversationId: string;
   senderId: string;
@@ -26,6 +40,7 @@ export interface Message {
   content: string;
   attachmentUrl?: string | null;
   type: MessageTypeEnum;
+  messageStatus: MessageStatus;
   createdAt: string;
   updatedAt: string;
 }
@@ -38,10 +53,9 @@ export interface GetMessagesParams {
 
 export interface SendDirectMessageRequest {
   content: string;
-  conversationId: string;
+  recipientId: string;
   type: MessageTypeEnum.TEXT;
   attachmentUrl: null;
-  recipientId?: string | null;
 }
 
 export interface SendGroupMessageRequest {
@@ -62,3 +76,14 @@ export type MessagePageResponse = BaseResponse<{
 }>;
 
 export type MessageResponse = BaseResponse<MessageDto>;
+
+export type MessageSender = Pick<ConversationMember, "userId" | "displayName">;
+
+export type UseMessagesInfiniteQueryParams = Omit<
+  GetMessagesParams,
+  "cursor"
+> & {
+  enabled?: boolean;
+  limit?: number;
+  members: MessageSender[];
+};

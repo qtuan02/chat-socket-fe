@@ -1,89 +1,197 @@
-/*
-Input: 1970-01-01T00:00:00.000Z
-Output: 01/01
-Input: 1970-01-01T00:00:00.000Z
-Output: 01/01/70
-*/
-export function formatTimestamp(timestamp: string) {
-  const messageDate = new Date(timestamp);
+import {
+  ONE_DAY_IN_MS,
+  ONE_WEEK_IN_MS,
+  ONE_YEAR_IN_MS,
+  VIETNAM_LOCALE,
+  VIETNAM_TIME_ZONE,
+} from "@/config/constant";
 
-  if (Number.isNaN(messageDate.getTime())) return timestamp;
+const vietnamTimeFormatter = new Intl.DateTimeFormat(VIETNAM_LOCALE, {
+  timeZone: VIETNAM_TIME_ZONE,
+  hour: "2-digit",
+  minute: "2-digit",
+  hour12: false,
+});
+
+const vietnamDateTimeFormatter = new Intl.DateTimeFormat(VIETNAM_LOCALE, {
+  timeZone: VIETNAM_TIME_ZONE,
+  day: "2-digit",
+  month: "2-digit",
+  year: "numeric",
+  hour: "2-digit",
+  minute: "2-digit",
+  second: "2-digit",
+  hour12: false,
+});
+
+const vietnamWeekdayFormatter = new Intl.DateTimeFormat(VIETNAM_LOCALE, {
+  timeZone: VIETNAM_TIME_ZONE,
+  weekday: "long",
+});
+
+const vietnamShortDateFormatter = new Intl.DateTimeFormat(VIETNAM_LOCALE, {
+  timeZone: VIETNAM_TIME_ZONE,
+  day: "2-digit",
+  month: "2-digit",
+});
+
+const vietnamShortYearDateFormatter = new Intl.DateTimeFormat(VIETNAM_LOCALE, {
+  timeZone: VIETNAM_TIME_ZONE,
+  day: "2-digit",
+  month: "2-digit",
+  year: "2-digit",
+});
+
+const vietnamMessageDateFormatter = new Intl.DateTimeFormat(VIETNAM_LOCALE, {
+  timeZone: VIETNAM_TIME_ZONE,
+  day: "2-digit",
+  month: "short",
+});
+
+const vietnamMessageDateWithYearFormatter = new Intl.DateTimeFormat(
+  VIETNAM_LOCALE,
+  {
+    timeZone: VIETNAM_TIME_ZONE,
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  },
+);
+
+const vietnamYearFormatter = new Intl.DateTimeFormat(VIETNAM_LOCALE, {
+  timeZone: VIETNAM_TIME_ZONE,
+  year: "numeric",
+});
+
+type RelativeDurationLabels = {
+  noValueFallback: string;
+  justNowLabel: string;
+  minutesLabel: (value: number) => string;
+  hoursLabel: (value: number) => string;
+  daysLabel: (value: number) => string;
+};
+
+function parseValidDate(value: string) {
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? null : date;
+}
+
+function formatRelativeDuration(
+  value: string | undefined,
+  labels: RelativeDurationLabels,
+) {
+  if (!value) return labels.noValueFallback;
+
+  const parsed = parseValidDate(value);
+  if (!parsed) return labels.noValueFallback;
+
+  const diff = Date.now() - parsed.getTime();
+  const minute = 60 * 1000;
+  const hour = 60 * minute;
+  const day = 24 * hour;
+
+  if (diff < minute) return labels.justNowLabel;
+  if (diff < hour)
+    return labels.minutesLabel(Math.max(1, Math.floor(diff / minute)));
+  if (diff < day)
+    return labels.hoursLabel(Math.max(1, Math.floor(diff / hour)));
+
+  return labels.daysLabel(Math.max(1, Math.floor(diff / day)));
+}
+
+export function formatRelativeTime(
+  value?: string,
+  fallback = "Time information is unavailable.",
+) {
+  return formatRelativeDuration(value, {
+    noValueFallback: fallback,
+    justNowLabel: "Just now",
+    minutesLabel: (value) => `${value} minutes ago`,
+    hoursLabel: (value) => `${value} hours ago`,
+    daysLabel: (value) => `${value} days ago`,
+  });
+}
+
+export function formatRelativeDurationWithLabels(
+  value?: string | null,
+  labels?: RelativeDurationLabels,
+) {
+  return formatRelativeDuration(
+    value ?? undefined,
+    labels ?? {
+      noValueFallback: "Time information is unavailable.",
+      justNowLabel: "Just now",
+      minutesLabel: (value) => `${value} minutes ago`,
+      hoursLabel: (value) => `${value} hours ago`,
+      daysLabel: (value) => `${value} days ago`,
+    },
+  );
+}
+
+export function formatRelativeActivity(
+  value: string | null | undefined,
+  labels: {
+    noActivityLabel: string;
+    activeJustNowLabel: string;
+    activeMinutesLabel: (value: number) => string;
+    activeHoursLabel: (value: number) => string;
+    activeDaysLabel: (value: number) => string;
+  },
+) {
+  return formatRelativeDurationWithLabels(value, {
+    noValueFallback: labels.noActivityLabel,
+    justNowLabel: labels.activeJustNowLabel,
+    minutesLabel: labels.activeMinutesLabel,
+    hoursLabel: labels.activeHoursLabel,
+    daysLabel: labels.activeDaysLabel,
+  });
+}
+
+export function formatTimestamp(timestamp: string) {
+  const messageDate = parseValidDate(timestamp);
+
+  if (!messageDate) return timestamp;
 
   const now = new Date();
   const diffInMs = now.getTime() - messageDate.getTime();
-  const oneDayInMs = 24 * 60 * 60 * 1000;
-  const oneWeekInMs = 7 * oneDayInMs;
-  const oneYearInMs = 365 * oneDayInMs;
 
-  if (diffInMs <= oneDayInMs)
-    return messageDate.toLocaleTimeString([], {
-      hour: "2-digit",
-      minute: "2-digit",
-      hour12: false,
-    });
+  if (diffInMs <= ONE_DAY_IN_MS)
+    return vietnamTimeFormatter.format(messageDate);
 
-  if (diffInMs <= oneWeekInMs)
-    return messageDate.toLocaleDateString([], { weekday: "long" });
+  if (diffInMs <= ONE_WEEK_IN_MS)
+    return vietnamWeekdayFormatter.format(messageDate);
 
-  const day = String(messageDate.getDate()).padStart(2, "0");
-  const month = String(messageDate.getMonth() + 1).padStart(2, "0");
+  if (diffInMs <= ONE_YEAR_IN_MS)
+    return vietnamShortDateFormatter.format(messageDate);
 
-  if (diffInMs <= oneYearInMs) return `${day}/${month}`;
-
-  const year = String(messageDate.getFullYear()).slice(-2).padStart(2, "0");
-
-  return `${day}/${month}/${year}`;
+  return vietnamShortYearDateFormatter.format(messageDate);
 }
 
-/*
-Input: 1970-01-01T00:00:00.000Z
-Output: 01 jan
-Input: 1970-01-01T00:00:00.000Z
-Output: 01 jan 1970
-*/
 export function formatMessageDate(value: string) {
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return value;
+  const date = parseValidDate(value);
+  if (!date) return value;
 
-  const day = date.getDate();
-  const month = date.toLocaleString("en-US", { month: "short" });
+  const currentYear = vietnamYearFormatter.format(new Date());
+  const messageYear = vietnamYearFormatter.format(date);
 
-  const currentYear = new Date().getFullYear();
-  if (date.getFullYear() === currentYear) return `${day} ${month}`;
+  if (messageYear === currentYear)
+    return vietnamMessageDateFormatter.format(date);
 
-  return `${day} ${month} ${date.getFullYear()}`;
+  return vietnamMessageDateWithYearFormatter.format(date);
 }
 
-/*
-Input: 1970-01-01T00:00:00.000Z
-Output: 01/01/1970, 00:00:00
-*/
 export function formatDateTime(value?: string) {
   if (!value) return "-";
 
-  const parsed = new Date(value);
-  if (Number.isNaN(parsed.getTime())) return value;
+  const parsed = parseValidDate(value);
+  if (!parsed) return value;
 
-  return parsed.toLocaleString();
+  return vietnamDateTimeFormatter.format(parsed);
 }
 
-/**
- * Input: 1970-01-01T00:00:00.000Z
- * Output: 00:00
- */
 export const formatTime = (createdAt: string) => {
-  const date = new Date(createdAt);
-  if (Number.isNaN(date.getTime())) return createdAt;
+  const date = parseValidDate(createdAt);
+  if (!date) return createdAt;
 
-  const now = new Date();
-  const diffInMs = now.getTime() - date.getTime();
-  const oneDayInMs = 24 * 60 * 60 * 1000;
-
-  if (diffInMs <= oneDayInMs)
-    return date.toLocaleString([], {
-      hour: "2-digit",
-      minute: "2-digit",
-    });
-
-  return date.toLocaleString();
+  return vietnamTimeFormatter.format(date);
 };
