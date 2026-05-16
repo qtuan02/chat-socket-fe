@@ -9,6 +9,7 @@ export const APP_ROUTES = {
 } as const;
 
 export const APP_API = {
+  healthCheck: "/health-check",
   v1: {
     base: "/v1",
     auth: {
