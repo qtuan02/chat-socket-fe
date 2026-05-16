@@ -1,5 +1,8 @@
 import type { Client, IMessage } from "@stomp/stompjs";
-import type { ConversationEvent } from "@/types/conversation";
+import type {
+  ConversationEvent,
+  ConversationSeenEvent,
+} from "@/types/conversation";
 import type { MessageDto } from "@/types/message";
 import { parseToJson } from "@/utils/string";
 
@@ -7,6 +10,8 @@ const socketDestinations = {
   conversationUpdates: "/user/queue/conversations",
   conversationMessages: (conversationId: string) =>
     `/topic/conversations/${conversationId}/messages`,
+  conversationSeen: (conversationId: string) =>
+    `/topic/conversations/${conversationId}/seen`,
 } as const;
 
 export function subscribeToConversationUpdates(
@@ -42,6 +47,27 @@ export function subscribeToConversationMessages(
       if (!incomingMessage) return;
 
       onMessage(incomingMessage);
+    },
+  );
+
+  return () => {
+    subscription.unsubscribe();
+  };
+}
+
+export function subscribeToConversationSeen(
+  client: Client,
+  conversationId: string,
+  onConversationSeen: (event: ConversationSeenEvent) => void,
+) {
+  const subscription = client.subscribe(
+    socketDestinations.conversationSeen(conversationId),
+    (message: IMessage) => {
+      const event = parseToJson<ConversationSeenEvent>(message.body);
+
+      if (!event || event.eventType !== "conversation.seen") return;
+
+      onConversationSeen(event);
     },
   );
 

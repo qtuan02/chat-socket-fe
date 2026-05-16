@@ -50,6 +50,7 @@ export function App() {
 
             <Route element={<ProtectedRoute />}>
               <Route path={APP_ROUTES.chat} element={<ChatPage />} />
+              <Route path={APP_ROUTES.friends} element={<ChatPage />} />
               <Route
                 path={APP_ROUTES.chatConversation}
                 element={<ChatPage />}

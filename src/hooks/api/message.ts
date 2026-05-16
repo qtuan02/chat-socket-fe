@@ -4,6 +4,7 @@ import {
   MESSAGE_LIST_FIRST_ITEM_INDEX,
   MESSAGES_DEFAULT_LIMIT,
 } from "@/config/constant";
+import { useCurrentUserQuery } from "@/hooks/api/user";
 import { queryKeysFactory } from "@/libs/query-key-factory";
 import { messageService } from "@/services/message-service";
 import type {
@@ -12,13 +13,16 @@ import type {
   MessagePage,
   UseMessagesInfiniteQueryParams,
 } from "@/types/message";
+import { MessageStatus } from "@/types/message";
 
 const messageQueryKeyFactory = queryKeysFactory<"message">("message");
 
 export const messageQueryKeys = {
   ...messageQueryKeyFactory,
-  messages: (conversationId: string, limit = 50) =>
-    messageQueryKeyFactory.detail(conversationId, { limit }),
+  conversation: (conversationId: string) =>
+    messageQueryKeyFactory.detail(conversationId),
+  messages: (userId: string, conversationId: string, limit = 50) =>
+    messageQueryKeyFactory.detail(conversationId, { userId, limit }),
 };
 
 function mapMessageToUiModel(
@@ -33,7 +37,7 @@ function mapMessageToUiModel(
     content: message.content,
     attachmentUrl: message.attachmentUrl ?? null,
     type: message.type,
-    messageStatus: "sent",
+    messageStatus: MessageStatus.Sent,
     createdAt: message.createdAt,
     updatedAt: message.updatedAt,
   };
@@ -41,9 +45,11 @@ function mapMessageToUiModel(
 
 export function useMessagesInfiniteQuery({
   conversationId,
+  enabled = true,
   members,
   limit = MESSAGES_DEFAULT_LIMIT,
 }: UseMessagesInfiniteQueryParams) {
+  const { data: currentUser } = useCurrentUserQuery();
   const query = useInfiniteQuery<
     MessagePage,
     Error,
@@ -54,7 +60,11 @@ export function useMessagesInfiniteQuery({
     ReturnType<typeof messageQueryKeys.messages>,
     string | undefined
   >({
-    queryKey: messageQueryKeys.messages(conversationId, limit),
+    queryKey: messageQueryKeys.messages(
+      currentUser?.id ?? "",
+      conversationId,
+      limit,
+    ),
     queryFn: ({ pageParam }) =>
       messageService.getMessages({
         conversationId,
@@ -63,7 +73,7 @@ export function useMessagesInfiniteQuery({
       }),
     getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
     initialPageParam: undefined as string | undefined,
-    enabled: !!conversationId,
+    enabled: enabled && !!conversationId && !!currentUser?.id,
   });
 
   const senderNameById = React.useMemo(() => {

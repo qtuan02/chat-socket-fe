@@ -1,4 +1,5 @@
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useQueryClient } from "@tanstack/react-query";
 import { Loader2 } from "lucide-react";
 import { type SubmitHandler, useForm } from "react-hook-form";
 import { Link, useNavigate } from "react-router";
@@ -16,26 +17,21 @@ import { APP_ROUTES } from "@/config/routes";
 import { useSignInMutation } from "@/hooks/api/auth";
 import useAuthStore from "@/stores/useAuthStore";
 import { cn } from "@/utils/cn";
+import { getErrorMessage } from "@/utils/error";
 import { type SignInFormValues, signInFormSchema } from "../types/sign-in-form";
 
 type SignInFormProps = {
   className?: string;
 };
 
-function getErrorMessage(error: unknown) {
-  if (error instanceof Error && error.message) {
-    return error.message;
-  }
-
-  return "Unable to sign in. Please try again.";
-}
-
 export function SignInForm({ className }: SignInFormProps) {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const { setAccessToken } = useAuthStore();
 
   const { isError, error, isPending, mutateAsync } = useSignInMutation({
     onSuccess: (data) => {
+      queryClient.clear();
       setAccessToken(data.data.accessToken);
       toast.success(data?.message || "Sign in successful.");
       navigate(APP_ROUTES.chat, { replace: true });
@@ -54,7 +50,9 @@ export function SignInForm({ className }: SignInFormProps) {
     },
   });
 
-  const submitError = isError ? getErrorMessage(error) : null;
+  const submitError = isError
+    ? getErrorMessage(error, "Unable to sign in. Please try again.")
+    : null;
 
   const onSubmit: SubmitHandler<SignInFormValues> = async (values) => {
     await mutateAsync(values);

@@ -63,9 +63,88 @@ const vietnamYearFormatter = new Intl.DateTimeFormat(VIETNAM_LOCALE, {
   year: "numeric",
 });
 
+type RelativeDurationLabels = {
+  noValueFallback: string;
+  justNowLabel: string;
+  minutesLabel: (value: number) => string;
+  hoursLabel: (value: number) => string;
+  daysLabel: (value: number) => string;
+};
+
 function parseValidDate(value: string) {
   const date = new Date(value);
   return Number.isNaN(date.getTime()) ? null : date;
+}
+
+function formatRelativeDuration(
+  value: string | undefined,
+  labels: RelativeDurationLabels,
+) {
+  if (!value) return labels.noValueFallback;
+
+  const parsed = parseValidDate(value);
+  if (!parsed) return labels.noValueFallback;
+
+  const diff = Date.now() - parsed.getTime();
+  const minute = 60 * 1000;
+  const hour = 60 * minute;
+  const day = 24 * hour;
+
+  if (diff < minute) return labels.justNowLabel;
+  if (diff < hour)
+    return labels.minutesLabel(Math.max(1, Math.floor(diff / minute)));
+  if (diff < day)
+    return labels.hoursLabel(Math.max(1, Math.floor(diff / hour)));
+
+  return labels.daysLabel(Math.max(1, Math.floor(diff / day)));
+}
+
+export function formatRelativeTime(
+  value?: string,
+  fallback = "Time information is unavailable.",
+) {
+  return formatRelativeDuration(value, {
+    noValueFallback: fallback,
+    justNowLabel: "Just now",
+    minutesLabel: (value) => `${value} minutes ago`,
+    hoursLabel: (value) => `${value} hours ago`,
+    daysLabel: (value) => `${value} days ago`,
+  });
+}
+
+export function formatRelativeDurationWithLabels(
+  value?: string | null,
+  labels?: RelativeDurationLabels,
+) {
+  return formatRelativeDuration(
+    value ?? undefined,
+    labels ?? {
+      noValueFallback: "Time information is unavailable.",
+      justNowLabel: "Just now",
+      minutesLabel: (value) => `${value} minutes ago`,
+      hoursLabel: (value) => `${value} hours ago`,
+      daysLabel: (value) => `${value} days ago`,
+    },
+  );
+}
+
+export function formatRelativeActivity(
+  value: string | null | undefined,
+  labels: {
+    noActivityLabel: string;
+    activeJustNowLabel: string;
+    activeMinutesLabel: (value: number) => string;
+    activeHoursLabel: (value: number) => string;
+    activeDaysLabel: (value: number) => string;
+  },
+) {
+  return formatRelativeDurationWithLabels(value, {
+    noValueFallback: labels.noActivityLabel,
+    justNowLabel: labels.activeJustNowLabel,
+    minutesLabel: labels.activeMinutesLabel,
+    hoursLabel: labels.activeHoursLabel,
+    daysLabel: labels.activeDaysLabel,
+  });
 }
 
 export function formatTimestamp(timestamp: string) {

@@ -1,29 +1,38 @@
 import { AlertCircle, Check, Clock3 } from "lucide-react";
-import type { Message } from "@/types/message";
+import type { ConversationMember } from "@/types/conversation";
+import {
+  type Message,
+  MessageStatus,
+  messageStatusLabels,
+} from "@/types/message";
 import { cn } from "@/utils/cn";
 import { formatTime } from "@/utils/date";
+import { getDisplayNameInitials } from "@/utils/user-display";
 
 type MessageBubbleProps = {
   isOwnMessage: boolean;
   message: Message;
+  readReceipts?: ConversationMember[];
   showSenderName: boolean;
 };
 
+const MAX_VISIBLE_READERS = 3;
+
 function MessageStatusLabel({ message }: { message: Message }) {
-  if (message.messageStatus === "sending") {
+  if (message.messageStatus === MessageStatus.Sending) {
     return (
       <span className="inline-flex items-center gap-1">
         <Clock3 className="size-3" />
-        Sending
+        {messageStatusLabels[MessageStatus.Sending]}
       </span>
     );
   }
 
-  if (message.messageStatus === "failed") {
+  if (message.messageStatus === MessageStatus.Failed) {
     return (
       <span className="inline-flex items-center gap-1 text-destructive">
         <AlertCircle className="size-3" />
-        Failed
+        {messageStatusLabels[MessageStatus.Failed]}
       </span>
     );
   }
@@ -31,14 +40,63 @@ function MessageStatusLabel({ message }: { message: Message }) {
   return (
     <span className="inline-flex items-center gap-1">
       <Check className="size-3" />
-      Sent
+      {messageStatusLabels[MessageStatus.Sent]}
     </span>
+  );
+}
+
+function ReaderAvatar({
+  member,
+  className,
+}: {
+  member: ConversationMember;
+  className?: string;
+}) {
+  return (
+    <span
+      aria-label={member.displayName}
+      className={cn(
+        "inline-flex size-4 shrink-0 items-center justify-center overflow-hidden rounded-full border border-background bg-muted text-[8px] font-semibold leading-none text-muted-foreground",
+        className,
+      )}
+      role="img"
+      title={member.displayName}
+    >
+      {member.avatarUrl ? (
+        <img
+          alt={member.displayName}
+          className="size-full rounded-full object-cover"
+          src={member.avatarUrl}
+        />
+      ) : (
+        getDisplayNameInitials(member.displayName)
+      )}
+    </span>
+  );
+}
+
+function MessageReadReceipt({ readers }: { readers: ConversationMember[] }) {
+  if (readers.length === 0) return null;
+
+  const visibleReaders = readers.slice(0, MAX_VISIBLE_READERS);
+  const readerNames = readers.map((reader) => reader.displayName).join(", ");
+
+  return (
+    <div
+      className="-space-x-1 flex max-w-[50vw] items-center justify-end px-1 pt-0.5"
+      title={readerNames}
+    >
+      {visibleReaders.map((reader) => (
+        <ReaderAvatar key={reader.userId} member={reader} />
+      ))}
+    </div>
   );
 }
 
 export function MessageBubble({
   isOwnMessage,
   message,
+  readReceipts = [],
   showSenderName,
 }: MessageBubbleProps) {
   return (
@@ -74,6 +132,7 @@ export function MessageBubble({
           {isOwnMessage ? <MessageStatusLabel message={message} /> : null}
         </p>
       </div>
+      {isOwnMessage ? <MessageReadReceipt readers={readReceipts} /> : null}
     </div>
   );
 }

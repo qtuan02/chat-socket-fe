@@ -1,24 +1,57 @@
-import { useInfiniteQuery } from "@tanstack/react-query";
+import {
+  type InfiniteData,
+  type QueryClient,
+  type QueryKey,
+  useInfiniteQuery,
+  useMutation,
+  useQueryClient,
+} from "@tanstack/react-query";
 import * as React from "react";
 import { useCurrentUserQuery } from "@/hooks/api/user";
 import { queryKeysFactory } from "@/libs/query-key-factory";
 import { conversationService } from "@/services/conversation-service";
 import { useSocketStore } from "@/stores/useSocketStore";
-import {
-  type Conversation,
-  type ConversationDto,
-  type ConversationPage,
-  ConversationTypeEnum,
-  type GetConversationsParams,
+import type {
+  Conversation,
+  ConversationDto,
+  ConversationEvent,
+  ConversationMember,
+  ConversationPage,
+  ConversationSeenEvent,
+  CreateGroupConversationRequest,
+  GetConversationsParams,
+  GroupMembersRequest,
+  UpdateGroupRequest,
 } from "@/types/conversation";
+import { ConversationTypeEnum } from "@/types/conversation";
+import { PresenceStatusEnum } from "@/types/user";
 
 const conversationQueryKeyFactory =
   queryKeysFactory<"conversation">("conversation");
 
+type ConversationInfiniteData = InfiniteData<
+  ConversationPage,
+  string | undefined
+>;
+
+type ConversationUpdateOptions = {
+  unreadCount?: number;
+};
+
+type ConversationMutationContext = {
+  previousConversationQueries: Array<
+    [QueryKey, ConversationInfiniteData | undefined]
+  >;
+};
+
+type ConversationCacheUpdateOptions = {
+  moveToTop?: boolean;
+};
+
 export const conversationQueryKeys = {
   ...conversationQueryKeyFactory,
-  list: (type?: ConversationTypeEnum, limit = 30) =>
-    conversationQueryKeyFactory.list({ type, limit }),
+  list: (userId: string, type?: ConversationTypeEnum, limit = 30) =>
+    conversationQueryKeyFactory.list({ userId, type, limit }),
 };
 
 export const CONVERSATIONS_DEFAULT_LIMIT = 30;
@@ -29,30 +62,40 @@ function mapConversationToUiModel(
   onlineUserIds: ReadonlySet<string>,
   isPresenceReady: boolean,
 ): Conversation {
-  const members = conversation.participants.map((participant) => ({
-    userId: participant.userId,
-    id: participant.userId,
-    displayName:
-      [participant.firstName, participant.lastName].filter(Boolean).join(" ") ||
-      participant.username ||
-      "Unknown user",
-    username: participant.username ?? undefined,
-    avatarUrl: participant.avatarUrl ?? undefined,
-    isOnline: isPresenceReady
-      ? onlineUserIds.has(participant.userId)
-      : undefined,
-    role: participant.role,
-    joinedAt: participant.joinedAt,
-  }));
+  const members: ConversationMember[] = conversation.participants.map(
+    (participant) => ({
+      userId: participant.userId,
+      id: participant.userId,
+      firstName: participant.firstName,
+      lastName: participant.lastName,
+      displayName:
+        [participant.firstName, participant.lastName]
+          .filter(Boolean)
+          .join(" ") ||
+        participant.username ||
+        "Unknown user",
+      username: participant.username ?? undefined,
+      avatarUrl: participant.avatarUrl ?? undefined,
+      bio: participant.bio,
+      presenceStatus: isPresenceReady
+        ? onlineUserIds.has(participant.userId)
+          ? PresenceStatusEnum.Online
+          : PresenceStatusEnum.Offline
+        : PresenceStatusEnum.Checking,
+      role: participant.role,
+      joinedAt: participant.joinedAt,
+      lastReadMessageId: participant.lastReadMessageId ?? null,
+      lastReadAt: participant.lastReadAt ?? null,
+    }),
+  );
 
   const isGroup = conversation.type === ConversationTypeEnum.GROUP;
   const otherParticipant = members.find(
     (member) => member.userId !== currentUserId,
   );
+  const lastMessageSenderId = conversation.lastMessage?.senderId;
   const lastMessageSender = conversation.lastMessage
-    ? members.find(
-        (member) => member.userId === conversation.lastMessage?.senderId,
-      )
+    ? members.find((member) => member.userId === lastMessageSenderId)
     : undefined;
 
   return {
@@ -72,12 +115,287 @@ function mapConversationToUiModel(
     directMember: isGroup ? undefined : otherParticipant,
     currentUserId: currentUserId || undefined,
     lastMessageId: conversation.lastMessageId,
-    avatarUrl: isGroup ? undefined : otherParticipant?.avatarUrl,
+    avatarUrl:
+      isGroup || !otherParticipant?.avatarUrl
+        ? undefined
+        : otherParticipant.avatarUrl,
     onlineUsersCount: isPresenceReady
-      ? members.filter((member) => member.isOnline).length
+      ? members.filter(
+          (member) => member.presenceStatus === PresenceStatusEnum.Online,
+        ).length
       : undefined,
     updatedAt: conversation.updatedAt,
   };
+}
+
+function hasConversation(
+  data: ConversationInfiniteData | undefined,
+  conversationId: string,
+) {
+  return data?.pages.some((page) =>
+    page.items.some((conversation) => conversation.id === conversationId),
+  );
+}
+
+function getHasLoadedConversation(
+  queryClient: QueryClient,
+  conversationId: string,
+) {
+  const conversationQueries =
+    queryClient.getQueriesData<ConversationInfiniteData>({
+      queryKey: conversationQueryKeys.lists(),
+    });
+
+  return conversationQueries.some(([, data]) =>
+    hasConversation(data, conversationId),
+  );
+}
+
+function getHasLoadedConversationQueries(queryClient: QueryClient) {
+  const conversationQueries =
+    queryClient.getQueriesData<ConversationInfiniteData>({
+      queryKey: conversationQueryKeys.lists(),
+    });
+
+  return conversationQueries.some(([, data]) => !!data);
+}
+
+function upsertConversationInPages(
+  data: ConversationInfiniteData | undefined,
+  conversationId: string,
+  replacement: ConversationDto | null | undefined,
+  options: ConversationCacheUpdateOptions = {},
+) {
+  if (!data) return data;
+
+  const replacementIsPresent = replacement != null;
+  let isFound = false;
+  let hasChanges = false;
+
+  const nextPages = data.pages.map((page) => {
+    const items: ConversationDto[] = [];
+    let didProcess = false;
+
+    for (const conversation of page.items) {
+      if (conversation.id !== conversationId) {
+        items.push(conversation);
+        continue;
+      }
+
+      isFound = true;
+      didProcess = true;
+
+      if (replacementIsPresent) {
+        items.push(replacement);
+      }
+    }
+
+    if (!didProcess) return page;
+
+    if (items.length !== page.items.length) hasChanges = true;
+
+    return { ...page, items };
+  });
+
+  if (!replacementIsPresent) {
+    return hasChanges ? { ...data, pages: nextPages } : data;
+  }
+
+  if (options.moveToTop) {
+    const [firstPage, ...restPages] = nextPages;
+    if (!firstPage) return data;
+
+    const currentFirstPageItems = isFound
+      ? firstPage.items.filter((item) => item.id !== conversationId)
+      : firstPage.items;
+    const upsertedFirstPage = [replacement, ...currentFirstPageItems];
+
+    return {
+      ...data,
+      pages: [{ ...firstPage, items: upsertedFirstPage }, ...restPages],
+    };
+  }
+
+  if (isFound || replacement == null)
+    return hasChanges ? { ...data, pages: nextPages } : data;
+
+  const [firstPage, ...restPages] = nextPages;
+  if (!firstPage) return data;
+
+  return {
+    ...data,
+    pages: [
+      { ...firstPage, items: [replacement, ...firstPage.items] },
+      ...restPages,
+    ],
+  };
+}
+
+function updateConversationInPages(
+  data: ConversationInfiniteData | undefined,
+  conversationId: string,
+  updater: (conversation: ConversationDto) => ConversationDto,
+  options: ConversationCacheUpdateOptions = {},
+) {
+  if (!data) return data;
+
+  const targetConversation = data.pages
+    .flatMap((page) => page.items)
+    .find((conversation) => conversation.id === conversationId);
+  if (!targetConversation) return data;
+
+  return upsertConversationInPages(
+    data,
+    conversationId,
+    updater(targetConversation),
+    options,
+  );
+}
+
+function updateConversationUnreadCount(
+  data: ConversationInfiniteData | undefined,
+  conversationId: string,
+  unreadCount: number,
+) {
+  return updateConversationInPages(data, conversationId, (conversation) => {
+    if (conversation.unreadCount === unreadCount) return conversation;
+
+    return {
+      ...conversation,
+      unreadCount,
+    };
+  });
+}
+
+function updateConversationFromEvent(
+  data: ConversationInfiniteData | undefined,
+  event: ConversationEvent,
+  options: ConversationUpdateOptions = {},
+) {
+  const lastMessage = event.lastMessage;
+
+  return updateConversationInPages(
+    data,
+    event.conversationId,
+    (conversation) => ({
+      ...conversation,
+      lastMessageId: lastMessage?.id ?? null,
+      lastMessage: lastMessage,
+      lastMessageSenderId: lastMessage?.senderId,
+      lastMessageSenderName: lastMessage
+        ? (() => {
+            const member = conversation.participants.find(
+              (item) => item.userId === lastMessage.senderId,
+            );
+            if (!member) return undefined;
+
+            return (
+              [member.firstName, member.lastName].filter(Boolean).join(" ") ||
+              member.username ||
+              "Unknown user"
+            );
+          })()
+        : undefined,
+      lastMessageAt: event.lastMessageAt,
+      unreadCount: options.unreadCount ?? event.unreadCount,
+      updatedAt: event.lastMessageAt,
+    }),
+    { moveToTop: true },
+  );
+}
+
+function updateConversationSeenStatus(
+  data: ConversationInfiniteData | undefined,
+  event: ConversationSeenEvent,
+  currentUserId?: string,
+) {
+  return updateConversationInPages(
+    data,
+    event.conversationId,
+    (conversation) => {
+      let didUpdateParticipant = false;
+      const participants = conversation.participants.map((participant) => {
+        if (participant.userId !== event.seenByUserId) return participant;
+
+        if (
+          participant.lastReadMessageId === event.lastReadMessageId &&
+          participant.lastReadAt === event.lastReadAt
+        )
+          return participant;
+
+        didUpdateParticipant = true;
+        return {
+          ...participant,
+          lastReadMessageId: event.lastReadMessageId,
+          lastReadAt: event.lastReadAt,
+        };
+      });
+
+      const unreadCount =
+        event.seenByUserId === currentUserId ? 0 : conversation.unreadCount;
+
+      if (!didUpdateParticipant && unreadCount === conversation.unreadCount) {
+        return conversation;
+      }
+
+      return {
+        ...conversation,
+        participants,
+        unreadCount,
+      };
+    },
+  );
+}
+
+export function applyConversationUpdateToCache(
+  queryClient: QueryClient,
+  event: ConversationEvent,
+  options: ConversationUpdateOptions = {},
+) {
+  const hasLoadedConversation = getHasLoadedConversation(
+    queryClient,
+    event.conversationId,
+  );
+  const hasLoadedConversationQueries =
+    getHasLoadedConversationQueries(queryClient);
+
+  queryClient.setQueriesData<ConversationInfiniteData>(
+    { queryKey: conversationQueryKeys.lists() },
+    (data) => updateConversationFromEvent(data, event, options),
+  );
+
+  if (!hasLoadedConversation && hasLoadedConversationQueries) {
+    void queryClient.invalidateQueries({
+      queryKey: conversationQueryKeys.lists(),
+    });
+  }
+}
+
+export function applyConversationSeenToCache(
+  queryClient: QueryClient,
+  event: ConversationSeenEvent,
+  currentUserId?: string,
+) {
+  queryClient.setQueriesData<ConversationInfiniteData>(
+    { queryKey: conversationQueryKeys.lists() },
+    (data) => updateConversationSeenStatus(data, event, currentUserId),
+  );
+}
+
+function upsertConversation(
+  queryClient: QueryClient,
+  conversation?: ConversationDto | null,
+  options?: ConversationCacheUpdateOptions,
+) {
+  if (!conversation) return;
+
+  queryClient.setQueriesData<ConversationInfiniteData>(
+    { queryKey: conversationQueryKeys.lists() },
+    (data) =>
+      upsertConversationInPages(data, conversation.id, conversation, {
+        moveToTop: options?.moveToTop,
+      }),
+  );
 }
 
 export function useConversationsInfiniteQuery(
@@ -104,7 +422,7 @@ export function useConversationsInfiniteQuery(
     ReturnType<typeof conversationQueryKeys.list>,
     string | undefined
   >({
-    queryKey: conversationQueryKeys.list(type, limit),
+    queryKey: conversationQueryKeys.list(currentUser?.id ?? "", type, limit),
     queryFn: ({ pageParam }) =>
       conversationService.getConversations({
         type,
@@ -113,6 +431,7 @@ export function useConversationsInfiniteQuery(
       }),
     getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
     initialPageParam: undefined as string | undefined,
+    enabled: !!currentUser?.id,
   });
 
   const conversations = React.useMemo(() => {
@@ -134,4 +453,246 @@ export function useConversationsInfiniteQuery(
     ...query,
     conversations,
   };
+}
+
+export function useMarkConversationAsSeenMutation() {
+  const queryClient = useQueryClient();
+
+  return useMutation<void, Error, string, ConversationMutationContext>({
+    mutationFn: conversationService.markAsSeen,
+    onMutate: async (conversationId) => {
+      await queryClient.cancelQueries({
+        queryKey: conversationQueryKeys.lists(),
+      });
+
+      const previousConversationQueries =
+        queryClient.getQueriesData<ConversationInfiniteData>({
+          queryKey: conversationQueryKeys.lists(),
+        });
+
+      queryClient.setQueriesData<ConversationInfiniteData>(
+        { queryKey: conversationQueryKeys.lists() },
+        (data) => updateConversationUnreadCount(data, conversationId, 0),
+      );
+
+      return { previousConversationQueries };
+    },
+    onError: (_error, _conversationId, context) => {
+      for (const [queryKey, data] of context?.previousConversationQueries ??
+        []) {
+        queryClient.setQueryData(queryKey, data);
+      }
+    },
+  });
+}
+
+export function useCreateGroupConversationMutation(options?: {
+  onSuccess?: (conversation: ConversationDto) => void;
+  onError?: (error: Error) => void;
+}) {
+  const queryClient = useQueryClient();
+
+  return useMutation<
+    ConversationDto,
+    Error,
+    CreateGroupConversationRequest,
+    ConversationMutationContext
+  >({
+    mutationFn: conversationService.createGroupConversation,
+    onMutate: async () => {
+      await queryClient.cancelQueries({
+        queryKey: conversationQueryKeys.lists(),
+      });
+      return {
+        previousConversationQueries:
+          queryClient.getQueriesData<ConversationInfiniteData>({
+            queryKey: conversationQueryKeys.lists(),
+          }),
+      };
+    },
+    onSuccess: (data, _variables, context) => {
+      upsertConversation(queryClient, data, { moveToTop: true });
+      void queryClient.invalidateQueries({
+        queryKey: conversationQueryKeys.lists(),
+      });
+      options?.onSuccess?.(data);
+      return context;
+    },
+    onError: (error, _variables, context) => {
+      for (const [queryKey, pageData] of context?.previousConversationQueries ??
+        []) {
+        queryClient.setQueryData(queryKey, pageData);
+      }
+      options?.onError?.(error);
+    },
+  });
+}
+
+export function useUpdateGroupMutation(options?: {
+  onSuccess?: (conversation: ConversationDto) => void;
+  onError?: (error: Error) => void;
+}) {
+  const queryClient = useQueryClient();
+
+  return useMutation<
+    ConversationDto,
+    Error,
+    { conversationId: string; payload: UpdateGroupRequest },
+    ConversationMutationContext
+  >({
+    mutationFn: ({ conversationId, payload }) =>
+      conversationService.updateGroup(conversationId, payload),
+    onMutate: async () => {
+      await queryClient.cancelQueries({
+        queryKey: conversationQueryKeys.lists(),
+      });
+      return {
+        previousConversationQueries:
+          queryClient.getQueriesData<ConversationInfiniteData>({
+            queryKey: conversationQueryKeys.lists(),
+          }),
+      };
+    },
+    onSuccess: (data) => {
+      upsertConversation(queryClient, data, { moveToTop: true });
+      void queryClient.invalidateQueries({
+        queryKey: conversationQueryKeys.lists(),
+      });
+      options?.onSuccess?.(data);
+    },
+    onError: (error, _variables, context) => {
+      for (const [queryKey, pageData] of context?.previousConversationQueries ??
+        []) {
+        queryClient.setQueryData(queryKey, pageData);
+      }
+      options?.onError?.(error);
+    },
+  });
+}
+
+export function useAddGroupMembersMutation(options?: {
+  onSuccess?: (conversation: ConversationDto) => void;
+  onError?: (error: Error) => void;
+}) {
+  const queryClient = useQueryClient();
+
+  return useMutation<
+    ConversationDto,
+    Error,
+    { conversationId: string; payload: GroupMembersRequest },
+    ConversationMutationContext
+  >({
+    mutationFn: ({ conversationId, payload }) =>
+      conversationService.addGroupMembers(conversationId, payload),
+    onMutate: async () => {
+      await queryClient.cancelQueries({
+        queryKey: conversationQueryKeys.lists(),
+      });
+
+      return {
+        previousConversationQueries:
+          queryClient.getQueriesData<ConversationInfiniteData>({
+            queryKey: conversationQueryKeys.lists(),
+          }),
+      };
+    },
+    onSuccess: (data) => {
+      upsertConversation(queryClient, data, { moveToTop: true });
+      void queryClient.invalidateQueries({
+        queryKey: conversationQueryKeys.lists(),
+      });
+      options?.onSuccess?.(data);
+    },
+    onError: (error, _variables, context) => {
+      for (const [queryKey, pageData] of context?.previousConversationQueries ??
+        []) {
+        queryClient.setQueryData(queryKey, pageData);
+      }
+      options?.onError?.(error);
+    },
+  });
+}
+
+export function useRemoveGroupMemberMutation(options?: {
+  onSuccess?: (conversation: ConversationDto) => void;
+  onError?: (error: Error) => void;
+}) {
+  const queryClient = useQueryClient();
+
+  return useMutation<
+    ConversationDto,
+    Error,
+    { conversationId: string; memberId: string },
+    ConversationMutationContext
+  >({
+    mutationFn: ({ conversationId, memberId }) =>
+      conversationService.removeGroupMember(conversationId, memberId),
+    onMutate: async () => {
+      await queryClient.cancelQueries({
+        queryKey: conversationQueryKeys.lists(),
+      });
+
+      return {
+        previousConversationQueries:
+          queryClient.getQueriesData<ConversationInfiniteData>({
+            queryKey: conversationQueryKeys.lists(),
+          }),
+      };
+    },
+    onSuccess: (data) => {
+      upsertConversation(queryClient, data, { moveToTop: true });
+      void queryClient.invalidateQueries({
+        queryKey: conversationQueryKeys.lists(),
+      });
+      options?.onSuccess?.(data);
+    },
+    onError: (error, _variables, context) => {
+      for (const [queryKey, pageData] of context?.previousConversationQueries ??
+        []) {
+        queryClient.setQueryData(queryKey, pageData);
+      }
+      options?.onError?.(error);
+    },
+  });
+}
+
+export function useLeaveGroupMutation(options?: {
+  onSuccess?: (conversationId: string) => void;
+  onError?: (error: Error) => void;
+}) {
+  const queryClient = useQueryClient();
+
+  return useMutation<null, Error, string, ConversationMutationContext>({
+    mutationFn: conversationService.leaveGroup,
+    onMutate: async (conversationId) => {
+      await queryClient.cancelQueries({
+        queryKey: conversationQueryKeys.lists(),
+      });
+
+      const previousConversationQueries =
+        queryClient.getQueriesData<ConversationInfiniteData>({
+          queryKey: conversationQueryKeys.lists(),
+        });
+
+      queryClient.setQueriesData<ConversationInfiniteData>(
+        { queryKey: conversationQueryKeys.lists() },
+        (data) => upsertConversationInPages(data, conversationId, null),
+      );
+
+      return { previousConversationQueries };
+    },
+    onSuccess: (_data, variables) => {
+      void queryClient.invalidateQueries({
+        queryKey: conversationQueryKeys.lists(),
+      });
+      options?.onSuccess?.(variables);
+    },
+    onError: (error, _variables, context) => {
+      for (const [queryKey, pageData] of context?.previousConversationQueries ??
+        []) {
+        queryClient.setQueryData(queryKey, pageData);
+      }
+      options?.onError?.(error);
+    },
+  });
 }

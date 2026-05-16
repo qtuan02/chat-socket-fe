@@ -1,12 +1,11 @@
 import type { Conversation, ConversationMember } from "@/types/conversation";
 import { ConversationTypeEnum } from "@/types/conversation";
 import { cn } from "@/utils/cn";
+import { getDisplayNameInitials } from "@/utils/user-display";
 import {
   getConversationAvatarMembers,
-  getMemberInitials,
-  getNameInitials,
   isConversationOnline,
-} from "../../utils/conversation-display";
+} from "../utils/conversation-display";
 
 type ConversationAvatarProps = {
   className?: string;
@@ -67,6 +66,9 @@ function ConversationMemberAvatar({
   size,
 }: ConversationMemberAvatarProps) {
   const label = member?.displayName ?? fallbackName;
+  const initials = member
+    ? getDisplayNameInitials(member.displayName)
+    : getDisplayNameInitials(fallbackName);
 
   return (
     <div
@@ -88,7 +90,7 @@ function ConversationMemberAvatar({
             avatarSizeClassNames[size].text,
           )}
         >
-          {member ? getMemberInitials(member) : getNameInitials(fallbackName)}
+          {initials}
         </span>
       )}
     </div>

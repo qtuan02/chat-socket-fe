@@ -8,7 +8,17 @@ export enum MessageTypeEnum {
   SYSTEM = "SYSTEM",
 }
 
-export type MessageStatus = "sending" | "sent" | "failed";
+export enum MessageStatus {
+  Sending = "sending",
+  Sent = "sent",
+  Failed = "failed",
+}
+
+export const messageStatusLabels: Record<MessageStatus, string> = {
+  [MessageStatus.Sending]: "Sending",
+  [MessageStatus.Sent]: "Sent",
+  [MessageStatus.Failed]: "Failed",
+};
 
 export interface MessageDto {
   id: string;
@@ -73,6 +83,7 @@ export type UseMessagesInfiniteQueryParams = Omit<
   GetMessagesParams,
   "cursor"
 > & {
+  enabled?: boolean;
   limit?: number;
   members: MessageSender[];
 };

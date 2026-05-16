@@ -1,12 +1,10 @@
 import { toast } from "sonner";
 import { create } from "zustand";
-import { conversationQueryKeys } from "@/hooks/api/conversation";
-import { messageQueryKeys } from "@/hooks/api/message";
-import { queryClient } from "@/libs/query-client";
 import { messageService } from "@/services/message-service";
 import {
   type Message,
   type MessageDto,
+  MessageStatus,
   MessageTypeEnum,
   type SendDirectMessageRequest,
   type SendGroupMessageRequest,
@@ -54,7 +52,7 @@ function createPendingMessage({
     content,
     attachmentUrl: null,
     type: MessageTypeEnum.TEXT,
-    messageStatus: "sending",
+    messageStatus: MessageStatus.Sending,
     createdAt: now,
     updatedAt: now,
   };
@@ -69,7 +67,7 @@ function toSentMessage(message: MessageDto): Message {
     content: message.content,
     attachmentUrl: message.attachmentUrl ?? null,
     type: message.type,
-    messageStatus: "sent",
+    messageStatus: MessageStatus.Sent,
     createdAt: message.createdAt,
     updatedAt: message.updatedAt,
   };
@@ -149,13 +147,6 @@ export const useChatStore = create<ChatStore>((set) => ({
         ),
       }));
 
-      void queryClient.invalidateQueries({
-        queryKey: messageQueryKeys.messages(conversationId),
-      });
-      void queryClient.invalidateQueries({
-        queryKey: conversationQueryKeys.all,
-      });
-
       return message;
     } catch (error) {
       set((state) => ({
@@ -165,7 +156,7 @@ export const useChatStore = create<ChatStore>((set) => ({
           pendingMessage.clientMessageId ?? pendingMessage.id,
           (message) => ({
             ...message,
-            messageStatus: "failed",
+            messageStatus: MessageStatus.Failed,
           }),
         ),
       }));
@@ -212,13 +203,6 @@ export const useChatStore = create<ChatStore>((set) => ({
         ),
       }));
 
-      void queryClient.invalidateQueries({
-        queryKey: messageQueryKeys.messages(conversationId),
-      });
-      void queryClient.invalidateQueries({
-        queryKey: conversationQueryKeys.all,
-      });
-
       return message;
     } catch (error) {
       set((state) => ({
@@ -228,7 +212,7 @@ export const useChatStore = create<ChatStore>((set) => ({
           pendingMessage.clientMessageId ?? pendingMessage.id,
           (message) => ({
             ...message,
-            messageStatus: "failed",
+            messageStatus: MessageStatus.Failed,
           }),
         ),
       }));

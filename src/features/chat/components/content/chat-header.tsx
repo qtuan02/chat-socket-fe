@@ -1,16 +1,16 @@
 import { CircleCheckBig, Columns2Icon } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import type { Conversation } from "@/types/conversation";
-import { ConversationTypeEnum } from "@/types/conversation";
+import { ConversationAvatar } from "@/features/conversation/components/conversation-avatar";
 import {
   formatDirectConversationStatus,
   formatGroupActiveCount,
-} from "../../utils/conversation-display";
-import { ConversationAvatar } from "../conversation/conversation-avatar";
+} from "@/features/conversation/utils/conversation-display";
+import type { Conversation } from "@/types/conversation";
+import { ConversationTypeEnum } from "@/types/conversation";
 
 type ChatHeaderProps = {
   conversation: Conversation;
-  onOpenDetails: () => void;
+  onOpenDetails?: () => void;
 };
 
 export function ChatHeader({ conversation, onOpenDetails }: ChatHeaderProps) {
@@ -40,15 +40,17 @@ export function ChatHeader({ conversation, onOpenDetails }: ChatHeaderProps) {
               <span>{conversation.unreadCount}</span>
             </div>
           ) : null}
-          <Button
-            type="button"
-            variant="outline"
-            size="icon-xs"
-            onClick={onOpenDetails}
-            aria-label="Toggle conversation info"
-          >
-            <Columns2Icon className="size-4" />
-          </Button>
+          {onOpenDetails ? (
+            <Button
+              type="button"
+              variant="outline"
+              size="icon-xs"
+              onClick={onOpenDetails}
+              aria-label="Toggle conversation info"
+            >
+              <Columns2Icon className="size-4" />
+            </Button>
+          ) : null}
         </div>
       </div>
     </header>
