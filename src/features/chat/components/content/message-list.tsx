@@ -1,12 +1,17 @@
+import * as React from "react";
 import { Virtuoso } from "react-virtuoso";
 import { Button } from "@/components/ui/button";
+import { useMessagesInfiniteQuery } from "@/hooks/api/message";
 import { useCurrentUserQuery } from "@/hooks/api/user";
+import { useChatStore } from "@/stores/useChatStore";
 import type { Conversation } from "@/types/conversation";
+import type { Message } from "@/types/message";
 import { cn } from "@/utils/cn";
 import { formatMessageDate } from "@/utils/date";
-import { useChatMessages } from "../../hooks/use-chat-messages";
 import { MessageListSkeleton } from "../skeleton/message-list-skeleton";
 import { MessageBubble } from "./message-bubble";
+
+const EMPTY_PENDING_MESSAGES: Message[] = [];
 
 type MessageListProps = {
   className?: string;
@@ -57,6 +62,11 @@ function MessageListEmpty({ className }: { className?: string }) {
 
 export function MessageList({ className, conversation }: MessageListProps) {
   const { data: currentUser } = useCurrentUserQuery();
+  const pendingMessages = useChatStore(
+    (state) =>
+      state.pendingMessagesByConversationId[conversation.id] ??
+      EMPTY_PENDING_MESSAGES,
+  );
   const {
     error,
     fetchNextPage,
@@ -67,7 +77,22 @@ export function MessageList({ className, conversation }: MessageListProps) {
     isLoading,
     messages,
     refetch,
-  } = useChatMessages(conversation);
+  } = useMessagesInfiniteQuery({
+    conversationId: conversation.id,
+    members: conversation.members,
+  });
+  const visibleMessages = React.useMemo(() => {
+    const serverMessageIds = new Set(messages.map((message) => message.id));
+    const localMessages = pendingMessages.filter(
+      (message) => !serverMessageIds.has(message.id),
+    );
+
+    return [...messages, ...localMessages].sort(
+      (firstMessage, secondMessage) =>
+        Date.parse(firstMessage.createdAt) -
+        Date.parse(secondMessage.createdAt),
+    );
+  }, [messages, pendingMessages]);
 
   if (isLoading) return <MessageListSkeleton className={className} />;
 
@@ -82,23 +107,24 @@ export function MessageList({ className, conversation }: MessageListProps) {
       />
     );
 
-  if (messages.length === 0) return <MessageListEmpty className={className} />;
+  if (visibleMessages.length === 0)
+    return <MessageListEmpty className={className} />;
 
   return (
     <section className={className ?? "min-h-0 flex-1 overflow-hidden p-4"}>
       <Virtuoso
-        data={messages}
+        key={conversation.id}
+        computeItemKey={(_, message) => message.clientMessageId ?? message.id}
+        data={visibleMessages}
         firstItemIndex={firstItemIndex}
         followOutput="auto"
-        initialTopMostItemIndex={
-          messages.length > 0 ? firstItemIndex + messages.length - 1 : 0
-        }
+        initialTopMostItemIndex={{ index: "LAST", align: "end" }}
         startReached={() => {
           if (hasNextPage && !isFetchingNextPage) void fetchNextPage();
         }}
         itemContent={(messageIndex, message) => {
           const arrayIndex = messageIndex - firstItemIndex;
-          const previousMessage = messages[arrayIndex - 1];
+          const previousMessage = visibleMessages[arrayIndex - 1];
           const dateLabel = formatMessageDate(message.createdAt);
           const previousDateLabel = previousMessage
             ? formatMessageDate(previousMessage.createdAt)

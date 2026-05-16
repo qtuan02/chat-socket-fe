@@ -6,13 +6,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { APP_ROUTES } from "@/config/routes";
+import { useConversationsInfiniteQuery } from "@/hooks/api/conversation";
 import { type Conversation, ConversationTypeEnum } from "@/types/conversation";
 import { cn } from "@/utils/cn";
 import { formatTimestamp } from "@/utils/date";
-import {
-  getConversationTypeFilter,
-  useChatConversations,
-} from "../../hooks/use-chat-conversations";
 import { ConversationListSkeleton } from "../skeleton/conversation-list-skeleton";
 import { ConversationAvatar } from "./conversation-avatar";
 
@@ -36,6 +33,14 @@ function getErrorMessage(error: unknown) {
   return "Unable to load conversations.";
 }
 
+function getConversationTypeFilter(filter: ConversationTypeEnum | null) {
+  if (filter === ConversationTypeEnum.GROUP) return ConversationTypeEnum.GROUP;
+  if (filter === ConversationTypeEnum.DIRECT)
+    return ConversationTypeEnum.DIRECT;
+
+  return undefined;
+}
+
 function formatLastMessagePreview(conversation: Conversation) {
   if (!conversation.lastMessageId) return conversation.lastMessage;
 
@@ -45,6 +50,11 @@ function formatLastMessagePreview(conversation: Conversation) {
       : conversation.lastMessageSenderName || "Unknown";
 
   return `${senderLabel}: ${conversation.lastMessage}`;
+}
+
+function formatUnreadCount(unreadCount: number) {
+  if (unreadCount > 99) return "99+";
+  return unreadCount.toString();
 }
 
 export function ConversationList({
@@ -67,7 +77,9 @@ export function ConversationList({
     isFetchingNextPage,
     isLoading,
     refetch,
-  } = useChatConversations(getConversationTypeFilter(conversationFilter));
+  } = useConversationsInfiniteQuery({
+    type: getConversationTypeFilter(conversationFilter),
+  });
 
   const visibleConversations = React.useMemo(() => {
     const normalizedSearchTerm = searchTerm.trim().toLowerCase();
@@ -181,6 +193,7 @@ export function ConversationList({
             itemContent={(_, conversation) => {
               const isActive = conversation.id === activeConversationId;
               const lastMessagePreview = formatLastMessagePreview(conversation);
+              const hasUnreadMessages = conversation.unreadCount > 0;
 
               return (
                 <div className="px-1 pt-2">
@@ -192,6 +205,9 @@ export function ConversationList({
                       isActive
                         ? "border-primary/70! bg-primary/10!"
                         : "border-border/80 bg-background",
+                      hasUnreadMessages &&
+                        !isActive &&
+                        "border-primary/50 bg-primary/5",
                     )}
                     aria-current={isActive ? "true" : undefined}
                     onClick={() => {
@@ -200,18 +216,43 @@ export function ConversationList({
                   >
                     <div className="flex items-start gap-3 min-h-12">
                       <ConversationAvatar conversation={conversation} />
-                      <div className="min-w-0 flex-1">
+                      <div className="min-w-0 flex-1 py-1">
                         <div className="flex items-center justify-between gap-3">
-                          <p className="m-0 truncate text-sm font-medium">
+                          <p
+                            className={cn(
+                              "m-0 truncate text-sm font-medium",
+                              hasUnreadMessages && "font-semibold",
+                            )}
+                          >
                             {conversation.title}
                           </p>
-                          <span className="text-[11px] text-muted-foreground">
-                            {formatTimestamp(conversation.lastMessageAt)}
-                          </span>
+                          <div className="flex shrink-0 items-center gap-2">
+                            <span
+                              className={cn(
+                                "text-[11px] text-muted-foreground",
+                                hasUnreadMessages && "font-medium text-primary",
+                              )}
+                            >
+                              {formatTimestamp(conversation.lastMessageAt)}
+                            </span>
+                          </div>
                         </div>
-                        <p className="m-0 mt-1 truncate text-xs text-muted-foreground">
-                          {lastMessagePreview}
-                        </p>
+                        <div className="flex items-center justify-between gap-3">
+                          <p
+                            className={cn(
+                              "m-0 mt-1 truncate text-xs text-muted-foreground",
+                              hasUnreadMessages &&
+                                "font-medium text-foreground",
+                            )}
+                          >
+                            {lastMessagePreview}
+                          </p>
+                          {hasUnreadMessages ? (
+                            <span className="inline-flex size-4 items-center justify-center rounded-full bg-primary px-1.5 text-[10px] font-semibold text-primary-foreground">
+                              {formatUnreadCount(conversation.unreadCount)}
+                            </span>
+                          ) : null}
+                        </div>
                       </div>
                     </div>
                   </button>

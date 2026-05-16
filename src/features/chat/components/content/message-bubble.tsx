@@ -1,3 +1,4 @@
+import { AlertCircle, Check, Clock3 } from "lucide-react";
 import type { Message } from "@/types/message";
 import { cn } from "@/utils/cn";
 import { formatTime } from "@/utils/date";
@@ -7,6 +8,33 @@ type MessageBubbleProps = {
   message: Message;
   showSenderName: boolean;
 };
+
+function MessageStatusLabel({ message }: { message: Message }) {
+  if (message.messageStatus === "sending") {
+    return (
+      <span className="inline-flex items-center gap-1">
+        <Clock3 className="size-3" />
+        Sending
+      </span>
+    );
+  }
+
+  if (message.messageStatus === "failed") {
+    return (
+      <span className="inline-flex items-center gap-1 text-destructive">
+        <AlertCircle className="size-3" />
+        Failed
+      </span>
+    );
+  }
+
+  return (
+    <span className="inline-flex items-center gap-1">
+      <Check className="size-3" />
+      Sent
+    </span>
+  );
+}
 
 export function MessageBubble({
   isOwnMessage,
@@ -36,11 +64,14 @@ export function MessageBubble({
         {message.content}
         <p
           className={cn(
-            "m-0 text-[10px]",
-            isOwnMessage ? "text-right text-white" : "text-muted-foreground",
+            "m-0 flex items-center gap-2 text-[10px]",
+            isOwnMessage
+              ? "justify-end text-white/85"
+              : "justify-start text-muted-foreground",
           )}
         >
-          {formatTime(message.createdAt)}
+          <span>{formatTime(message.createdAt)}</span>
+          {isOwnMessage ? <MessageStatusLabel message={message} /> : null}
         </p>
       </div>
     </div>

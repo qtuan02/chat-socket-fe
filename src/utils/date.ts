@@ -1,8 +1,10 @@
-const VIETNAM_LOCALE = "vi-VN";
-const VIETNAM_TIME_ZONE = "Asia/Ho_Chi_Minh";
-const ONE_DAY_IN_MS = 24 * 60 * 60 * 1000;
-const ONE_WEEK_IN_MS = 7 * ONE_DAY_IN_MS;
-const ONE_YEAR_IN_MS = 365 * ONE_DAY_IN_MS;
+import {
+  ONE_DAY_IN_MS,
+  ONE_WEEK_IN_MS,
+  ONE_YEAR_IN_MS,
+  VIETNAM_LOCALE,
+  VIETNAM_TIME_ZONE,
+} from "@/config/constant";
 
 const vietnamTimeFormatter = new Intl.DateTimeFormat(VIETNAM_LOCALE, {
   timeZone: VIETNAM_TIME_ZONE,
@@ -112,10 +114,5 @@ export const formatTime = (createdAt: string) => {
   const date = parseValidDate(createdAt);
   if (!date) return createdAt;
 
-  const now = new Date();
-  const diffInMs = now.getTime() - date.getTime();
-
-  if (diffInMs <= ONE_DAY_IN_MS) return vietnamTimeFormatter.format(date);
-
-  return vietnamDateTimeFormatter.format(date);
+  return vietnamTimeFormatter.format(date);
 };

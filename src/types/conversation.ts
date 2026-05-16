@@ -65,6 +65,14 @@ export interface Conversation {
   updatedAt: string;
 }
 
+export interface ConversationEvent {
+  eventType: "conversation.updated";
+  conversationId: string;
+  lastMessage: MessageDto;
+  lastMessageAt: string;
+  unreadCount: number;
+}
+
 export interface GetConversationsParams {
   limit?: number;
   cursor?: string;

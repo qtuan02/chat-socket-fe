@@ -6,6 +6,7 @@ import useAuthStore from "./useAuthStore";
 
 interface SocketStore {
   client: Client | null;
+  isConnected: boolean;
   isPresenceReady: boolean;
   onlineUsers: string[];
   connect: () => void;
@@ -14,6 +15,7 @@ interface SocketStore {
 
 export const useSocketStore = create<SocketStore>((set, get) => ({
   client: null,
+  isConnected: false,
   isPresenceReady: false,
   onlineUsers: [],
 
@@ -36,7 +38,7 @@ export const useSocketStore = create<SocketStore>((set, get) => ({
     set({ client });
 
     client.onConnect = () => {
-      set({ isPresenceReady: false });
+      set({ isConnected: true, isPresenceReady: false });
 
       const handleOnlineUsers = (message: IMessage) => {
         const onlineUsers = parseToJson<string[]>(message.body);
@@ -52,11 +54,15 @@ export const useSocketStore = create<SocketStore>((set, get) => ({
 
     client.onStompError = (frame) => {
       console.error("STOMP error:", frame.headers.message);
-      set({ isPresenceReady: false });
+      set({ isConnected: false, isPresenceReady: false });
+    };
+
+    client.onDisconnect = () => {
+      set({ isConnected: false, isPresenceReady: false, onlineUsers: [] });
     };
 
     client.onWebSocketClose = () => {
-      set({ isPresenceReady: false, onlineUsers: [] });
+      set({ isConnected: false, isPresenceReady: false, onlineUsers: [] });
     };
 
     client.activate();
@@ -67,7 +73,12 @@ export const useSocketStore = create<SocketStore>((set, get) => ({
 
     if (client) {
       void client.deactivate();
-      set({ client: null, isPresenceReady: false, onlineUsers: [] });
+      set({
+        client: null,
+        isConnected: false,
+        isPresenceReady: false,
+        onlineUsers: [],
+      });
     }
   },
 }));
