@@ -64,7 +64,7 @@ export function ChatCurrentUserSection({
   }
 
   return (
-    <section className={cn("w-full p-4", className)}>
+    <section className={cn("hidden w-full p-4 md:block", className)}>
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <CurrentUserTrigger

@@ -4,9 +4,13 @@ import type {
   UpdateUserRequestPayload,
   User,
   UserDto,
+  UserInfoDto,
+  UserInfoResponse,
+  UserItemData,
   UserResponse,
 } from "@/types/user";
 import { PresenceStatusEnum } from "@/types/user";
+import { getDisplayName } from "@/utils/user-display";
 
 function normalizePresenceStatus(rawStatus?: string): PresenceStatusEnum {
   if (!rawStatus) {
@@ -35,6 +39,21 @@ function toUserModel(dto: UserDto): User {
   };
 }
 
+function toUserInfoModel(dto: UserInfoDto): UserItemData {
+  return {
+    id: dto.id,
+    username: dto.username,
+    firstName: dto.firstName,
+    lastName: dto.lastName,
+    displayName: getDisplayName(dto),
+    email: dto.email,
+    avatarUrl: dto.avatarUrl,
+    bio: dto.bio,
+    phone: dto.phone,
+    joinedAt: dto.joinedAt,
+  };
+}
+
 export const userService = {
   getCurrentUserProfile: async () => {
     const response = await axiosClient.get<UserResponse>(
@@ -42,6 +61,19 @@ export const userService = {
     );
 
     return toUserModel(response.data.data);
+  },
+
+  getUserInfo: async (userId: string): Promise<UserItemData> => {
+    const response = await axiosClient.get<UserInfoResponse>(
+      `${APP_API.v1.base}${APP_API.v1.user.info}`,
+      {
+        params: {
+          userId,
+        },
+      },
+    );
+
+    return toUserInfoModel(response.data.data);
   },
 
   updateCurrentUserProfile: async (

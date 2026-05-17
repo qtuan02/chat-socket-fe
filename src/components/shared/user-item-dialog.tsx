@@ -7,6 +7,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { Skeleton } from "@/components/ui/skeleton";
 import type { UserItemData } from "@/types/user";
 import { formatDateTime } from "@/utils/date";
 import { getUsernameLabel } from "@/utils/user-display";
@@ -20,6 +21,9 @@ type UserItemDialogProps = {
   presenceStatusLabel: string | null;
   popupAction: UserItemPopupAction;
   actionButton: ReactNode;
+  dialogAction?: ReactNode;
+  isDetailLoading?: boolean;
+  detailErrorMessage?: string | null;
 };
 
 export function UserItemDialog({
@@ -30,8 +34,12 @@ export function UserItemDialog({
   presenceStatusLabel,
   popupAction,
   actionButton,
+  dialogAction,
+  isDetailLoading = false,
+  detailErrorMessage,
 }: UserItemDialogProps) {
   const usernameLabel = getUsernameLabel(user.username);
+  const hasMultipleActions = Boolean(actionButton && dialogAction);
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
@@ -44,25 +52,57 @@ export function UserItemDialog({
         </DialogHeader>
 
         <div className="grid gap-3">
-          <DetailField label="Username" value={usernameLabel} />
-          <DetailField label="Bio" value={user.bio} />
-          <DetailField label="Relationship" value={friendStatusLabel} />
-          {presenceStatusLabel ? (
-            <DetailField label="Presence" value={presenceStatusLabel} />
+          {isDetailLoading ? (
+            <div className="grid gap-2">
+              <Skeleton className="h-12 rounded-lg" />
+              <Skeleton className="h-12 rounded-lg" />
+              <Skeleton className="h-12 rounded-lg" />
+            </div>
+          ) : detailErrorMessage ? (
+            <p className="rounded-lg border border-destructive/30 bg-destructive/5 px-3 py-2 text-xs text-destructive">
+              {detailErrorMessage}
+            </p>
+          ) : (
+            <>
+              <DetailField label="Username" value={usernameLabel} />
+              {user.email ? (
+                <DetailField label="Email" value={user.email} />
+              ) : null}
+              {user.phone ? (
+                <DetailField label="Phone" value={user.phone} />
+              ) : null}
+              <DetailField label="Bio" value={user.bio} />
+              <DetailField label="Relationship" value={friendStatusLabel} />
+              {presenceStatusLabel ? (
+                <DetailField label="Presence" value={presenceStatusLabel} />
+              ) : null}
+              <DetailField
+                label="Additional info"
+                value={
+                  <span className="inline-flex items-center gap-2">
+                    {popupAction.icon}
+                    <span>{popupAction.label}</span>
+                  </span>
+                }
+              />
+              {user.joinedAt ? (
+                <DetailField
+                  label="Joined"
+                  value={formatDateTime(user.joinedAt)}
+                />
+              ) : null}
+            </>
+          )}
+          {actionButton || dialogAction ? (
+            <div
+              className={
+                hasMultipleActions ? "grid gap-2 pt-1 sm:grid-cols-2" : "pt-1"
+              }
+            >
+              {dialogAction}
+              {actionButton}
+            </div>
           ) : null}
-          <DetailField
-            label="Additional info"
-            value={
-              <span className="inline-flex items-center gap-2">
-                {popupAction.icon}
-                <span>{popupAction.label}</span>
-              </span>
-            }
-          />
-          {user.joinedAt ? (
-            <DetailField label="Joined" value={formatDateTime(user.joinedAt)} />
-          ) : null}
-          {actionButton ? <div className="pt-1">{actionButton}</div> : null}
         </div>
       </DialogContent>
     </Dialog>

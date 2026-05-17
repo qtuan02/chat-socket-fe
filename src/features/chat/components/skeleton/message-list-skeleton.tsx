@@ -19,7 +19,7 @@ export function MessageListSkeleton({ className }: MessageListSkeletonProps) {
   return (
     <section
       className={cn(
-        "flex min-h-0 flex-1 flex-col justify-end overflow-hidden p-4",
+        "flex min-h-0 flex-1 flex-col justify-end overflow-hidden overflow-x-hidden p-2.5 md:p-4",
         className,
       )}
     >

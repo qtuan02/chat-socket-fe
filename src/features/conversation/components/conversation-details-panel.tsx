@@ -1,4 +1,4 @@
-import { BadgeCheck, LogOut, PencilLine, UserPlus } from "lucide-react";
+import { LogOut, PencilLine, UserPlus } from "lucide-react";
 import * as React from "react";
 import { Button } from "@/components/ui/button";
 import {
@@ -23,6 +23,7 @@ type ConversationDetailsPanelProps = {
   className?: string;
   conversation: Conversation;
   open: boolean;
+  onClose?: () => void;
   isRenameGroupSubmitting?: boolean;
   isAddMembersSubmitting?: boolean;
   isLeaveGroupSubmitting?: boolean;
@@ -49,6 +50,7 @@ export function ConversationDetailsPanel({
   onAddMembers,
   onLeaveGroup,
   onRemoveMember,
+  onClose,
 }: ConversationDetailsPanelProps) {
   const isGroup = conversation.type === ConversationTypeEnum.GROUP;
   const members = conversation.members;
@@ -106,7 +108,7 @@ export function ConversationDetailsPanel({
   return (
     <aside
       className={cn(
-        "fixed inset-y-0 right-0 z-40 flex w-[min(88vw,24rem)] min-w-0 flex-col border-l border-border bg-background shadow-lg transition-[transform] duration-300",
+        "fixed inset-y-0 right-0 z-40 flex w-[min(88vw,24rem)] min-w-0 flex-col overflow-y-auto border-l border-border bg-background pb-20 shadow-lg transition-[transform] duration-300 md:overflow-auto md:pb-0",
         "translate-x-full pointer-events-none md:static md:z-auto md:w-80 md:min-h-0 md:max-h-full md:translate-x-0 md:shadow-none",
         open ? "translate-x-0 pointer-events-auto" : "",
         open ? "md:flex" : "md:hidden",
@@ -115,83 +117,74 @@ export function ConversationDetailsPanel({
       aria-hidden={!open}
       aria-label="Conversation details"
     >
-      <ConversationDetailsPanelHeader
-        isGroup={isGroup}
-        participantCount={conversation.participantCount}
-        lastActivityLabel={lastActivityLabel}
-        unreadMessages={conversation.unreadCount}
-      />
+      <div className="min-h-0 flex-1">
+        <ConversationDetailsPanelHeader
+          isGroup={isGroup}
+          participantCount={conversation.participantCount}
+          lastActivityLabel={lastActivityLabel}
+          unreadMessages={conversation.unreadCount}
+          onClose={onClose}
+        />
 
-      <div className="px-4 py-4">
-        <section className="grid gap-3">
-          {isGroup || !directMember ? null : (
-            <ConversationDirectMemberCard member={directMember} />
-          )}
+        <div className="px-4 py-4">
+          <section className="grid gap-3">
+            {isGroup || !directMember ? null : (
+              <ConversationDirectMemberCard member={directMember} />
+            )}
 
-          {isGroup ? (
-            <section className="grid gap-2">
-              <p className="text-xs uppercase tracking-wide text-muted-foreground">
-                Group actions
-              </p>
-              <div className="grid gap-2 sm:grid-cols-2">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => {
-                    setIsRenameOpen(true);
-                  }}
-                >
-                  <PencilLine className="size-4" />
-                  Rename group
-                </Button>
+            {isGroup ? (
+              <section className="grid gap-2">
+                <p className="text-xs uppercase tracking-wide text-muted-foreground">
+                  Group actions
+                </p>
+                <div className="grid gap-2 sm:grid-cols-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => {
+                      setIsRenameOpen(true);
+                    }}
+                  >
+                    <PencilLine className="size-4" />
+                    Rename group
+                  </Button>
 
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => {
-                    setIsAddMembersOpen(true);
-                  }}
-                >
-                  <UserPlus className="size-4" />
-                  Add members
-                </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => {
+                      setIsAddMembersOpen(true);
+                    }}
+                  >
+                    <UserPlus className="size-4" />
+                    Add members
+                  </Button>
 
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={handleLeaveGroup}
-                  disabled={isLeaveGroupSubmitting}
-                  className="sm:col-span-2 border-destructive/40 text-destructive hover:bg-destructive/10 hover:text-destructive sm:justify-center"
-                >
-                  <LogOut className="size-4" />
-                  {isLeaveGroupSubmitting ? "Leaving..." : "Leave group"}
-                </Button>
-              </div>
-            </section>
-          ) : null}
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={handleLeaveGroup}
+                    disabled={isLeaveGroupSubmitting}
+                    className="sm:col-span-2 border-destructive/40 text-destructive hover:bg-destructive/10 hover:text-destructive sm:justify-center"
+                  >
+                    <LogOut className="size-4" />
+                    {isLeaveGroupSubmitting ? "Leaving..." : "Leave group"}
+                  </Button>
+                </div>
+              </section>
+            ) : null}
 
-          <ConversationMembersSection
-            isGroup={isGroup}
-            members={members}
-            isCurrentUserAdmin={isCurrentUserAdmin}
-            currentUserId={conversation.currentUserId}
-            removingMemberId={removingMemberId}
-            onSendFriendRequest={onSendFriendRequest}
-            sendingFriendRequestId={sendingFriendRequestId}
-            onRemoveMember={handleRemoveMember}
-          />
-        </section>
-      </div>
-
-      <div className="border-t border-border px-4 py-3">
-        <div className="rounded-lg border border-dashed border-border bg-muted/40 px-3 py-2">
-          <p className="text-xs text-muted-foreground">Conversation health</p>
-          <p className="mt-1 inline-flex items-center gap-2 text-sm font-medium">
-            <BadgeCheck className="size-4 text-emerald-500" />
-            {isGroup
-              ? "Active and ready for new messages"
-              : "Direct channel is available"}
-          </p>
+            <ConversationMembersSection
+              isGroup={isGroup}
+              members={members}
+              isCurrentUserAdmin={isCurrentUserAdmin}
+              currentUserId={conversation.currentUserId}
+              removingMemberId={removingMemberId}
+              onSendFriendRequest={onSendFriendRequest}
+              sendingFriendRequestId={sendingFriendRequestId}
+              onRemoveMember={handleRemoveMember}
+            />
+          </section>
         </div>
       </div>
 

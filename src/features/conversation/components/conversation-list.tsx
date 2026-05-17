@@ -331,7 +331,7 @@ export function ConversationList({
       </div>
 
       {isFriendSearchOpen ? (
-        <div ref={friendSearchRef} className="min-h-0 flex-1 px-4 py-4">
+        <div ref={friendSearchRef} className="min-h-0 flex-1 p-3 md:p-4">
           <FriendSearchPanel
             conversationIdByFriendId={conversationIdByFriendId}
             onBack={handleCloseFriendSearch}
@@ -340,7 +340,7 @@ export function ConversationList({
         </div>
       ) : (
         <>
-          <div className="px-4 pt-4">
+          <div className="md:px-4 md:pt-4 px-3 pt-3">
             <label
               className="mb-4 block"
               htmlFor={`conversation-search-${searchInputId}`}
@@ -370,7 +370,7 @@ export function ConversationList({
             />
           </div>
 
-          <div className="min-h-0 flex-1 overflow-hidden px-4 py-4">
+          <div className="min-h-0 flex-1 overflow-hidden p-3 md:p-4">
             {isLoading && <ConversationListSkeleton />}
 
             {isError && (

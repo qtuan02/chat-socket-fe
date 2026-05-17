@@ -42,7 +42,7 @@ function MessageComposerActions({
   content: string;
 }) {
   return (
-    <form className="space-y-3" onSubmit={handleFormSubmit}>
+    <form className="space-y-1 md:space-y-3" onSubmit={handleFormSubmit}>
       <div className="relative">
         <textarea
           ref={textareaRef}
@@ -75,14 +75,57 @@ function MessageComposerActions({
               <Smile className="size-4" />
               <span className="sr-only">Emoji</span>
             </Button>
-            {isEmojiPickerOpen ? (
+            {isEmojiPickerOpen && (
               <div
                 ref={pickerRef}
-                className="absolute bottom-full left-0 z-20 mb-2 rounded-lg border border-border bg-background p-1 shadow-lg"
+                className={cn(
+                  "fixed inset-0 z-50 flex items-end justify-center bg-black/50 p-3",
+                  "md:absolute md:inset-auto md:bottom-full md:left-0 md:mb-2 md:block md:bg-transparent md:p-0",
+                )}
+                onPointerDown={handleEmojiButtonClick}
               >
-                <Picker data={data} onEmojiSelect={insertEmoji} theme="light" />
+                <div
+                  className={cn(
+                    "w-full max-w-md overflow-hidden rounded-t-2xl bg-background p-2 shadow-lg",
+                    "[&_em-emoji-picker]:h-[min(70dvh,24rem)] [&_em-emoji-picker]:w-full [&_em-emoji-picker]:max-w-full",
+                    "md:w-[352px] md:rounded-lg md:border md:border-border md:p-0 md:[&_em-emoji-picker]:h-[435px]",
+                  )}
+                  onPointerDown={(event) => {
+                    event.stopPropagation();
+                  }}
+                >
+                  <div className="md:hidden">
+                    <Picker
+                      data={data}
+                      dynamicWidth
+                      emojiButtonSize={34}
+                      emojiSize={22}
+                      maxFrequentRows={2}
+                      onEmojiSelect={insertEmoji}
+                      previewPosition="none"
+                      skinTonePosition="none"
+                      theme="light"
+                    />
+                  </div>
+                  <div className="hidden md:block">
+                    <Picker
+                      data={data}
+                      onEmojiSelect={insertEmoji}
+                      theme="light"
+                    />
+                  </div>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    className="mt-2 w-full md:hidden"
+                    onClick={handleEmojiButtonClick}
+                  >
+                    Close
+                  </Button>
+                </div>
               </div>
-            ) : null}
+            )}
           </div>
         </div>
         <Button type="submit" variant="default" disabled={isSendBlocked}>
@@ -102,7 +145,7 @@ export function MessageComposer({
   const composer = useMessageComposer({ conversation, onMessageSent });
 
   return (
-    <div className={cn("border-t border-border p-4", className)}>
+    <div className={cn("border-t border-border p-3 pb-1 md:p-4", className)}>
       <MessageComposerActions {...composer} />
     </div>
   );

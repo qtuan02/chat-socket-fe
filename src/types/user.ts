@@ -43,13 +43,22 @@ export type UserItemData = Pick<UserIdentity, "id"> & {
   username?: UserIdentity["username"];
   firstName?: UserIdentity["firstName"];
   lastName?: UserIdentity["lastName"];
+  email?: string;
   avatarUrl?: UserIdentity["avatarUrl"];
   bio?: UserIdentity["bio"];
+  phone?: string;
   joinedAt?: string;
   presenceStatus?: PresenceStatusEnum;
 };
 
+export interface UserInfoDto extends UserIdentity {
+  email?: string;
+  phone?: string;
+  joinedAt: string;
+}
+
 export type UserResponse = BaseResponse<User>;
+export type UserInfoResponse = BaseResponse<UserInfoDto>;
 
 export type UpdateUserRequestPayload = {
   username?: string;
