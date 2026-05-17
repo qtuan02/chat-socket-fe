@@ -3,6 +3,7 @@ import * as React from "react";
 import { useNavigate } from "react-router";
 import { toast } from "sonner";
 import { APP_ROUTES } from "@/config/routes";
+import { useConversationsInfiniteQuery } from "@/hooks/api/conversation";
 import {
   friendQueryKeys,
   friendRequestQueryKeys,
@@ -16,6 +17,10 @@ import {
   useSendFriendRequestMutation,
 } from "@/hooks/api/friend";
 import { currentUserQueryKeys, useUserInfoQuery } from "@/hooks/api/user";
+import {
+  type ConversationPage,
+  ConversationTypeEnum,
+} from "@/types/conversation";
 import type { Friend, FriendSearchResult } from "@/types/friend";
 
 type AddFriendDialogState = {
@@ -24,6 +29,31 @@ type AddFriendDialogState = {
   lastSearchTerm: string;
   results: FriendSearchResult[];
 };
+
+function findDirectConversationIdByFriendId(
+  data: { pages: Array<ConversationPage> } | undefined,
+  friendId: string,
+) {
+  for (const page of data?.pages ?? []) {
+    const conversation = page.items.find(
+      (item) =>
+        item.type === ConversationTypeEnum.DIRECT &&
+        (item.directUserAId === friendId || item.directUserBId === friendId),
+    );
+
+    if (conversation) return conversation.id;
+  }
+
+  return null;
+}
+
+function hasMoreDirectConversationPages(
+  data: { pages: Array<ConversationPage> } | undefined,
+) {
+  const lastPage = data?.pages[data.pages.length - 1];
+
+  return Boolean(lastPage?.nextCursor);
+}
 
 export function useFriendsTemplate() {
   const queryClient = useQueryClient();
@@ -49,6 +79,15 @@ export function useFriendsTemplate() {
       results: [],
     });
   const friendsQuery = useFriendsQuery();
+  const {
+    data: directConversationPages,
+    fetchNextPage: fetchNextDirectConversationsPage,
+    isLoading: isDirectConversationsLoading,
+    refetch: refetchDirectConversations,
+  } = useConversationsInfiniteQuery({
+    type: ConversationTypeEnum.DIRECT,
+    limit: 100,
+  });
   const friendInfoQuery = useUserInfoQuery(selectedFriendInfoId);
   const friendRequestsQuery = useFriendRequestsQuery();
 
@@ -284,12 +323,61 @@ export function useFriendsTemplate() {
   );
 
   const handleMessageFriend = React.useCallback(
-    (friend: Friend) => {
+    async (friend: Friend) => {
+      let conversationPages = directConversationPages;
+      let existingConversationId = findDirectConversationIdByFriendId(
+        conversationPages,
+        friend.id,
+      );
+
+      if (existingConversationId) {
+        navigate(APP_ROUTES.conversationById(existingConversationId));
+        return;
+      }
+
+      if (!conversationPages || isDirectConversationsLoading) {
+        const result = await refetchDirectConversations();
+        conversationPages = result.data;
+        existingConversationId = findDirectConversationIdByFriendId(
+          conversationPages,
+          friend.id,
+        );
+
+        if (existingConversationId) {
+          navigate(APP_ROUTES.conversationById(existingConversationId));
+          return;
+        }
+      }
+
+      let hasNextPage = hasMoreDirectConversationPages(conversationPages);
+
+      while (hasNextPage) {
+        const result = await fetchNextDirectConversationsPage();
+        conversationPages = result.data;
+        existingConversationId = findDirectConversationIdByFriendId(
+          conversationPages,
+          friend.id,
+        );
+
+        if (existingConversationId) {
+          navigate(APP_ROUTES.conversationById(existingConversationId));
+          return;
+        }
+
+        hasNextPage = hasMoreDirectConversationPages(conversationPages);
+      }
+
       navigate(APP_ROUTES.chat, {
         state: { directMessageDraftFriend: friend },
       });
     },
-    [navigate],
+    [
+      directConversationPages,
+      fetchNextDirectConversationsPage,
+      isDirectConversationsLoading,
+      navigate,
+      refetchDirectConversations,
+    ],
   );
 
   return {
