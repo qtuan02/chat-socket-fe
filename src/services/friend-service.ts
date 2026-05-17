@@ -23,7 +23,7 @@ import type {
 } from "@/types/friend";
 import { FriendRelationshipStatusEnum } from "@/types/friend-status";
 import { PresenceStatusEnum } from "@/types/user";
-import { getDisplayName } from "@/utils/user-display";
+import { getDisplayName } from "@/utils/display";
 
 const statusAliasByNormalizedValue: Record<
   string,

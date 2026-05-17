@@ -1,6 +1,8 @@
-import { LogOut, PencilLine, UserPlus } from "lucide-react";
 import * as React from "react";
-import { Button } from "@/components/ui/button";
+import { AddGroupMembersDialog } from "@/features/group/components/add-group-members-dialog";
+import { GroupConversationActions } from "@/features/group/components/group-conversation-actions";
+import { GroupMembersSection } from "@/features/group/components/group-members-section";
+import { RenameGroupDialog } from "@/features/group/components/rename-group-dialog";
 import {
   type Conversation,
   ConversationTypeEnum,
@@ -12,12 +14,9 @@ import { formatDateTime } from "@/utils/date";
 import {
   getConversationActivityAt,
   getDirectConversationMember,
-} from "../utils/conversation-display";
-import { AddGroupMembersDialog } from "./add-group-members-dialog";
+} from "@/utils/display";
 import { ConversationDetailsPanelHeader } from "./conversation-details-panel-header";
 import { ConversationDirectMemberCard } from "./conversation-direct-member-card";
-import { ConversationMembersSection } from "./conversation-members-section";
-import { RenameGroupDialog } from "./rename-group-dialog";
 
 type ConversationDetailsPanelProps = {
   className?: string;
@@ -133,57 +132,29 @@ export function ConversationDetailsPanel({
             )}
 
             {isGroup ? (
-              <section className="grid gap-2">
-                <p className="text-xs uppercase tracking-wide text-muted-foreground">
-                  Group actions
-                </p>
-                <div className="grid gap-2 sm:grid-cols-2">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => {
-                      setIsRenameOpen(true);
-                    }}
-                  >
-                    <PencilLine className="size-4" />
-                    Rename group
-                  </Button>
-
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => {
-                      setIsAddMembersOpen(true);
-                    }}
-                  >
-                    <UserPlus className="size-4" />
-                    Add members
-                  </Button>
-
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={handleLeaveGroup}
-                    disabled={isLeaveGroupSubmitting}
-                    className="sm:col-span-2 border-destructive/40 text-destructive hover:bg-destructive/10 hover:text-destructive sm:justify-center"
-                  >
-                    <LogOut className="size-4" />
-                    {isLeaveGroupSubmitting ? "Leaving..." : "Leave group"}
-                  </Button>
-                </div>
-              </section>
+              <GroupConversationActions
+                isLeaveGroupSubmitting={Boolean(isLeaveGroupSubmitting)}
+                onAddMembersClick={() => {
+                  setIsAddMembersOpen(true);
+                }}
+                onLeaveGroupClick={handleLeaveGroup}
+                onRenameGroupClick={() => {
+                  setIsRenameOpen(true);
+                }}
+              />
             ) : null}
 
-            <ConversationMembersSection
-              isGroup={isGroup}
-              members={members}
-              isCurrentUserAdmin={isCurrentUserAdmin}
-              currentUserId={conversation.currentUserId}
-              removingMemberId={removingMemberId}
-              onSendFriendRequest={onSendFriendRequest}
-              sendingFriendRequestId={sendingFriendRequestId}
-              onRemoveMember={handleRemoveMember}
-            />
+            {isGroup ? (
+              <GroupMembersSection
+                members={members}
+                isCurrentUserAdmin={isCurrentUserAdmin}
+                currentUserId={conversation.currentUserId}
+                removingMemberId={removingMemberId}
+                onSendFriendRequest={onSendFriendRequest}
+                sendingFriendRequestId={sendingFriendRequestId}
+                onRemoveMember={handleRemoveMember}
+              />
+            ) : null}
           </section>
         </div>
       </div>

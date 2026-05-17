@@ -3,6 +3,7 @@ import Picker from "@emoji-mart/react";
 import { Send, Smile } from "lucide-react";
 import type * as React from "react";
 import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
 import { useMessageComposer } from "@/features/chat/hooks/use-message-composer";
 import type { Conversation } from "@/types/conversation";
 import type { MessageDto } from "@/types/message";
@@ -44,7 +45,7 @@ function MessageComposerActions({
   return (
     <form className="space-y-1 md:space-y-3" onSubmit={handleFormSubmit}>
       <div className="relative">
-        <textarea
+        <Textarea
           ref={textareaRef}
           value={content}
           onChange={(event) => {
@@ -54,7 +55,7 @@ function MessageComposerActions({
           rows={3}
           aria-label="Message composer"
           placeholder="Type a message..."
-          className="w-full min-h-20 resize-none rounded-md border border-input bg-muted/20 px-3 py-2 text-sm shadow-sm outline-none ring-0 transition"
+          className="min-h-20 resize-none bg-muted/20 text-sm"
         />
       </div>
       <div className="flex items-center justify-between gap-2">

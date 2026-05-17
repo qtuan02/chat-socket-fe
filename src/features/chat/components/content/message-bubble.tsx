@@ -1,4 +1,5 @@
 import { AlertCircle, Check, Clock3 } from "lucide-react";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import type { ConversationMember } from "@/types/conversation";
 import {
   type Message,
@@ -7,7 +8,7 @@ import {
 } from "@/types/message";
 import { cn } from "@/utils/cn";
 import { formatTime } from "@/utils/date";
-import { getDisplayNameInitials } from "@/utils/user-display";
+import { getDisplayNameInitials } from "@/utils/display";
 
 type MessageBubbleProps = {
   isOwnMessage: boolean;
@@ -53,25 +54,26 @@ function ReaderAvatar({
   className?: string;
 }) {
   return (
-    <span
+    <Avatar
       aria-label={member.displayName}
       className={cn(
-        "inline-flex size-4 shrink-0 items-center justify-center overflow-hidden rounded-full border border-background bg-muted text-[8px] font-semibold leading-none text-muted-foreground",
+        "size-4 border border-background bg-muted text-[8px] font-semibold leading-none text-muted-foreground",
         className,
       )}
       role="img"
       title={member.displayName}
     >
       {member.avatarUrl ? (
-        <img
+        <AvatarImage
           alt={member.displayName}
-          className="size-full rounded-full object-cover"
+          className="object-cover"
           src={member.avatarUrl}
         />
-      ) : (
-        getDisplayNameInitials(member.displayName)
-      )}
-    </span>
+      ) : null}
+      <AvatarFallback className="text-[8px] font-semibold leading-none">
+        {getDisplayNameInitials(member.displayName)}
+      </AvatarFallback>
+    </Avatar>
   );
 }
 

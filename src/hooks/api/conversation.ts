@@ -35,6 +35,7 @@ type ConversationInfiniteData = InfiniteData<
 >;
 
 type ConversationUpdateOptions = {
+  refetchMissingConversation?: boolean;
   unreadCount?: number;
 };
 
@@ -60,7 +61,6 @@ function mapConversationToUiModel(
   conversation: ConversationDto,
   currentUserId: string,
   onlineUserIds: ReadonlySet<string>,
-  isPresenceReady: boolean,
 ): Conversation {
   const members: ConversationMember[] = conversation.participants.map(
     (participant) => ({
@@ -77,11 +77,9 @@ function mapConversationToUiModel(
       username: participant.username ?? undefined,
       avatarUrl: participant.avatarUrl ?? undefined,
       bio: participant.bio,
-      presenceStatus: isPresenceReady
-        ? onlineUserIds.has(participant.userId)
-          ? PresenceStatusEnum.Online
-          : PresenceStatusEnum.Offline
-        : PresenceStatusEnum.Checking,
+      presenceStatus: onlineUserIds.has(participant.userId)
+        ? PresenceStatusEnum.Online
+        : PresenceStatusEnum.Offline,
       role: participant.role,
       joinedAt: participant.joinedAt,
       lastReadMessageId: participant.lastReadMessageId ?? null,
@@ -119,11 +117,9 @@ function mapConversationToUiModel(
       isGroup || !otherParticipant?.avatarUrl
         ? undefined
         : otherParticipant.avatarUrl,
-    onlineUsersCount: isPresenceReady
-      ? members.filter(
-          (member) => member.presenceStatus === PresenceStatusEnum.Online,
-        ).length
-      : undefined,
+    onlineUsersCount: members.filter(
+      (member) => member.presenceStatus === PresenceStatusEnum.Online,
+    ).length,
     updatedAt: conversation.updatedAt,
   };
 }
@@ -186,6 +182,7 @@ function upsertConversationInPages(
       didProcess = true;
 
       if (replacementIsPresent) {
+        if (replacement !== conversation) hasChanges = true;
         items.push(replacement);
       }
     }
@@ -364,7 +361,11 @@ export function applyConversationUpdateToCache(
     (data) => updateConversationFromEvent(data, event, options),
   );
 
-  if (!hasLoadedConversation && hasLoadedConversationQueries) {
+  if (
+    options.refetchMissingConversation !== false &&
+    !hasLoadedConversation &&
+    hasLoadedConversationQueries
+  ) {
     void queryClient.invalidateQueries({
       queryKey: conversationQueryKeys.lists(),
     });
@@ -405,7 +406,6 @@ export function useConversationsInfiniteQuery(
 ) {
   const { type, limit = CONVERSATIONS_DEFAULT_LIMIT } = params;
   const { data: currentUser } = useCurrentUserQuery();
-  const isPresenceReady = useSocketStore((state) => state.isPresenceReady);
   const onlineUsers = useSocketStore((state) => state.onlineUsers);
   const onlineUserIds = React.useMemo(
     () => new Set(onlineUsers),
@@ -442,12 +442,11 @@ export function useConversationsInfiniteQuery(
             conversation,
             currentUser?.id ?? "",
             onlineUserIds,
-            isPresenceReady,
           ),
         ),
       ) ?? []
     );
-  }, [currentUser?.id, isPresenceReady, onlineUserIds, query.data?.pages]);
+  }, [currentUser?.id, onlineUserIds, query.data?.pages]);
 
   return {
     ...query,

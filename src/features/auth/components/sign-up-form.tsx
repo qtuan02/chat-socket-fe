@@ -1,7 +1,10 @@
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useQueryClient } from "@tanstack/react-query";
 import { Loader2 } from "lucide-react";
+import { useState } from "react";
 import { type SubmitHandler, useForm } from "react-hook-form";
-import { Link } from "react-router";
+import { Link, useNavigate } from "react-router";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import {
   Field,
@@ -12,7 +15,8 @@ import {
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { APP_ROUTES } from "@/config/routes";
-import { useSignUpMutation } from "@/hooks/api/auth";
+import { useSignInMutation, useSignUpMutation } from "@/hooks/api/auth";
+import useAuthStore from "@/stores/useAuthStore";
 import { cn } from "@/utils/cn";
 import { getErrorMessage } from "@/utils/error";
 import { type SignUpFormValues, signUpFormSchema } from "../types/sign-up-form";
@@ -21,9 +25,37 @@ type SignUpFormProps = {
   className?: string;
 };
 
+type CreatedCredentials = Pick<SignUpFormValues, "username" | "password">;
+
 export function SignUpForm({ className }: SignUpFormProps) {
-  const { isError, error, isPending, isSuccess, mutateAsync } =
-    useSignUpMutation();
+  const navigate = useNavigate();
+  const queryClient = useQueryClient();
+  const { setAccessToken } = useAuthStore();
+  const [createdCredentials, setCreatedCredentials] =
+    useState<CreatedCredentials | null>(null);
+
+  const {
+    isError: isSignUpError,
+    error: signUpError,
+    isPending: isSignUpPending,
+    isSuccess: isSignUpSuccess,
+    mutateAsync: signUp,
+  } = useSignUpMutation();
+
+  const {
+    isError: isSignInError,
+    error: signInError,
+    isPending: isSignInPending,
+    mutateAsync: signIn,
+  } = useSignInMutation({
+    onSuccess: (data) => {
+      queryClient.clear();
+      setCreatedCredentials(null);
+      setAccessToken(data.data.accessToken);
+      toast.success(data?.message || "Sign in successful.");
+      navigate(APP_ROUTES.chat, { replace: true });
+    },
+  });
 
   const {
     handleSubmit,
@@ -41,13 +73,28 @@ export function SignUpForm({ className }: SignUpFormProps) {
   });
 
   const onSubmit: SubmitHandler<SignUpFormValues> = async (values) => {
-    await mutateAsync(values);
+    await signUp(values);
+    setCreatedCredentials({
+      username: values.username,
+      password: values.password,
+    });
   };
-  const submitError = isError
-    ? getErrorMessage(error, "Unable to sign up. Please try again.")
+
+  const submitError = isSignUpError
+    ? getErrorMessage(signUpError, "Unable to sign up. Please try again.")
     : null;
 
-  if (isSuccess) {
+  const signInSubmitError = isSignInError
+    ? getErrorMessage(signInError, "Unable to sign in. Please try again.")
+    : null;
+
+  const handleAutoSignIn = () => {
+    if (!createdCredentials) return;
+
+    void signIn(createdCredentials).catch(() => undefined);
+  };
+
+  if (isSignUpSuccess && createdCredentials) {
     return (
       <div
         className={cn(
@@ -59,8 +106,33 @@ export function SignUpForm({ className }: SignUpFormProps) {
         <p className="text-balance text-muted-foreground">
           Your account has been created successfully. You can sign in now.
         </p>
-        <Button asChild className="w-full max-w-sm">
-          <Link to={APP_ROUTES.signIn}>Go to sign in</Link>
+        <div className="flex w-full max-w-md flex-col gap-3 rounded-lg border bg-muted/40 p-4 text-left sm:flex-row sm:items-center sm:justify-between">
+          <p className="text-sm font-medium text-foreground">
+            Would you like to sign in now?
+          </p>
+          <Button
+            type="button"
+            disabled={isSignInPending}
+            onClick={handleAutoSignIn}
+            className="sm:w-auto"
+          >
+            {isSignInPending ? (
+              <>
+                <Loader2 className="size-4 animate-spin" />
+                Signing in...
+              </>
+            ) : (
+              "Yes, sign in"
+            )}
+          </Button>
+        </div>
+        {signInSubmitError ? (
+          <p role="alert" className="text-sm font-medium text-destructive">
+            {signInSubmitError}
+          </p>
+        ) : null}
+        <Button asChild variant="link" className="h-auto p-0">
+          <Link to={APP_ROUTES.signIn}>Go to sign in instead</Link>
         </Button>
       </div>
     );
@@ -173,8 +245,12 @@ export function SignUpForm({ className }: SignUpFormProps) {
           />
         </Field>
 
-        <Button type="submit" disabled={isPending} className="w-full mt-4">
-          {isPending ? (
+        <Button
+          type="submit"
+          disabled={isSignUpPending}
+          className="w-full mt-4"
+        >
+          {isSignUpPending ? (
             <>
               <Loader2 className="size-4 animate-spin" />
               Creating account...

@@ -4,61 +4,61 @@ import { FriendsSection } from "../components/friends-section";
 import { useFriendsTemplate } from "../hooks/use-friends-template";
 
 export function FriendsTemplate() {
-  const friendsState = useFriendsTemplate();
+  const { addFriend, friendDetails, friends, requests } = useFriendsTemplate();
 
   return (
     <section className="flex min-h-0 flex-1 flex-col overflow-y-auto overflow-x-hidden bg-muted/50 md:pb-0 md:overflow-hidden">
       <section className="mx-auto flex min-h-0 flex-1 w-full max-w-5xl flex-col gap-4 p-3 md:p-6">
         <div className="grid min-h-0 flex-1 gap-4 md:gap-5 h-full">
           <FriendRequestSection
-            isLoading={friendsState.isRequestsLoading}
-            isError={friendsState.isFriendRequestsError}
-            error={friendsState.friendRequestsError}
-            receivedRequests={friendsState.receivedRequests}
-            sentRequests={friendsState.sentRequests}
-            processingRequestId={friendsState.processingRequestId}
-            onAccept={friendsState.handleAcceptFriendRequest}
-            onDecline={friendsState.handleDeclineFriendRequest}
-            onCancelSentRequest={friendsState.handleCancelFriendRequest}
+            isLoading={requests.isLoading}
+            isError={requests.isError}
+            error={requests.error}
+            receivedRequests={requests.received}
+            sentRequests={requests.sent}
+            processingRequestId={requests.processingRequestId}
+            onAccept={requests.accept}
+            onDecline={requests.decline}
+            onCancelSentRequest={requests.cancel}
             onRetry={() => {
-              void friendsState.refetchFriendRequests();
+              void requests.refetch();
             }}
           />
 
           <FriendsSection
-            isLoading={friendsState.isFriendsLoading}
-            isError={friendsState.isFriendsError}
-            error={friendsState.friendsError}
-            friendInfoError={friendsState.friendInfoError}
-            friends={friendsState.friends}
-            selectedFriendInfo={friendsState.selectedFriendInfo}
-            selectedFriendInfoId={friendsState.selectedFriendInfoId}
-            searchTerm={friendsState.friendSearchTerm}
-            onSearchChange={friendsState.setFriendSearchTerm}
+            isLoading={friends.isLoading}
+            isError={friends.isError}
+            error={friends.error}
+            friendInfoError={friendDetails.error}
+            friends={friends.items}
+            selectedFriendInfo={friendDetails.selectedFriendInfo}
+            selectedFriendInfoId={friendDetails.selectedFriendInfoId}
+            searchTerm={friends.searchTerm}
+            onSearchChange={friends.setSearchTerm}
             onRetry={() => {
-              void friendsState.refetchFriends();
+              void friends.refetch();
             }}
-            processingFriendId={friendsState.processingFriendId}
-            isFriendInfoLoading={friendsState.isFriendInfoLoading}
-            onOpenFriendDetails={friendsState.handleOpenFriendDetails}
-            onMessageFriend={friendsState.handleMessageFriend}
-            onUnfriend={friendsState.handleUnfriend}
-            onAddFriend={friendsState.handleOpenAddFriend}
+            processingFriendId={friendDetails.processingFriendId}
+            isFriendInfoLoading={friendDetails.isLoading}
+            onOpenFriendDetails={friendDetails.open}
+            onMessageFriend={friendDetails.message}
+            onUnfriend={friendDetails.unfriend}
+            onAddFriend={addFriend.open}
           />
         </div>
       </section>
       <AddFriendDialog
-        isOpen={friendsState.addFriendDialogState.isOpen}
-        hasSearched={friendsState.addFriendDialogState.hasSearched}
-        isSearching={friendsState.searching}
-        isSendingRequest={friendsState.sendingRequest}
-        lastSearchTerm={friendsState.addFriendDialogState.lastSearchTerm}
-        searchError={friendsState.searchError}
-        searchResults={friendsState.addFriendDialogState.results}
-        sendingFriendId={friendsState.sendingFriendId}
-        onOpenChange={friendsState.handleCloseAddFriend}
-        onSearch={friendsState.handleSearchUser}
-        onSendRequest={friendsState.handleSendFriendRequest}
+        isOpen={addFriend.state.isOpen}
+        hasSearched={addFriend.state.hasSearched}
+        isSearching={addFriend.isSearching}
+        isSendingRequest={addFriend.isSendingRequest}
+        lastSearchTerm={addFriend.state.lastSearchTerm}
+        searchError={addFriend.searchError}
+        searchResults={addFriend.state.results}
+        sendingFriendId={addFriend.sendingFriendId}
+        onOpenChange={addFriend.setOpen}
+        onSearch={addFriend.search}
+        onSendRequest={addFriend.sendRequest}
       />
     </section>
   );

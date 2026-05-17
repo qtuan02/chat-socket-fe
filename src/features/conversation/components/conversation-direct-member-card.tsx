@@ -1,8 +1,12 @@
 import { DetailField } from "@/components/shared/detail-field";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import type { ConversationMember } from "@/types/conversation";
 import { formatDateTime } from "@/utils/date";
-import { getDisplayNameInitials, getUsernameLabel } from "@/utils/user-display";
-import { getMemberPresenceLabel } from "../utils/conversation-display";
+import {
+  getDisplayNameInitials,
+  getMemberPresenceLabel,
+  getUsernameLabel,
+} from "@/utils/display";
 
 export function ConversationDirectMemberCard({
   member,
@@ -12,17 +16,18 @@ export function ConversationDirectMemberCard({
   return (
     <>
       <div className="w-full flex justify-center">
-        {member.avatarUrl ? (
-          <img
-            alt={member.displayName}
-            className="size-40 rounded-full border border-border bg-background text-xl font-semibold text-muted-foreground shadow-sm object-cover"
-            src={member.avatarUrl}
-          />
-        ) : (
-          <div className="relative inline-flex size-40 items-center justify-center overflow-hidden rounded-full border border-border bg-background text-xl font-semibold text-muted-foreground shadow-sm">
-            <span>{getDisplayNameInitials(member.displayName)}</span>
-          </div>
-        )}
+        <Avatar className="size-40 border border-border bg-background text-muted-foreground shadow-sm">
+          {member.avatarUrl ? (
+            <AvatarImage
+              alt={member.displayName}
+              className="object-cover"
+              src={member.avatarUrl}
+            />
+          ) : null}
+          <AvatarFallback className="text-xl font-semibold">
+            {getDisplayNameInitials(member.displayName)}
+          </AvatarFallback>
+        </Avatar>
       </div>
 
       <div className="mt-4 grid gap-3">

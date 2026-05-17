@@ -1,12 +1,12 @@
 import { ArrowLeft, CircleCheckBig, Columns2Icon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ConversationAvatar } from "@/features/conversation/components/conversation-avatar";
+import type { Conversation } from "@/types/conversation";
+import { ConversationTypeEnum } from "@/types/conversation";
 import {
   formatDirectConversationStatus,
   formatGroupActiveCount,
-} from "@/features/conversation/utils/conversation-display";
-import type { Conversation } from "@/types/conversation";
-import { ConversationTypeEnum } from "@/types/conversation";
+} from "@/utils/display";
 
 type ChatHeaderProps = {
   conversation: Conversation;
@@ -28,8 +28,8 @@ export function ChatHeader({
 
   return (
     <header className="h-14 border-b border-border bg-background px-3 py-2 md:h-16 md:px-4 md:py-2">
-      <div className="flex h-full items-center gap-2 md:gap-3 justify-between">
-        <div className="flex items-center gap-3">
+      <div className="flex h-full min-w-0 items-center justify-between gap-2 md:gap-3">
+        <div className="flex min-w-0 flex-1 items-center gap-3">
           {showBackButton && onBack ? (
             <Button
               type="button"
@@ -42,9 +42,9 @@ export function ChatHeader({
               <ArrowLeft className="size-4" />
             </Button>
           ) : null}
-          <div className="flex min-w-0 items-center gap-3">
+          <div className="flex min-w-0 flex-1 items-center gap-3">
             <ConversationAvatar conversation={conversation} size="md" />
-            <div className="min-w-0">
+            <div className="min-w-0 flex-1">
               <h1 className="truncate text-sm font-semibold leading-tight md:text-lg">
                 {conversation.title}
               </h1>
@@ -54,7 +54,7 @@ export function ChatHeader({
             </div>
           </div>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex shrink-0 items-center gap-2">
           {conversation.unreadCount > 0 ? (
             <div className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2.5 py-1 text-xs text-primary">
               <CircleCheckBig className="size-3.5" />

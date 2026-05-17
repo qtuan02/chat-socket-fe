@@ -1,21 +1,33 @@
-import { useInfiniteQuery } from "@tanstack/react-query";
+import {
+  type InfiniteData,
+  type QueryClient,
+  useInfiniteQuery,
+  useMutation,
+} from "@tanstack/react-query";
 import * as React from "react";
 import {
   MESSAGE_LIST_FIRST_ITEM_INDEX,
   MESSAGES_DEFAULT_LIMIT,
 } from "@/config/constant";
 import { useCurrentUserQuery } from "@/hooks/api/user";
-import { queryKeysFactory } from "@/libs/query-key-factory";
+import {
+  queryKeysFactory,
+  type UseMutationOptionsWrapper,
+} from "@/libs/query-key-factory";
 import { messageService } from "@/services/message-service";
 import type {
   Message,
   MessageDto,
   MessagePage,
+  SendDirectMessageRequest,
+  SendGroupMessageRequest,
   UseMessagesInfiniteQueryParams,
 } from "@/types/message";
 import { MessageStatus } from "@/types/message";
 
 const messageQueryKeyFactory = queryKeysFactory<"message">("message");
+
+type MessageInfiniteData = InfiniteData<MessagePage, string | undefined>;
 
 export const messageQueryKeys = {
   ...messageQueryKeyFactory,
@@ -41,6 +53,48 @@ function mapMessageToUiModel(
     createdAt: message.createdAt,
     updatedAt: message.updatedAt,
   };
+}
+
+function appendMessageToInfiniteData(
+  data: MessageInfiniteData | undefined,
+  message: MessageDto,
+): MessageInfiniteData | undefined {
+  if (!data) return data;
+
+  const hasExistingMessage = data.pages.some((page) =>
+    page.items.some((item) => item.id === message.id),
+  );
+  if (hasExistingMessage) return data;
+
+  if (data.pages.length === 0) {
+    return {
+      ...data,
+      pages: [{ items: [message], nextCursor: null }],
+      pageParams: [undefined],
+    };
+  }
+
+  return {
+    ...data,
+    pages: data.pages.map((page, index) =>
+      index === 0
+        ? {
+            ...page,
+            items: [...page.items, message],
+          }
+        : page,
+    ),
+  };
+}
+
+export function appendConversationMessageToCache(
+  queryClient: QueryClient,
+  message: MessageDto,
+) {
+  queryClient.setQueriesData<MessageInfiniteData>(
+    { queryKey: messageQueryKeys.conversation(message.conversationId) },
+    (data) => appendMessageToInfiniteData(data, message),
+  );
 }
 
 export function useMessagesInfiniteQuery({
@@ -101,4 +155,30 @@ export function useMessagesInfiniteQuery({
     firstItemIndex,
     messages,
   };
+}
+
+export function useSendDirectMessageMutation(
+  options?: UseMutationOptionsWrapper<
+    SendDirectMessageRequest,
+    MessageDto,
+    Error
+  >,
+) {
+  return useMutation({
+    mutationFn: messageService.sendDirectMessage,
+    ...options,
+  });
+}
+
+export function useSendGroupMessageMutation(
+  options?: UseMutationOptionsWrapper<
+    SendGroupMessageRequest,
+    MessageDto,
+    Error
+  >,
+) {
+  return useMutation({
+    mutationFn: messageService.sendGroupMessage,
+    ...options,
+  });
 }
