@@ -181,7 +181,7 @@ export function FriendsSection({
                       }}
                     >
                       <MessageCircle className="size-4" />
-                      Nhắn tin
+                      Message
                     </Button>
                   }
                   isActionLoading={processingFriendId === friend.id}
