@@ -15,12 +15,17 @@ import {
 type UserItemProps = {
   className?: string;
   user: UserItemData;
+  detailUser?: UserItemData | null;
   subtitle?: string;
   action?: React.ReactNode;
+  dialogAction?: React.ReactNode;
+  detailErrorMessage?: string | null;
   compact?: boolean;
   friendStatus?: FriendRelationshipStatus;
+  isDetailLoading?: boolean;
   isActionLoading?: boolean;
   actionPayload?: string;
+  onOpenDetails?: (userId: string) => void;
   onSendFriendRequest?: (userId: string, message?: string) => void;
   onCancelFriendRequest?: (userId: string) => void;
   onUnfriend?: (userId: string) => void;
@@ -29,62 +34,93 @@ type UserItemProps = {
 export function UserItem({
   className,
   user,
+  detailUser,
   subtitle,
   action,
+  dialogAction,
+  detailErrorMessage,
   compact = false,
   friendStatus,
+  isDetailLoading = false,
   isActionLoading = false,
   actionPayload,
+  onOpenDetails,
   onSendFriendRequest,
   onCancelFriendRequest,
   onUnfriend,
 }: UserItemProps) {
   const [isPopupOpen, setIsPopupOpen] = React.useState(false);
   const displayName = user.displayName.trim();
+  const dialogUser = detailUser ?? user;
   const friendStatusLabel = getFriendStatusLabel(friendStatus);
-  const presenceStatusLabel = getPresenceStatusLabel(user.presenceStatus);
+  const presenceStatusLabel = getPresenceStatusLabel(dialogUser.presenceStatus);
   const popupAction = getFriendPopupAction(friendStatus);
 
   return (
     <>
       <li
         className={cn(
-          "rounded-lg border border-border/80 bg-background p-2.5",
+          "border border-border/80 bg-background",
           "transition",
           "hover:border-primary/50 hover:bg-muted/50 focus-within:border-primary/50 focus-within:ring-2 focus-within:ring-primary/30 focus-within:ring-offset-2",
-          compact ? "py-2" : "py-2.5",
+          compact ? "rounded-md p-2" : "rounded-lg p-2.5",
           className,
         )}
       >
-        <div className="relative grid gap-2.5">
+        <div className={cn("relative grid", compact ? "gap-1.5" : "gap-2.5")}>
           <button
             type="button"
-            className="grid grid-cols-[auto,1fr] gap-2.5 text-left"
+            className={cn(
+              "w-full text-left",
+              compact
+                ? "flex items-center justify-between gap-2"
+                : "grid grid-cols-[auto,1fr] gap-2.5",
+            )}
             onClick={() => {
               setIsPopupOpen(true);
+              onOpenDetails?.(user.id);
             }}
           >
-            <div className="flex items-center gap-2">
+            <div className="flex min-w-0 items-center gap-2">
               <UserItemAvatar
                 compact={compact}
                 displayName={displayName}
                 avatarUrl={user.avatarUrl}
                 presenceStatus={user.presenceStatus}
-                avatarSizeClassName="size-11"
+                avatarSizeClassName={compact ? "size-8" : "size-11"}
               />
-              <div className="flex flex-col justify-center">
-                <p className="truncate text-sm font-medium leading-tight">
+              <div className="flex min-w-0 flex-col justify-center">
+                <p
+                  className={cn(
+                    "truncate text-sm font-medium",
+                    compact ? "leading-5" : "leading-tight",
+                  )}
+                >
                   {displayName}
                 </p>
                 {user.username && (
-                  <span className="text-xs text-muted-foreground">
+                  <span
+                    className={cn(
+                      "truncate text-muted-foreground",
+                      compact ? "text-[11px] leading-4" : "text-xs",
+                    )}
+                  >
                     {getUsernameLabel(user.username)}
                   </span>
                 )}
               </div>
             </div>
-            <div className="min-w-0">
-              <div className="mt-0.5 space-y-1 text-[12px] text-muted-foreground">
+            <div
+              className={compact ? "max-w-24 shrink-0 text-right" : "min-w-0"}
+            >
+              <div
+                className={cn(
+                  "text-muted-foreground",
+                  compact
+                    ? "text-[11px] leading-4"
+                    : "mt-0.5 space-y-1 text-[12px]",
+                )}
+              >
                 <p className="truncate">{friendStatusLabel}</p>
                 {subtitle && <p className="truncate">{subtitle}</p>}
               </div>
@@ -98,7 +134,7 @@ export function UserItem({
       <UserItemDialog
         isOpen={isPopupOpen}
         onOpenChange={setIsPopupOpen}
-        user={user}
+        user={dialogUser}
         friendStatusLabel={friendStatusLabel}
         presenceStatusLabel={presenceStatusLabel}
         popupAction={popupAction}
@@ -113,6 +149,9 @@ export function UserItem({
             onUnfriend={onUnfriend}
           />
         }
+        dialogAction={dialogAction}
+        detailErrorMessage={detailErrorMessage}
+        isDetailLoading={isDetailLoading}
       />
     </>
   );

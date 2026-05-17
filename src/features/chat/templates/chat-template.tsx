@@ -1,11 +1,12 @@
 import { useQueryClient } from "@tanstack/react-query";
-import { Menu } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import * as React from "react";
 import { useLocation, useNavigate, useParams } from "react-router";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { APP_ROUTES } from "@/config/routes";
+import { MobileChatBottomNav } from "@/features/chat/components/mobile/mobile-chat-bottom-nav";
+import { ChatProfileTemplate } from "@/features/chat/templates/chat-profile-template";
 import { ChatSidebar } from "@/features/conversation/components/chat-sidebar";
 import { ConversationDetailsPanel } from "@/features/conversation/components/conversation-details-panel";
 import { FriendsTemplate } from "@/features/friends/templates/friends-template";
@@ -126,6 +127,29 @@ function createDirectMessageDraftConversation({
   };
 }
 
+function MobileTopBackBar({
+  title,
+  onBack,
+}: {
+  title: string;
+  onBack: () => void;
+}) {
+  return (
+    <header className="flex h-14 items-center gap-2 border-b border-border px-3">
+      <Button
+        type="button"
+        variant="outline"
+        size="icon-sm"
+        onClick={onBack}
+        aria-label="Back to conversations"
+      >
+        <ArrowLeft className="size-4" />
+      </Button>
+      <h1 className="truncate text-base font-semibold">{title}</h1>
+    </header>
+  );
+}
+
 export function ChatTemplate() {
   const { conversationId = "" } = useParams();
   const navigate = useNavigate();
@@ -134,7 +158,6 @@ export function ChatTemplate() {
     () => getDraftFriendFromLocationState(location.state),
     [location.state],
   );
-  const [isSidebarOpen, setIsSidebarOpen] = React.useState(false);
   const [isDetailsOpen, setIsDetailsOpen] = React.useState(false);
   const [removingMemberId, setRemovingMemberId] = React.useState<string | null>(
     null,
@@ -159,7 +182,10 @@ export function ChatTemplate() {
       conversations.find((conversation) => conversation.id === conversationId),
     [conversationId, conversations],
   );
+  const isConversationRoute = Boolean(conversationId);
+  const isConversationRootRoute = location.pathname === APP_ROUTES.chat;
   const isFriendsRoute = location.pathname === APP_ROUTES.friends;
+  const isProfileRoute = location.pathname === APP_ROUTES.profile;
   const directMessageDraftConversation = React.useMemo(() => {
     if (!directMessageDraftFriend) return null;
 
@@ -176,13 +202,16 @@ export function ChatTemplate() {
       presenceStatus,
     });
   }, [currentUser, directMessageDraftFriend, isPresenceReady, onlineUsers]);
-  const displayedConversation = isFriendsRoute
-    ? null
-    : (directMessageDraftConversation ?? activeConversation);
+  const displayedConversation =
+    isConversationRoute || isConversationRootRoute
+      ? (directMessageDraftConversation ?? activeConversation)
+      : null;
   const isDraftConversation =
-    !isFriendsRoute && !!directMessageDraftConversation;
+    isConversationRootRoute && !!directMessageDraftConversation;
   const sidebarActiveConversationId =
-    isDraftConversation || isFriendsRoute ? "" : conversationId;
+    isDraftConversation || isFriendsRoute || isProfileRoute
+      ? ""
+      : conversationId;
 
   React.useEffect(() => {
     if (!locationDraftFriend) return;
@@ -205,13 +234,12 @@ export function ChatTemplate() {
   ]);
 
   React.useEffect(() => {
-    if (!isFriendsRoute || !directMessageDraftFriend) return;
+    if (isFriendsRoute || isProfileRoute) {
+      setDirectMessageDraftFriend(null);
+      setIsDetailsOpen(false);
+      return;
+    }
 
-    setDirectMessageDraftFriend(null);
-    setIsDetailsOpen(false);
-  }, [directMessageDraftFriend, isFriendsRoute]);
-
-  React.useEffect(() => {
     if (
       !directMessageDraftFriend ||
       !activeConversation ||
@@ -222,12 +250,19 @@ export function ChatTemplate() {
       return;
 
     setDirectMessageDraftFriend(null);
-  }, [activeConversation, conversationId, directMessageDraftFriend]);
+  }, [
+    activeConversation,
+    conversationId,
+    directMessageDraftFriend,
+    isFriendsRoute,
+    isProfileRoute,
+  ]);
 
   React.useEffect(() => {
     if (
       isDraftConversation ||
       isFriendsRoute ||
+      isProfileRoute ||
       !activeConversation ||
       activeConversation.unreadCount === 0 ||
       !activeConversation.lastMessageId
@@ -243,19 +278,18 @@ export function ChatTemplate() {
     activeConversation,
     isDraftConversation,
     isFriendsRoute,
+    isProfileRoute,
     markConversationAsSeen,
   ]);
 
   const handleConversationSelect = React.useCallback(() => {
     setDirectMessageDraftFriend(null);
-    setIsSidebarOpen(false);
     setIsDetailsOpen(false);
   }, []);
 
   const handleDirectMessageDraftSelect = React.useCallback(
     (friend: Friend) => {
       setDirectMessageDraftFriend(friend);
-      setIsSidebarOpen(false);
       setIsDetailsOpen(false);
 
       if (location.pathname !== APP_ROUTES.chat) {
@@ -311,12 +345,12 @@ export function ChatTemplate() {
     },
   });
   const leaveGroupMutation = useLeaveGroupMutation({
-    onSuccess: (conversationId) => {
+    onSuccess: (convId) => {
       toast.success("You left the group.");
       setIsDetailsOpen(false);
       if (currentUser?.id) {
         queryClient.invalidateQueries({
-          queryKey: messageQueryKeys.messages(currentUser.id, conversationId),
+          queryKey: messageQueryKeys.messages(currentUser.id, convId),
         });
       }
       navigate(APP_ROUTES.chat);
@@ -407,11 +441,142 @@ export function ChatTemplate() {
     );
   };
 
+  const renderMobileRouteContent = () => {
+    if (isConversationRoute) {
+      if (!displayedConversation) {
+        return (
+          <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
+            <MobileTopBackBar
+              title="Đoạn chat"
+              onBack={() => {
+                navigate(APP_ROUTES.chat);
+              }}
+            />
+            {isConversationsLoading ? (
+              <WelcomeSkeleton />
+            ) : (
+              <EmptyConversationBanner />
+            )}
+          </div>
+        );
+      }
+
+      return (
+        <>
+          <ChatHeader
+            conversation={displayedConversation}
+            onOpenDetails={
+              isDraftConversation
+                ? undefined
+                : () => {
+                    setIsDetailsOpen((isOpen) => !isOpen);
+                  }
+            }
+            showBackButton
+            onBack={() => {
+              navigate(APP_ROUTES.chat);
+            }}
+          />
+          <MessageList
+            conversation={displayedConversation}
+            isDraft={isDraftConversation}
+          />
+          <MessageComposer
+            conversation={displayedConversation}
+            onMessageSent={
+              isDraftConversation ? handleDraftMessageSent : undefined
+            }
+          />
+        </>
+      );
+    }
+
+    if (isFriendsRoute) {
+      return (
+        <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
+          <MobileTopBackBar
+            title="Bạn bè"
+            onBack={() => {
+              navigate(APP_ROUTES.chat);
+            }}
+          />
+          <FriendsTemplate />
+        </div>
+      );
+    }
+
+    if (isProfileRoute) {
+      return (
+        <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
+          <MobileTopBackBar
+            title="Profile"
+            onBack={() => {
+              navigate(APP_ROUTES.chat);
+            }}
+          />
+          <ChatProfileTemplate />
+        </div>
+      );
+    }
+
+    return (
+      <ChatSidebar
+        activeConversationId={sidebarActiveConversationId}
+        className="h-full pb-16"
+        onConversationSelect={handleConversationSelect}
+        onDirectMessageDraftSelect={handleDirectMessageDraftSelect}
+      />
+    );
+  };
+
+  const renderDesktopContent = () => {
+    if (isProfileRoute) {
+      return <ChatProfileTemplate />;
+    }
+
+    if (isFriendsRoute) {
+      return <FriendsTemplate />;
+    }
+
+    if (displayedConversation) {
+      return (
+        <>
+          <ChatHeader
+            conversation={displayedConversation}
+            onOpenDetails={
+              isDraftConversation
+                ? undefined
+                : () => {
+                    setIsDetailsOpen((isOpen) => !isOpen);
+                  }
+            }
+          />
+          <MessageList
+            conversation={displayedConversation}
+            isDraft={isDraftConversation}
+          />
+          <MessageComposer
+            conversation={displayedConversation}
+            onMessageSent={
+              isDraftConversation ? handleDraftMessageSent : undefined
+            }
+          />
+        </>
+      );
+    }
+
+    if (isConversationsLoading) {
+      return <WelcomeSkeleton />;
+    }
+
+    return <EmptyConversationBanner />;
+  };
+
   return (
     <ChatSocketProvider
       activeConversationId={isDraftConversation ? "" : conversationId}
     >
-      <main className="h-screen w-full overflow-hidden bg-muted/50">
+      <main className="min-h-screen h-dvh w-full overflow-hidden bg-muted/50 md:h-screen md:min-h-screen">
         <div className="h-full w-full min-w-0 bg-background">
           <div
             className={cn(
@@ -428,65 +593,14 @@ export function ChatTemplate() {
               onDirectMessageDraftSelect={handleDirectMessageDraftSelect}
             />
 
-            <Sheet open={isSidebarOpen} onOpenChange={setIsSidebarOpen}>
-              <SheetContent side="left" className="w-[320px] p-0 md:hidden">
-                <ChatSidebar
-                  activeConversationId={sidebarActiveConversationId}
-                  className="h-full"
-                  onConversationSelect={handleConversationSelect}
-                  onDirectMessageDraftSelect={handleDirectMessageDraftSelect}
-                />
-              </SheetContent>
-
-              <section className="flex h-full min-h-0 min-w-0 flex-1 flex-col border-l border-border md:border-l-0">
-                <div className="border-b border-border px-3 md:hidden">
-                  <div className="flex h-14 items-center gap-2">
-                    <SheetTrigger asChild>
-                      <Button type="button" size="sm" variant="outline">
-                        <Menu className="size-4" />
-                        <span>Conversations</span>
-                      </Button>
-                    </SheetTrigger>
-                    <h2 className="truncate text-sm font-medium">
-                      {isFriendsRoute
-                        ? "Friends"
-                        : (displayedConversation?.title ?? "Chat")}
-                    </h2>
-                  </div>
-                </div>
-
-                {isFriendsRoute ? (
-                  <FriendsTemplate />
-                ) : displayedConversation ? (
-                  <>
-                    <ChatHeader
-                      conversation={displayedConversation}
-                      onOpenDetails={
-                        isDraftConversation
-                          ? undefined
-                          : () => {
-                              setIsDetailsOpen((isOpen) => !isOpen);
-                            }
-                      }
-                    />
-                    <MessageList
-                      conversation={displayedConversation}
-                      isDraft={isDraftConversation}
-                    />
-                    <MessageComposer
-                      conversation={displayedConversation}
-                      onMessageSent={
-                        isDraftConversation ? handleDraftMessageSent : undefined
-                      }
-                    />
-                  </>
-                ) : isConversationsLoading ? (
-                  <WelcomeSkeleton />
-                ) : (
-                  <EmptyConversationBanner />
-                )}
-              </section>
-            </Sheet>
+            <section className="flex h-full min-h-0 min-w-0 flex-1 flex-col border-l border-border md:border-l-0">
+              <div className="flex min-h-0 flex-1 flex-col overflow-hidden pb-16 md:hidden">
+                {renderMobileRouteContent()}
+              </div>
+              <div className="hidden min-h-0 min-w-0 flex-1 flex-col overflow-hidden md:flex">
+                {renderDesktopContent()}
+              </div>
+            </section>
 
             {activeConversation && !isDraftConversation && !isFriendsRoute ? (
               <ConversationDetailsPanel
@@ -502,11 +616,15 @@ export function ChatTemplate() {
                 onAddMembers={handleAddMembers}
                 onLeaveGroup={handleLeaveGroup}
                 onRemoveMember={handleRemoveMember}
+                onClose={() => {
+                  setIsDetailsOpen(false);
+                }}
               />
             ) : null}
           </div>
         </div>
       </main>
+      <MobileChatBottomNav />
     </ChatSocketProvider>
   );
 }

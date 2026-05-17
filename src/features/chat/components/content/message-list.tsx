@@ -199,7 +199,11 @@ export function MessageList({
     return <MessageListEmpty className={className} />;
 
   return (
-    <section className={className ?? "min-h-0 flex-1 overflow-hidden p-4"}>
+    <section
+      className={
+        className ?? "min-h-0 flex-1 overflow-hidden overflow-x-hidden md:py-4"
+      }
+    >
       <Virtuoso
         ref={virtuosoRef}
         alignToBottom
@@ -242,8 +246,10 @@ export function MessageList({
 
               <div
                 className={cn(
-                  "flex pb-1",
-                  isOwnMessage ? "justify-end" : "justify-start",
+                  "flex min-w-0 pb-1",
+                  isOwnMessage
+                    ? "justify-end mr-3 md:mr-4"
+                    : "justify-start ml-3 md:ml-4",
                 )}
               >
                 <MessageBubble

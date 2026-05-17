@@ -4,6 +4,7 @@ export const APP_ROUTES = {
   signIn: "/sign-in",
   signUp: "/sign-up",
   friends: "/friends",
+  profile: "/profile",
   conversationById: (conversationId: string) =>
     `/conversation/${conversationId}`,
 } as const;
@@ -20,6 +21,7 @@ export const APP_API = {
     },
     user: {
       me: "/user/me",
+      info: "/user/info",
     },
     friend: {
       list: "/friend",

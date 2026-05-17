@@ -86,6 +86,7 @@ function AppRoutes() {
           <Route path={APP_ROUTES.chat} element={<ChatPage />} />
           <Route path={APP_ROUTES.friends} element={<ChatPage />} />
           <Route path={APP_ROUTES.chatConversation} element={<ChatPage />} />
+          <Route path={APP_ROUTES.profile} element={<ChatPage />} />
         </Route>
       </Routes>
     </BrowserRouter>

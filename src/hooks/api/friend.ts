@@ -107,6 +107,7 @@ export function useFriendsQuery(
     ...options,
     queryKey: friendQueryKeys.list(currentUser?.id ?? "", params),
     queryFn: () => friendService.getFriends(params),
+    staleTime: 0,
     enabled: !!currentUser?.id && (options?.enabled ?? true),
   });
   const data = React.useMemo(
@@ -154,6 +155,7 @@ export function useFriendsInfiniteQuery(
     getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
     initialPageParam: undefined as string | undefined,
     enabled: !!currentUser?.id,
+    staleTime: 0,
   });
 
   const friends = React.useMemo(
@@ -197,6 +199,7 @@ export function useFriendRequestsQuery(
     queryKey: friendRequestQueryKeys.list(currentUser?.id ?? ""),
     queryFn: friendService.getFriendRequests,
     enabled: !!currentUser?.id && (options?.enabled ?? true),
+    staleTime: 0,
   });
 }
 

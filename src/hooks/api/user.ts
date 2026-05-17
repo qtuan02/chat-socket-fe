@@ -7,13 +7,18 @@ import {
 } from "@/libs/query-key-factory";
 import { userService } from "@/services/user-service";
 import useAuthStore from "@/stores/useAuthStore";
-import type { UpdateUserRequestPayload, User } from "@/types/user";
+import type {
+  UpdateUserRequestPayload,
+  User,
+  UserItemData,
+} from "@/types/user";
 
-const userQueryKeyFactory = queryKeysFactory<"user", void, "me">("user");
+const userQueryKeyFactory = queryKeysFactory<"user">("user");
 
 export const currentUserQueryKeys = {
   ...userQueryKeyFactory,
   current: () => userQueryKeyFactory.detail("me"),
+  info: (userId: string) => userQueryKeyFactory.detail(userId),
 };
 
 export function useCurrentUserQuery(options?: UseQueryOptionsWrapper<User>) {
@@ -24,6 +29,20 @@ export function useCurrentUserQuery(options?: UseQueryOptionsWrapper<User>) {
     queryKey: currentUserQueryKeys.current(),
     queryFn: userService.getCurrentUserProfile,
     enabled: !!accessToken && (options?.enabled ?? true),
+  });
+}
+
+export function useUserInfoQuery(
+  userId: string | null,
+  options?: UseQueryOptionsWrapper<UserItemData>,
+) {
+  const accessToken = useAuthStore((state) => state.accessToken);
+
+  return useQuery({
+    ...options,
+    queryKey: currentUserQueryKeys.info(userId ?? ""),
+    queryFn: () => userService.getUserInfo(userId ?? ""),
+    enabled: !!accessToken && !!userId && (options?.enabled ?? true),
   });
 }
 

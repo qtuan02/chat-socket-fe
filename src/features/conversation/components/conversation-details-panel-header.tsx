@@ -1,11 +1,13 @@
-import { Users } from "lucide-react";
+import { Users, X } from "lucide-react";
 import { DetailField } from "@/components/shared/detail-field";
+import { Button } from "@/components/ui/button";
 
 type ConversationDetailsPanelHeaderProps = {
   isGroup: boolean;
   participantCount: number;
   lastActivityLabel: string;
   unreadMessages: number;
+  onClose?: () => void;
 };
 
 export function ConversationDetailsPanelHeader({
@@ -13,6 +15,7 @@ export function ConversationDetailsPanelHeader({
   participantCount,
   lastActivityLabel,
   unreadMessages,
+  onClose,
 }: ConversationDetailsPanelHeaderProps) {
   return (
     <>
@@ -25,9 +28,22 @@ export function ConversationDetailsPanelHeader({
             {isGroup ? "Group conversation details" : "Direct message details"}
           </p>
         </div>
+
+        {onClose ? (
+          <Button
+            type="button"
+            variant="outline"
+            size="icon-sm"
+            onClick={onClose}
+            className="md:hidden"
+            aria-label="Close conversation info"
+          >
+            <X className="size-4" />
+          </Button>
+        ) : null}
       </div>
 
-      <div className="flex-1 min-h-0 overflow-y-auto px-4 py-4">
+      <div className="px-4 py-4">
         <section className="grid gap-3">
           <DetailField
             label="Type"

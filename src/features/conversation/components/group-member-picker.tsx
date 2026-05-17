@@ -128,40 +128,42 @@ function FriendListItem({
     <li>
       <div
         className={cn(
-          "rounded-lg border border-border/80 bg-background p-2.5",
+          "rounded-md border border-border/80 bg-background px-2 py-1.5",
           isSelected && "border-primary/40 bg-primary/5",
           isDisabled && "opacity-80",
         )}
       >
-        <div className="grid grid-cols-[auto,1fr,auto] gap-2">
+        <div className="flex min-h-10 items-center gap-2">
           <UserItemAvatar
             compact
             displayName={friend.displayName}
             avatarUrl={friend.avatarUrl}
+            avatarSizeClassName="size-7"
           />
-          <div className="min-w-0">
-            <p className="truncate text-sm font-medium">{friend.displayName}</p>
+          <div className="min-w-0 flex-1">
+            <p className="truncate text-sm font-medium leading-5">
+              {friend.displayName}
+            </p>
             {username ? (
-              <p className="truncate text-xs text-muted-foreground">
+              <p className="truncate text-xs leading-4 text-muted-foreground">
                 {username}
               </p>
             ) : null}
           </div>
-          <div className="flex items-start justify-end">
-            <Button
-              type="button"
-              size="sm"
-              variant={
-                isDisabled ? "outline" : isSelected ? "secondary" : "outline"
-              }
-              onClick={() => {
-                onToggle(friend);
-              }}
-              disabled={isDisabled || isSubmitting}
-            >
-              {isSelected ? "Remove" : "Add"}
-            </Button>
-          </div>
+          <Button
+            type="button"
+            size="sm"
+            variant={
+              isDisabled ? "outline" : isSelected ? "secondary" : "outline"
+            }
+            className="h-7 shrink-0 px-2 text-xs"
+            onClick={() => {
+              onToggle(friend);
+            }}
+            disabled={isDisabled || isSubmitting}
+          >
+            {isSelected ? "Remove" : "Add"}
+          </Button>
         </div>
       </div>
     </li>
@@ -401,21 +403,6 @@ export function GroupMemberPicker({
           </ul>
         ) : null}
       </div>
-
-      <Button
-        type="button"
-        variant="outline"
-        size="sm"
-        onClick={() => {
-          if (listRef.current) {
-            listRef.current.scrollTop = 0;
-          }
-          void refetch();
-        }}
-        disabled={isSubmitting || isLoading || isError}
-      >
-        Refresh
-      </Button>
     </div>
   );
 }

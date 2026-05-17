@@ -113,13 +113,15 @@ export function MessageBubble({
       ) : null}
       <div
         className={cn(
-          "rounded-lg border px-2 py-1 text-sm shadow-sm max-w-[50vw]",
+          "min-w-0 rounded-lg border px-2 py-1 text-sm shadow-sm [overflow-wrap:anywhere] md:max-w-[50vw] max-w-[70vw]",
           isOwnMessage
             ? "border-primary/40 bg-primary text-primary-foreground"
             : "border-border bg-muted text-foreground",
         )}
       >
-        {message.content}
+        <p className="m-0 whitespace-pre-wrap break-words leading-relaxed">
+          {message.content}
+        </p>
         <p
           className={cn(
             "m-0 flex items-center gap-2 text-[10px]",

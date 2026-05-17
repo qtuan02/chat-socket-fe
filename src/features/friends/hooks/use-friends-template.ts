@@ -1,6 +1,8 @@
 import { useQueryClient } from "@tanstack/react-query";
 import * as React from "react";
+import { useNavigate } from "react-router";
 import { toast } from "sonner";
+import { APP_ROUTES } from "@/config/routes";
 import {
   friendQueryKeys,
   friendRequestQueryKeys,
@@ -13,7 +15,8 @@ import {
   useSearchFriendsByUsernameMutation,
   useSendFriendRequestMutation,
 } from "@/hooks/api/friend";
-import type { FriendSearchResult } from "@/types/friend";
+import { currentUserQueryKeys, useUserInfoQuery } from "@/hooks/api/user";
+import type { Friend, FriendSearchResult } from "@/types/friend";
 
 type AddFriendDialogState = {
   hasSearched: boolean;
@@ -24,11 +27,15 @@ type AddFriendDialogState = {
 
 export function useFriendsTemplate() {
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
   const [friendSearchTerm, setFriendSearchTerm] = React.useState("");
   const [processingRequestId, setProcessingRequestId] = React.useState<
     string | null
   >(null);
   const [processingFriendId, setProcessingFriendId] = React.useState<
+    string | null
+  >(null);
+  const [selectedFriendInfoId, setSelectedFriendInfoId] = React.useState<
     string | null
   >(null);
   const [sendingFriendId, setSendingFriendId] = React.useState<string | null>(
@@ -42,6 +49,7 @@ export function useFriendsTemplate() {
       results: [],
     });
   const friendsQuery = useFriendsQuery();
+  const friendInfoQuery = useUserInfoQuery(selectedFriendInfoId);
   const friendRequestsQuery = useFriendRequestsQuery();
 
   const searchFriendsMutation = useSearchFriendsByUsernameMutation();
@@ -265,18 +273,42 @@ export function useFriendsTemplate() {
     [deleteFriendMutation],
   );
 
+  const handleOpenFriendDetails = React.useCallback(
+    (friendId: string) => {
+      setSelectedFriendInfoId(friendId);
+      void queryClient.invalidateQueries({
+        queryKey: currentUserQueryKeys.info(friendId),
+      });
+    },
+    [queryClient],
+  );
+
+  const handleMessageFriend = React.useCallback(
+    (friend: Friend) => {
+      navigate(APP_ROUTES.chat, {
+        state: { directMessageDraftFriend: friend },
+      });
+    },
+    [navigate],
+  );
+
   return {
     friendSearchTerm,
     setFriendSearchTerm,
     isFriendsLoading,
     isRequestsLoading,
     friends: friendsQuery.data?.items ?? [],
+    selectedFriendInfo: friendInfoQuery.data,
+    selectedFriendInfoId,
     receivedRequests: friendRequestsQuery.data?.receivedRequests ?? [],
     sentRequests: friendRequestsQuery.data?.sentRequests ?? [],
     isFriendRequestsError: friendRequestsQuery.isError,
     isFriendsError: friendsQuery.isError,
     friendRequestsError: friendRequestsQuery.error,
     friendsError: friendsQuery.error,
+    friendInfoError: friendInfoQuery.error,
+    isFriendInfoLoading:
+      friendInfoQuery.isLoading || friendInfoQuery.isFetching,
     processingRequestId,
     processingFriendId,
     sendingFriendId,
@@ -288,6 +320,8 @@ export function useFriendsTemplate() {
     handleCloseAddFriend: handleCloseAddFriend,
     handleSearchUser,
     handleSendFriendRequest,
+    handleOpenFriendDetails,
+    handleMessageFriend,
     handleAcceptFriendRequest,
     handleDeclineFriendRequest,
     handleCancelFriendRequest,
