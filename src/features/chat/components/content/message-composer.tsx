@@ -1,6 +1,6 @@
 import data from "@emoji-mart/data";
 import Picker from "@emoji-mart/react";
-import { Paperclip, Send, Smile } from "lucide-react";
+import { Send, Smile } from "lucide-react";
 import type * as React from "react";
 import { Button } from "@/components/ui/button";
 import { useMessageComposer } from "@/features/chat/hooks/use-message-composer";
@@ -59,10 +59,10 @@ function MessageComposerActions({
       </div>
       <div className="flex items-center justify-between gap-2">
         <div className="flex items-center gap-2">
-          <Button type="button" size="icon" variant="outline">
+          {/* <Button type="button" size="icon" variant="outline">
             <Paperclip className="size-4" />
             <span className="sr-only">Attach</span>
-          </Button>
+          </Button> */}
           <div className="relative">
             <Button
               type="button"

@@ -6,12 +6,12 @@ import { cn } from "@/utils/cn";
 const mobileBottomNavItems = [
   {
     href: APP_ROUTES.chat,
-    label: "Đoạn chat",
+    label: "Conversations",
     icon: MessageCircle,
   },
   {
     href: APP_ROUTES.friends,
-    label: "Bạn bè",
+    label: "Friends",
     icon: UserRoundSearch,
   },
   {

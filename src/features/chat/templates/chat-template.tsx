@@ -447,7 +447,7 @@ export function ChatTemplate() {
         return (
           <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
             <MobileTopBackBar
-              title="Đoạn chat"
+              title="Conversations"
               onBack={() => {
                 navigate(APP_ROUTES.chat);
               }}
@@ -495,7 +495,7 @@ export function ChatTemplate() {
       return (
         <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
           <MobileTopBackBar
-            title="Bạn bè"
+            title="Friends"
             onBack={() => {
               navigate(APP_ROUTES.chat);
             }}

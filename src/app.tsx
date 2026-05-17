@@ -55,7 +55,7 @@ function BackendHealthGate({ children }: { children: React.ReactNode }) {
       <main className="grid min-h-screen place-items-center bg-background text-foreground">
         <div className="flex items-center gap-3 text-sm text-muted-foreground">
           <Loader2 className="size-5 animate-spin" aria-hidden="true" />
-          <span>Đang kết nối máy chủ...</span>
+          <span>Connecting to server...</span>
         </div>
       </main>
     );
