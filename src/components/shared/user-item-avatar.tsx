@@ -1,6 +1,7 @@
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { PresenceStatusEnum } from "@/types/user";
 import { cn } from "@/utils/cn";
-import { getDisplayNameInitials } from "@/utils/user-display";
+import { getDisplayNameInitials } from "@/utils/display";
 
 type UserItemAvatarProps = {
   compact: boolean;
@@ -22,32 +23,22 @@ export function UserItemAvatar({
 
   return (
     <span className="relative inline-flex shrink-0">
-      <span
+      <Avatar
         className={cn(
-          "inline-flex items-center justify-center overflow-hidden rounded-full border border-border bg-muted text-muted-foreground shadow-sm",
+          "border border-border bg-muted text-muted-foreground shadow-sm",
           resolvedAvatarSizeClassName,
         )}
       >
-        {avatarUrl ? (
-          <img
-            alt={displayName}
-            className={cn(
-              "rounded-full object-cover",
-              resolvedAvatarSizeClassName,
-            )}
-            src={avatarUrl}
-          />
-        ) : (
-          <span
-            className={[
-              "font-semibold leading-none",
-              compact ? "text-xs" : "text-sm",
-            ].join(" ")}
-          >
-            {getDisplayNameInitials(displayName)}
-          </span>
-        )}
-      </span>
+        {avatarUrl ? <AvatarImage alt={displayName} src={avatarUrl} /> : null}
+        <AvatarFallback
+          className={cn(
+            "font-semibold leading-none",
+            compact ? "text-xs" : "text-sm",
+          )}
+        >
+          {getDisplayNameInitials(displayName)}
+        </AvatarFallback>
+      </Avatar>
       {presenceStatus ? (
         <span
           aria-hidden="true"

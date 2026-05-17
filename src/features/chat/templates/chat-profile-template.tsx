@@ -1,15 +1,16 @@
 import { LogOut, PencilLine } from "lucide-react";
 import { DetailField } from "@/components/shared/detail-field";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { ChatCurrentUserProfileDialog } from "@/features/conversation/components/chat-current-user-profile-dialog";
+import { useChatCurrentUserSection } from "@/features/chat/hooks/use-chat-current-user";
+import { ChatCurrentUserProfileDialog } from "@/features/current-user/components/chat-current-user-profile-dialog";
 import {
   CurrentUserError,
   CurrentUserSkeleton,
-} from "@/features/conversation/components/chat-current-user-section-state";
-import { useChatCurrentUserSection } from "@/features/conversation/hooks/use-chat-current-user";
+} from "@/features/current-user/components/chat-current-user-section-state";
 import { presenceStatusLabels } from "@/types/user";
 import { formatDateTime } from "@/utils/date";
-import { getUsernameLabel } from "@/utils/user-display";
+import { getUsernameLabel } from "@/utils/display";
 
 function ProfileAvatar({
   avatarUrl,
@@ -21,17 +22,18 @@ function ProfileAvatar({
   initials: string;
 }) {
   return (
-    <div className="bg-muted inline-flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full border">
+    <Avatar className="size-10 border bg-muted">
       {avatarUrl ? (
-        <img
+        <AvatarImage
           alt={displayName}
-          className="h-full w-full rounded-full object-cover"
+          className="object-cover"
           src={avatarUrl}
         />
-      ) : (
-        <span className="text-sm font-semibold leading-none">{initials}</span>
-      )}
-    </div>
+      ) : null}
+      <AvatarFallback className="text-sm font-semibold leading-none">
+        {initials}
+      </AvatarFallback>
+    </Avatar>
   );
 }
 

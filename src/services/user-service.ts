@@ -10,7 +10,7 @@ import type {
   UserResponse,
 } from "@/types/user";
 import { PresenceStatusEnum } from "@/types/user";
-import { getDisplayName } from "@/utils/user-display";
+import { getDisplayName } from "@/utils/display";
 
 function normalizePresenceStatus(rawStatus?: string): PresenceStatusEnum {
   if (!rawStatus) {

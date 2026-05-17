@@ -1,4 +1,5 @@
 import type { Client, IMessage } from "@stomp/stompjs";
+import { SOCKET_EVENT } from "@/config/constant";
 import type {
   ConversationEvent,
   ConversationSeenEvent,
@@ -16,14 +17,23 @@ const socketDestinations = {
 
 export function subscribeToConversationUpdates(
   client: Client,
-  onConversationUpdate: (event: ConversationEvent) => void,
+  onConversationUpdate: (
+    event: ConversationEvent | ConversationSeenEvent,
+  ) => void,
 ) {
   const subscription = client.subscribe(
     socketDestinations.conversationUpdates,
     (message: IMessage) => {
-      const event = parseToJson<ConversationEvent>(message.body);
+      const event = parseToJson<ConversationEvent | ConversationSeenEvent>(
+        message.body,
+      );
 
-      if (!event || event.eventType !== "conversation.updated") return;
+      if (
+        !event ||
+        (event.eventType !== SOCKET_EVENT.CONVERSATION_UPDATED &&
+          event.eventType !== SOCKET_EVENT.CONVERSATION_SEEN)
+      )
+        return;
 
       onConversationUpdate(event);
     },
@@ -65,7 +75,7 @@ export function subscribeToConversationSeen(
     (message: IMessage) => {
       const event = parseToJson<ConversationSeenEvent>(message.body);
 
-      if (!event || event.eventType !== "conversation.seen") return;
+      if (!event || event.eventType !== SOCKET_EVENT.CONVERSATION_SEEN) return;
 
       onConversationSeen(event);
     },

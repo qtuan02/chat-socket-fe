@@ -1,11 +1,12 @@
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import type { Conversation, ConversationMember } from "@/types/conversation";
 import { ConversationTypeEnum } from "@/types/conversation";
 import { cn } from "@/utils/cn";
-import { getDisplayNameInitials } from "@/utils/user-display";
 import {
   getConversationAvatarMembers,
+  getDisplayNameInitials,
   isConversationOnline,
-} from "../utils/conversation-display";
+} from "@/utils/display";
 
 type ConversationAvatarProps = {
   className?: string;
@@ -71,29 +72,28 @@ function ConversationMemberAvatar({
     : getDisplayNameInitials(fallbackName);
 
   return (
-    <div
+    <Avatar
       className={cn(
-        "inline-flex shrink-0 items-center justify-center overflow-hidden rounded-full border border-border bg-muted text-muted-foreground shadow-sm",
+        "border border-border bg-muted text-muted-foreground shadow-sm",
         className,
       )}
     >
       {member?.avatarUrl ? (
-        <img
+        <AvatarImage
           alt={label}
-          className="size-full rounded-full object-cover"
+          className="object-cover"
           src={member.avatarUrl}
         />
-      ) : (
-        <span
-          className={cn(
-            "font-semibold leading-none",
-            avatarSizeClassNames[size].text,
-          )}
-        >
-          {initials}
-        </span>
-      )}
-    </div>
+      ) : null}
+      <AvatarFallback
+        className={cn(
+          "font-semibold leading-none",
+          avatarSizeClassNames[size].text,
+        )}
+      >
+        {initials}
+      </AvatarFallback>
+    </Avatar>
   );
 }
 

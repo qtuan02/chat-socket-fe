@@ -6,13 +6,13 @@ import { BrowserRouter, Route, Routes } from "react-router";
 import { Toaster } from "sonner";
 import { env } from "@/config/env";
 import { APP_ROUTES } from "@/config/routes";
-import { GuestRoute } from "@/features/auth/providers/guest-route";
-import { ProtectedRoute } from "@/features/auth/providers/protected-route";
 import { useBackendHealthQuery } from "@/hooks/api/health";
 import { queryClient } from "@/libs/query-client";
 import { ChatPage } from "@/pages/chat-page";
 import { SignInPage } from "@/pages/sign-in-page";
 import { SignUpPage } from "@/pages/sign-up-page";
+import { GuestRoute } from "@/providers/guest-route";
+import { ProtectedRoute } from "@/providers/protected-route";
 import useAuthStore from "./stores/useAuthStore";
 import { useSocketStore } from "./stores/useSocketStore";
 

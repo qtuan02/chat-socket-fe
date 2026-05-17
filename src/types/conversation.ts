@@ -1,3 +1,4 @@
+import type { SOCKET_EVENT } from "@/config/constant";
 import type { BaseResponse } from "./base";
 import type { MessageDto } from "./message";
 import type { PresenceStatusEnum } from "./user";
@@ -88,7 +89,7 @@ export interface Conversation {
 }
 
 export interface ConversationEvent {
-  eventType: "conversation.updated";
+  eventType: typeof SOCKET_EVENT.CONVERSATION_UPDATED;
   conversationId: string;
   lastMessage: MessageDto | null;
   lastMessageAt: string;
@@ -96,7 +97,7 @@ export interface ConversationEvent {
 }
 
 export interface ConversationSeenEvent {
-  eventType: "conversation.seen";
+  eventType: typeof SOCKET_EVENT.CONVERSATION_SEEN;
   conversationId: string;
   seenByUserId: string;
   lastReadMessageId: string;

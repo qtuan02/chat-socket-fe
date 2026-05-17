@@ -10,7 +10,7 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import type { UserItemData } from "@/types/user";
 import { formatDateTime } from "@/utils/date";
-import { getUsernameLabel } from "@/utils/user-display";
+import { getUsernameLabel } from "@/utils/display";
 import type { UserItemPopupAction } from "./user-item-helpers";
 
 type UserItemDialogProps = {

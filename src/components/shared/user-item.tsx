@@ -1,8 +1,9 @@
 import * as React from "react";
+import { Button } from "@/components/ui/button";
 import type { FriendRelationshipStatus } from "@/types/friend";
 import type { UserItemData } from "@/types/user";
 import { cn } from "@/utils/cn";
-import { getUsernameLabel } from "@/utils/user-display";
+import { getUsernameLabel } from "@/utils/display";
 import { UserItemActionButton } from "./user-item-action-button";
 import { UserItemAvatar } from "./user-item-avatar";
 import { UserItemDialog } from "./user-item-dialog";
@@ -68,10 +69,11 @@ export function UserItem({
         )}
       >
         <div className={cn("relative grid", compact ? "gap-1.5" : "gap-2.5")}>
-          <button
+          <Button
             type="button"
+            variant="ghost"
             className={cn(
-              "w-full text-left",
+              "h-auto w-full p-0 text-left whitespace-normal hover:bg-transparent",
               compact
                 ? "flex items-center justify-between gap-2"
                 : "grid grid-cols-[auto,1fr] gap-2.5",
@@ -125,7 +127,7 @@ export function UserItem({
                 {subtitle && <p className="truncate">{subtitle}</p>}
               </div>
             </div>
-          </button>
+          </Button>
 
           {action && <div className="relative shrink-0 pt-0.5">{action}</div>}
         </div>

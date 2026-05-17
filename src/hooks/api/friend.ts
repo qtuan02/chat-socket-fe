@@ -56,13 +56,7 @@ export const friendRequestQueryKeys = {
 function getPresenceStatusFromOnlineUsers(
   userId: string,
   onlineUserIds: ReadonlySet<string>,
-  isPresenceReady: boolean,
-  fallbackPresenceStatus?: PresenceStatusEnum,
 ): PresenceStatusEnum {
-  if (!isPresenceReady) {
-    return fallbackPresenceStatus ?? PresenceStatusEnum.Checking;
-  }
-
   return onlineUserIds.has(userId)
     ? PresenceStatusEnum.Online
     : PresenceStatusEnum.Offline;
@@ -71,7 +65,6 @@ function getPresenceStatusFromOnlineUsers(
 function applyFriendsPresence(
   data: FriendsPage | undefined,
   onlineUserIds: ReadonlySet<string>,
-  isPresenceReady: boolean,
 ): FriendsPage | undefined {
   if (!data) return data;
 
@@ -83,8 +76,6 @@ function applyFriendsPresence(
         presenceStatus: getPresenceStatusFromOnlineUsers(
           friend.id,
           onlineUserIds,
-          isPresenceReady,
-          friend.presenceStatus,
         ),
       }),
     ),
@@ -96,7 +87,6 @@ export function useFriendsQuery(
   options?: UseQueryOptionsWrapper<FriendsPage, Error>,
 ) {
   const { data: currentUser } = useCurrentUserQuery();
-  const isPresenceReady = useSocketStore((state) => state.isPresenceReady);
   const onlineUsers = useSocketStore((state) => state.onlineUsers);
   const onlineUserIds = React.useMemo(
     () => new Set(onlineUsers),
@@ -111,8 +101,8 @@ export function useFriendsQuery(
     enabled: !!currentUser?.id && (options?.enabled ?? true),
   });
   const data = React.useMemo(
-    () => applyFriendsPresence(query.data, onlineUserIds, isPresenceReady),
-    [isPresenceReady, onlineUserIds, query.data],
+    () => applyFriendsPresence(query.data, onlineUserIds),
+    [onlineUserIds, query.data],
   );
 
   return {
@@ -125,7 +115,6 @@ export function useFriendsInfiniteQuery(
   params: Omit<FriendListParams, "cursor"> = {},
 ) {
   const { data: currentUser } = useCurrentUserQuery();
-  const isPresenceReady = useSocketStore((state) => state.isPresenceReady);
   const onlineUsers = useSocketStore((state) => state.onlineUsers);
   const onlineUserIds = React.useMemo(
     () => new Set(onlineUsers),
@@ -162,25 +151,19 @@ export function useFriendsInfiniteQuery(
     () =>
       query.data?.pages.flatMap((page) =>
         page.items.map((friend) =>
-          getPresenceStatusFromOnlineUsers(
-            friend.id,
-            onlineUserIds,
-            isPresenceReady,
-            friend.presenceStatus,
-          ) === friend.presenceStatus
+          getPresenceStatusFromOnlineUsers(friend.id, onlineUserIds) ===
+          friend.presenceStatus
             ? friend
             : {
                 ...friend,
                 presenceStatus: getPresenceStatusFromOnlineUsers(
                   friend.id,
                   onlineUserIds,
-                  isPresenceReady,
-                  friend.presenceStatus,
                 ),
               },
         ),
       ) ?? [],
-    [isPresenceReady, onlineUserIds, query.data?.pages],
+    [onlineUserIds, query.data?.pages],
   );
 
   return {
