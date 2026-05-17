@@ -1,5 +1,6 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { type ReactNode, useEffect } from "react";
+import { SOCKET_EVENT } from "@/config/constant";
 import {
   applyConversationSeenToCache,
   applyConversationUpdateToCache,
@@ -14,7 +15,6 @@ import {
 } from "@/services/socket-service";
 import { useSocketStore } from "@/stores/useSocketStore";
 import type { ConversationEvent } from "@/types/conversation";
-import { SOCKET_EVENT } from "@/config/constant";
 
 type ChatSocketProviderProps = {
   activeConversationId: string;

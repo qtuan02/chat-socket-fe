@@ -13,7 +13,6 @@ import { ConversationDetailsPanel } from "@/features/conversation/components/con
 import { FriendsTemplate } from "@/features/friends/templates/friends-template";
 import { useConversationsInfiniteQuery } from "@/hooks/api/conversation";
 import { cn } from "@/utils/cn";
-import { ChatSocketProvider } from "../../../providers/chat-socket-provider";
 import { EmptyConversationBanner } from "../components/content/empty-conversation-banner";
 import { WelcomeSkeleton } from "../components/skeleton/welcome-skeleton";
 
@@ -160,9 +159,7 @@ export function ChatTemplate() {
     !isProfileRoute;
 
   return (
-    <ChatSocketProvider
-      activeConversationId={isDraftConversation ? "" : conversationId}
-    >
+    <>
       <main className="min-h-screen h-dvh w-full overflow-hidden bg-muted/50 md:h-screen md:min-h-screen">
         <div className="h-full w-full min-w-0 bg-background">
           <div
@@ -201,6 +198,6 @@ export function ChatTemplate() {
         </div>
       </main>
       <MobileChatBottomNav />
-    </ChatSocketProvider>
+    </>
   );
 }
