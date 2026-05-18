@@ -1,9 +1,9 @@
 import * as React from "react";
 import { Button } from "@/components/ui/button";
-import type { FriendRelationshipStatus } from "@/types/friend";
+import type { FriendStatus } from "@/types/friend-status";
 import type { UserItemData } from "@/types/user";
 import { cn } from "@/utils/cn";
-import { getUsernameLabel } from "@/utils/display";
+import { getDisplayName, getUsernameLabel } from "@/utils/display";
 import { UserItemActionButton } from "./user-item-action-button";
 import { UserItemAvatar } from "./user-item-avatar";
 import { UserItemDialog } from "./user-item-dialog";
@@ -22,7 +22,7 @@ type UserItemProps = {
   dialogAction?: React.ReactNode;
   detailErrorMessage?: string | null;
   compact?: boolean;
-  friendStatus?: FriendRelationshipStatus;
+  friendStatus?: FriendStatus;
   isDetailLoading?: boolean;
   isActionLoading?: boolean;
   actionPayload?: string;
@@ -51,7 +51,7 @@ export function UserItem({
   onUnfriend,
 }: UserItemProps) {
   const [isPopupOpen, setIsPopupOpen] = React.useState(false);
-  const displayName = user.displayName.trim();
+  const displayName = getDisplayName(user);
   const dialogUser = detailUser ?? user;
   const friendStatusLabel = getFriendStatusLabel(friendStatus);
   const presenceStatusLabel = getPresenceStatusLabel(dialogUser.presenceStatus);
@@ -61,7 +61,7 @@ export function UserItem({
     <>
       <li
         className={cn(
-          "border border-border/80 bg-background",
+          "border border-border/80 bg-background list-none",
           "transition",
           "hover:border-primary/50 hover:bg-muted/50 focus-within:border-primary/50 focus-within:ring-2 focus-within:ring-primary/30 focus-within:ring-offset-2",
           compact ? "rounded-md p-2" : "rounded-lg p-2.5",
@@ -87,7 +87,7 @@ export function UserItem({
               <UserItemAvatar
                 compact={compact}
                 displayName={displayName}
-                avatarUrl={user.avatarUrl}
+                avatarUrl={user.avatarUrl ?? undefined}
                 presenceStatus={user.presenceStatus}
                 avatarSizeClassName={compact ? "size-8" : "size-11"}
               />

@@ -1,13 +1,19 @@
 import { Check, Loader2, X } from "lucide-react";
 import { UserItem } from "@/components/shared/user-item";
 import { Button } from "@/components/ui/button";
-import type { FriendRequestItem } from "@/types/friend";
-import { FriendRelationshipStatusEnum } from "@/types/friend-status";
+import type {
+  FriendRequestUser,
+  ReceivedFriendRequest,
+  SentFriendRequest,
+} from "@/types/friend";
+import { FriendStatus } from "@/types/friend-status";
 import { formatRelativeTime } from "@/utils/date";
+
+type FriendRequest = ReceivedFriendRequest | SentFriendRequest;
 
 type FriendRequestListProps = {
   emptyMessage: string;
-  requests: FriendRequestItem[];
+  requests: FriendRequest[];
   title: string;
   variant: "received" | "sent";
   processingRequestId: string | null;
@@ -16,7 +22,16 @@ type FriendRequestListProps = {
   onCancel?: (requestId: string) => void;
 };
 
-function buildSubtitle(message?: string, createdAt?: string) {
+function getRequestUser(
+  request: FriendRequest,
+  variant: "received" | "sent",
+): FriendRequestUser {
+  return variant === "received"
+    ? (request as ReceivedFriendRequest).fromUser
+    : (request as SentFriendRequest).toUser;
+}
+
+function buildSubtitle(message?: string | null, createdAt?: string) {
   const relativeTime = formatRelativeTime(createdAt);
 
   if (message && relativeTime) return `${message} - ${relativeTime}`;
@@ -122,22 +137,17 @@ export function FriendRequestList({
         <ul className="grid gap-2 md:grid-cols-2 xl:grid-cols-3">
           {requests.map((request) => {
             const isProcessing = processingRequestId === request.id;
+            const requestUser = getRequestUser(request, variant);
 
             return (
               <UserItem
                 key={request.id}
                 friendStatus={
                   variant === "received"
-                    ? FriendRelationshipStatusEnum.Pending
-                    : FriendRelationshipStatusEnum.Sent
+                    ? FriendStatus.RECEIVED
+                    : FriendStatus.SENT
                 }
-                user={{
-                  id: request.user.id,
-                  displayName: request.user.displayName,
-                  username: request.user.username,
-                  avatarUrl: request.user.avatarUrl,
-                  bio: request.user.bio,
-                }}
+                user={requestUser}
                 subtitle={buildSubtitle(request.message, request.createdAt)}
                 action={
                   <FriendRequestActions

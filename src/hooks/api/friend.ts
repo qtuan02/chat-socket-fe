@@ -9,14 +9,13 @@ import {
 import { friendService } from "@/services/friend-service";
 import { useSocketStore } from "@/stores/useSocketStore";
 import type {
-  AcceptFriendResponseDto,
-  Friend,
   FriendActionRequest,
   FriendListParams,
   FriendRequests,
-  FriendSearchResult,
+  FriendRequestUser,
   FriendSendRequestPayload,
   FriendsPage,
+  FriendWithPresence,
 } from "@/types/friend";
 import { PresenceStatusEnum } from "@/types/user";
 
@@ -31,12 +30,12 @@ export const friendQueryKeys = {
     friendQueryKeyFactory.list({
       userId,
       search: params.search,
-      cursor: params.cursor,
+      offset: params.offset,
       limit: params.limit,
     }),
   listInfinite: (
     userId: string,
-    params: Omit<FriendListParams, "cursor"> = {},
+    params: Omit<FriendListParams, "offset"> = {},
   ) =>
     friendQueryKeyFactory.list({
       userId,
@@ -70,8 +69,8 @@ function applyFriendsPresence(
 
   return {
     ...data,
-    items: data.items.map(
-      (friend): Friend => ({
+    messages: data.messages.map(
+      (friend): FriendWithPresence => ({
         ...friend,
         presenceStatus: getPresenceStatusFromOnlineUsers(
           friend.id,
@@ -112,7 +111,7 @@ export function useFriendsQuery(
 }
 
 export function useFriendsInfiniteQuery(
-  params: Omit<FriendListParams, "cursor"> = {},
+  params: Omit<FriendListParams, "offset"> = {},
 ) {
   const { data: currentUser } = useCurrentUserQuery();
   const onlineUsers = useSocketStore((state) => state.onlineUsers);
@@ -126,10 +125,10 @@ export function useFriendsInfiniteQuery(
     Error,
     {
       pages: Array<FriendsPage>;
-      pageParams: Array<string | undefined>;
+      pageParams: Array<number | undefined>;
     },
     ReturnType<typeof friendQueryKeys.listInfinite>,
-    string | undefined
+    number | undefined
   >({
     queryKey: friendQueryKeys.listInfinite(currentUser?.id ?? "", {
       search: params.search,
@@ -139,10 +138,10 @@ export function useFriendsInfiniteQuery(
       friendService.getFriends({
         search: params.search,
         limit: params.limit,
-        cursor: pageParam,
+        offset: pageParam,
       }),
-    getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
-    initialPageParam: undefined as string | undefined,
+    getNextPageParam: (lastPage) => lastPage.nextOffset ?? undefined,
+    initialPageParam: undefined as number | undefined,
     enabled: !!currentUser?.id,
     staleTime: 0,
   });
@@ -150,7 +149,7 @@ export function useFriendsInfiniteQuery(
   const friends = React.useMemo(
     () =>
       query.data?.pages.flatMap((page) =>
-        page.items.map((friend) =>
+        page.messages.map((friend) =>
           getPresenceStatusFromOnlineUsers(friend.id, onlineUserIds) ===
           friend.presenceStatus
             ? friend
@@ -186,15 +185,6 @@ export function useFriendRequestsQuery(
   });
 }
 
-export function useSearchFriendsByUsernameMutation(
-  options?: UseMutationOptionsWrapper<string, FriendSearchResult[], Error>,
-) {
-  return useMutation({
-    mutationFn: friendService.searchUsersByUsername,
-    ...options,
-  });
-}
-
 export function useSendFriendRequestMutation(
   options?: UseMutationOptionsWrapper<
     FriendSendRequestPayload,
@@ -211,7 +201,7 @@ export function useSendFriendRequestMutation(
 export function useAcceptFriendRequestMutation(
   options?: UseMutationOptionsWrapper<
     FriendActionRequest,
-    AcceptFriendResponseDto,
+    FriendRequestUser,
     Error
   >,
 ) {

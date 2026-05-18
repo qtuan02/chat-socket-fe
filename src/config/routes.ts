@@ -22,10 +22,10 @@ export const APP_API = {
     user: {
       me: "/user/me",
       info: "/user/info",
+      search: "/user",
     },
     friend: {
       list: "/friend",
-      search: "/friend/search",
       requests: "/friend/request",
       sendRequest: "/friend/request",
       acceptRequest: "/friend/accept",

@@ -1,13 +1,13 @@
 import { Virtuoso } from "react-virtuoso";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { FriendSearchTrigger } from "@/features/friend-search/components/friend-search-trigger";
 import type { Conversation, ConversationTypeEnum } from "@/types/conversation";
 import { cn } from "@/utils/cn";
 import { getErrorMessage } from "@/utils/error";
 import { ConversationListFilter } from "./conversation-list-filter";
 import { ConversationListItem } from "./conversation-list-item";
 import { ConversationListSkeleton } from "./conversation-list-skeleton";
+import { UserSearchTrigger } from "./user-search-trigger";
 
 type ConversationListProps = {
   className?: string;
@@ -20,7 +20,7 @@ type ConversationListProps = {
   isLoading: boolean;
   onConversationSelect: (conversationId: string) => void;
   onFilterChange: (nextFilter: ConversationTypeEnum | null) => void;
-  onFriendSearchOpen: () => void;
+  onUserSearchOpen: () => void;
   onLoadMore: () => void;
   onRetry: () => void;
 };
@@ -55,14 +55,14 @@ export function ConversationList({
   isLoading,
   onConversationSelect,
   onFilterChange,
-  onFriendSearchOpen,
+  onUserSearchOpen,
   onLoadMore,
   onRetry,
 }: ConversationListProps) {
   return (
     <section className={cn("flex flex-col bg-background/60", className)}>
       <div className="px-3 pt-3 md:px-4 md:pt-4">
-        <FriendSearchTrigger onOpen={onFriendSearchOpen} />
+        <UserSearchTrigger onOpen={onUserSearchOpen} />
 
         <ConversationListFilter
           activeFilter={activeFilter}

@@ -4,7 +4,6 @@ import { toast } from "sonner";
 import { APP_ROUTES } from "@/config/routes";
 import { ConversationList } from "@/features/conversation/components/conversation-list";
 import { ConversationSidebarHeader } from "@/features/conversation/components/conversation-sidebar-header";
-import { FriendSearchList } from "@/features/friend-search/components/friend-search-list";
 import { CreateGroupDialog } from "@/features/group/components/create-group-dialog";
 import {
   useConversationsInfiniteQuery,
@@ -15,25 +14,26 @@ import {
   ConversationTypeEnum,
   type CreateGroupConversationRequest,
 } from "@/types/conversation";
-import type { Friend } from "@/types/friend";
+import type { DirectMessageUser } from "@/types/user";
 import { cn } from "@/utils/cn";
 import { getErrorMessage } from "@/utils/error";
 import { ChatCurrentUserSection } from "../../../current-user/components/chat-current-user-section";
+import { UserSearchList } from "./user-search-list";
 
 type ChatSidebarProps = {
   className?: string;
   activeConversationId: string;
   onConversationSelect?: () => void;
-  onDirectMessageDraftSelect?: (friend: Friend) => void;
+  onDirectMessageDraftSelect?: (user: DirectMessageUser) => void;
 };
 
-type SidebarView = "conversations" | "friend-search";
+type SidebarView = "conversations" | "user-search";
 
 function getConversationTypeFilter(filter: ConversationTypeEnum | null) {
   return filter ?? undefined;
 }
 
-function getDirectConversationIdByFriendId(conversations: Conversation[]) {
+function getDirectConversationIdByUserId(conversations: Conversation[]) {
   const directConversationIds = new Map<string, string>();
 
   for (const conversation of conversations) {
@@ -83,8 +83,8 @@ export function ChatSidebar({
     },
   });
 
-  const directConversationIdByFriendId = React.useMemo(
-    () => getDirectConversationIdByFriendId(conversations),
+  const directConversationIdByUserId = React.useMemo(
+    () => getDirectConversationIdByUserId(conversations),
     [conversations],
   );
 
@@ -93,13 +93,13 @@ export function ChatSidebar({
     onConversationSelect?.();
   };
 
-  const handleSelectFriend = (friend: Friend) => {
-    const conversationId = directConversationIdByFriendId.get(friend.id);
+  const handleSelectUser = (user: DirectMessageUser) => {
+    const conversationId = directConversationIdByUserId.get(user.id);
 
     if (conversationId) {
       handleSelectConversation(conversationId);
     } else {
-      onDirectMessageDraftSelect?.(friend);
+      onDirectMessageDraftSelect?.(user);
     }
 
     setActiveView("conversations");
@@ -126,14 +126,14 @@ export function ChatSidebar({
         }}
       />
 
-      {activeView === "friend-search" ? (
+      {activeView === "user-search" ? (
         <div className="min-h-0 flex-1 p-3 md:p-4">
-          <FriendSearchList
-            conversationIdByFriendId={directConversationIdByFriendId}
+          <UserSearchList
+            conversationIdByUserId={directConversationIdByUserId}
             onBack={() => {
               setActiveView("conversations");
             }}
-            onSelectFriend={handleSelectFriend}
+            onSelectUser={handleSelectUser}
           />
         </div>
       ) : (
@@ -148,8 +148,8 @@ export function ChatSidebar({
           isLoading={isLoading}
           onConversationSelect={handleSelectConversation}
           onFilterChange={setConversationFilter}
-          onFriendSearchOpen={() => {
-            setActiveView("friend-search");
+          onUserSearchOpen={() => {
+            setActiveView("user-search");
           }}
           onLoadMore={handleLoadMoreConversations}
           onRetry={() => {

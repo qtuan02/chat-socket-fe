@@ -1,19 +1,24 @@
 import { CONVERSATION_LABELS } from "@/config/constant";
 import type { Conversation, ConversationMember } from "@/types/conversation";
 import { ConversationTypeEnum } from "@/types/conversation";
-import type { User } from "@/types/user";
 import { PresenceStatusEnum, presenceStatusLabels } from "@/types/user";
 import { formatRelativeActivity as formatRelativeActivityWithLabels } from "@/utils/date";
 
-export type DisplayableNameInput = Pick<
-  User,
-  "firstName" | "lastName" | "username"
->;
+export type DisplayableNameInput = {
+  displayName?: string | null;
+  firstName?: string | null;
+  id?: string | null;
+  lastName?: string | null;
+  username?: string | null;
+};
 
-export function getDisplayName(user: DisplayableNameInput) {
+export function getDisplayName(user: DisplayableNameInput): string {
+  const explicitDisplayName = user.displayName?.trim();
+  if (explicitDisplayName) return explicitDisplayName;
+
   const fullName = [user.firstName, user.lastName].filter(Boolean).join(" ");
 
-  return fullName || user.username;
+  return fullName || user.username || user.id || "-";
 }
 
 export function getDisplayNameInitials(name?: string) {
@@ -30,7 +35,7 @@ export function getDisplayNameInitials(name?: string) {
   return normalizedName.slice(0, 2).toUpperCase();
 }
 
-export function getUsernameLabel(username?: string) {
+export function getUsernameLabel(username?: string | null) {
   if (!username) return null;
 
   return username.startsWith("@") ? username : `@${username}`;

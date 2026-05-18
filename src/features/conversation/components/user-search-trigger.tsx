@@ -2,11 +2,11 @@ import { Search } from "lucide-react";
 import * as React from "react";
 import { Input } from "@/components/ui/input";
 
-type FriendSearchTriggerProps = {
+type UserSearchTriggerProps = {
   onOpen: () => void;
 };
 
-export function FriendSearchTrigger({ onOpen }: FriendSearchTriggerProps) {
+export function UserSearchTrigger({ onOpen }: UserSearchTriggerProps) {
   const searchInputId = React.useId();
 
   return (
@@ -14,7 +14,7 @@ export function FriendSearchTrigger({ onOpen }: FriendSearchTriggerProps) {
       className="mb-4 block"
       htmlFor={`conversation-search-${searchInputId}`}
     >
-      <span className="sr-only">Search friends</span>
+      <span className="sr-only">Search users</span>
       <div className="relative text-muted-foreground">
         <Search className="pointer-events-none absolute left-3 top-2 size-4" />
         <Input
@@ -22,7 +22,7 @@ export function FriendSearchTrigger({ onOpen }: FriendSearchTriggerProps) {
           readOnly
           onFocus={onOpen}
           onClick={onOpen}
-          placeholder="Search friends"
+          placeholder="Search users"
           type="search"
           className="h-9 cursor-text pl-9 pr-3"
         />

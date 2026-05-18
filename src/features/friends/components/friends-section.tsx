@@ -1,27 +1,29 @@
-import { Search, UserPlus } from "lucide-react";
+import { Search } from "lucide-react";
 import * as React from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
-import type { Friend } from "@/types/friend";
-import type { UserItemData } from "@/types/user";
+import type { FriendWithPresence } from "@/types/friend";
+import type { UserInfo } from "@/types/user";
 import { getErrorMessage } from "@/utils/error";
 import { FriendList } from "./friend-list";
 
 type FriendsSectionProps = {
   isLoading: boolean;
+  isFetchingNextPage: boolean;
+  hasNextPage: boolean;
   isError: boolean;
   error: unknown;
   friendInfoError: unknown;
-  friends: Friend[];
-  selectedFriendInfo?: UserItemData;
+  friends: FriendWithPresence[];
+  selectedFriendInfo?: UserInfo;
   selectedFriendInfoId: string | null;
   searchTerm: string;
   onSearchChange: (value: string) => void;
+  onLoadMore: () => void;
   onRetry: () => void;
-  onAddFriend: () => void;
   onOpenFriendDetails: (friendId: string) => void;
-  onMessageFriend: (friend: Friend) => void;
+  onMessageFriend: (friend: FriendWithPresence) => void;
   isFriendInfoLoading: boolean;
   processingFriendId: string | null;
   onUnfriend: (friendId: string) => void;
@@ -39,6 +41,8 @@ function FriendsEmptyState({ hasSearchTerm }: { hasSearchTerm: boolean }) {
 
 export function FriendsSection({
   isLoading,
+  isFetchingNextPage,
+  hasNextPage,
   isError,
   error,
   friendInfoError,
@@ -47,8 +51,8 @@ export function FriendsSection({
   selectedFriendInfoId,
   searchTerm,
   onSearchChange,
+  onLoadMore,
   onRetry,
-  onAddFriend,
   onOpenFriendDetails,
   onMessageFriend,
   isFriendInfoLoading,
@@ -56,7 +60,33 @@ export function FriendsSection({
   onUnfriend,
 }: FriendsSectionProps) {
   const searchInputId = React.useId();
+  const isLoadMoreLockedRef = React.useRef(false);
   const hasSearchTerm = searchTerm.trim().length > 0;
+
+  React.useEffect(() => {
+    if (!isFetchingNextPage) {
+      isLoadMoreLockedRef.current = false;
+    }
+  }, [isFetchingNextPage]);
+
+  const handleScroll = React.useCallback(
+    (event: React.UIEvent<HTMLDivElement>) => {
+      if (!hasNextPage || isFetchingNextPage || isLoadMoreLockedRef.current)
+        return;
+
+      const scrollContainer = event.currentTarget;
+      const distanceToBottom =
+        scrollContainer.scrollHeight -
+        scrollContainer.scrollTop -
+        scrollContainer.clientHeight;
+
+      if (distanceToBottom < 240) {
+        isLoadMoreLockedRef.current = true;
+        onLoadMore();
+      }
+    },
+    [hasNextPage, isFetchingNextPage, onLoadMore],
+  );
 
   return (
     <section className="flex min-h-0 flex-1 flex-col rounded-xl border border-border bg-background/60">
@@ -68,10 +98,6 @@ export function FriendsSection({
               Connect with your existing friends.
             </p>
           </div>
-          <Button type="button" size="sm" onClick={onAddFriend}>
-            <UserPlus className="size-4" />
-            Add Friend
-          </Button>
         </div>
 
         <label className="block" htmlFor={`friends-search-${searchInputId}`}>
@@ -92,7 +118,10 @@ export function FriendsSection({
         </label>
       </div>
 
-      <div className="min-h-0 flex-1 overflow-y-auto p-3 md:p-4">
+      <div
+        className="min-h-0 flex-1 overflow-y-auto p-3 md:p-4"
+        onScroll={handleScroll}
+      >
         {isLoading ? (
           <div className="grid gap-2">
             <Skeleton className="h-14 rounded-lg" />
@@ -127,6 +156,13 @@ export function FriendsSection({
             onOpenFriendDetails={onOpenFriendDetails}
             onUnfriend={onUnfriend}
           />
+        ) : null}
+
+        {isFetchingNextPage ? (
+          <div className="mt-3 grid gap-2">
+            <Skeleton className="h-14 rounded-lg" />
+            <Skeleton className="h-14 rounded-lg" />
+          </div>
         ) : null}
       </div>
     </section>

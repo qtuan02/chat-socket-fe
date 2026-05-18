@@ -7,7 +7,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useFriendsInfiniteQuery } from "@/hooks/api/friend";
 import type { Friend } from "@/types/friend";
 import { cn } from "@/utils/cn";
-import { getUsernameLabel } from "@/utils/display";
+import { getDisplayName, getUsernameLabel } from "@/utils/display";
 import { getErrorMessage } from "@/utils/error";
 
 const GROUP_MEMBER_PICKER_LIMIT = 25;
@@ -31,7 +31,7 @@ function normalizeFriendIds(friendIds: readonly string[]) {
 }
 
 function getMemberLabel(member: Friend) {
-  return member.displayName || member.username || member.id;
+  return getDisplayName(member);
 }
 
 function SearchState({
@@ -83,15 +83,16 @@ function SelectedFriendChip({
   onRemove: (friendId: string) => void;
 }) {
   const username = getUsernameLabel(friend.username);
+  const displayName = getDisplayName(friend);
 
   return (
     <span className="inline-flex items-center gap-1 rounded-full border border-border bg-muted/50 px-2 py-1 text-xs">
       <UserItemAvatar
         compact
-        displayName={friend.displayName}
-        avatarUrl={friend.avatarUrl}
+        displayName={displayName}
+        avatarUrl={friend.avatarUrl ?? undefined}
       />
-      <span className="max-w-[12rem] truncate">{friend.displayName}</span>
+      <span className="max-w-[12rem] truncate">{displayName}</span>
       {username ? (
         <span className="text-muted-foreground">{username}</span>
       ) : null}
@@ -125,6 +126,7 @@ function FriendListItem({
   onToggle: (friend: Friend) => void;
 }) {
   const username = getUsernameLabel(friend.username);
+  const displayName = getDisplayName(friend);
 
   return (
     <li>
@@ -138,13 +140,13 @@ function FriendListItem({
         <div className="flex min-h-10 items-center gap-2">
           <UserItemAvatar
             compact
-            displayName={friend.displayName}
-            avatarUrl={friend.avatarUrl}
+            displayName={displayName}
+            avatarUrl={friend.avatarUrl ?? undefined}
             avatarSizeClassName="size-7"
           />
           <div className="min-w-0 flex-1">
             <p className="truncate text-sm font-medium leading-5">
-              {friend.displayName}
+              {displayName}
             </p>
             {username ? (
               <p className="truncate text-xs leading-4 text-muted-foreground">

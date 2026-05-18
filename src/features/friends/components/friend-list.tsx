@@ -1,19 +1,19 @@
 import { MessageCircle } from "lucide-react";
 import { UserItem } from "@/components/shared/user-item";
 import { Button } from "@/components/ui/button";
-import type { Friend } from "@/types/friend";
-import { FriendRelationshipStatusEnum } from "@/types/friend-status";
-import type { UserItemData } from "@/types/user";
+import type { FriendWithPresence } from "@/types/friend";
+import { FriendStatus } from "@/types/friend-status";
+import type { UserInfo } from "@/types/user";
 import { getErrorMessage } from "@/utils/error";
 
 type FriendListProps = {
   friendInfoError: unknown;
-  friends: Friend[];
+  friends: FriendWithPresence[];
   isFriendInfoLoading: boolean;
   processingFriendId: string | null;
-  selectedFriendInfo?: UserItemData;
+  selectedFriendInfo?: UserInfo;
   selectedFriendInfoId: string | null;
-  onMessageFriend: (friend: Friend) => void;
+  onMessageFriend: (friend: FriendWithPresence) => void;
   onOpenFriendDetails: (friendId: string) => void;
   onUnfriend: (friendId: string) => void;
 };
@@ -23,15 +23,15 @@ function getFriendDetailUser({
   selectedFriendInfo,
   selectedFriendInfoId,
 }: {
-  friend: Friend;
-  selectedFriendInfo?: UserItemData;
+  friend: FriendWithPresence;
+  selectedFriendInfo?: UserInfo;
   selectedFriendInfoId: string | null;
 }) {
   if (selectedFriendInfoId !== friend.id || !selectedFriendInfo) return null;
 
   return {
     ...selectedFriendInfo,
-    presenceStatus: selectedFriendInfo.presenceStatus ?? friend.presenceStatus,
+    presenceStatus: friend.presenceStatus,
   };
 }
 
@@ -60,16 +60,8 @@ export function FriendList({
           <UserItem
             key={friend.id}
             compact
-            friendStatus={FriendRelationshipStatusEnum.Friend}
-            user={{
-              id: friend.id,
-              displayName: friend.displayName,
-              username: friend.username,
-              avatarUrl: friend.avatarUrl,
-              bio: friend.bio,
-              joinedAt: friend.joinedAt,
-              presenceStatus: friend.presenceStatus,
-            }}
+            friendStatus={FriendStatus.FRIEND}
+            user={friend}
             detailUser={detailUser}
             detailErrorMessage={
               isSelected && friendInfoError

@@ -1,4 +1,9 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  useInfiniteQuery,
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from "@tanstack/react-query";
 import { toast } from "sonner";
 import {
   queryKeysFactory,
@@ -7,11 +12,17 @@ import {
 } from "@/libs/query-key-factory";
 import { userService } from "@/services/user-service";
 import useAuthStore from "@/stores/useAuthStore";
+import type { PaginationRequest, PaginationResponse } from "@/types/base";
 import type {
   UpdateUserRequestPayload,
   User,
-  UserItemData,
+  UserInfo,
+  UserSearch,
 } from "@/types/user";
+
+type UserSearchParams = Omit<PaginationRequest, "cursor"> & {
+  search?: string;
+};
 
 const userQueryKeyFactory = queryKeysFactory<"user">("user");
 
@@ -19,6 +30,11 @@ export const currentUserQueryKeys = {
   ...userQueryKeyFactory,
   current: () => userQueryKeyFactory.detail("me"),
   info: (userId: string) => userQueryKeyFactory.detail(userId),
+  searchInfinite: (params: Omit<UserSearchParams, "offset"> = {}) =>
+    userQueryKeyFactory.list({
+      search: params.search,
+      limit: params.limit,
+    }),
 };
 
 export function useCurrentUserQuery(options?: UseQueryOptionsWrapper<User>) {
@@ -34,7 +50,7 @@ export function useCurrentUserQuery(options?: UseQueryOptionsWrapper<User>) {
 
 export function useUserInfoQuery(
   userId: string | null,
-  options?: UseQueryOptionsWrapper<UserItemData>,
+  options?: UseQueryOptionsWrapper<UserInfo>,
 ) {
   const accessToken = useAuthStore((state) => state.accessToken);
 
@@ -43,6 +59,34 @@ export function useUserInfoQuery(
     queryKey: currentUserQueryKeys.info(userId ?? ""),
     queryFn: () => userService.getUserInfo(userId ?? ""),
     enabled: !!accessToken && !!userId && (options?.enabled ?? true),
+  });
+}
+
+export function useUserSearchInfiniteQuery(
+  params: Omit<UserSearchParams, "offset"> = {},
+) {
+  const accessToken = useAuthStore((state) => state.accessToken);
+
+  return useInfiniteQuery<
+    PaginationResponse<UserSearch>,
+    Error,
+    {
+      pages: Array<PaginationResponse<UserSearch>>;
+      pageParams: Array<number | undefined>;
+    },
+    ReturnType<typeof currentUserQueryKeys.searchInfinite>,
+    number | undefined
+  >({
+    queryKey: currentUserQueryKeys.searchInfinite(params),
+    queryFn: ({ pageParam }) =>
+      userService.searchUsers({
+        search: params.search,
+        limit: params.limit,
+        offset: pageParam,
+      }),
+    getNextPageParam: (lastPage) => lastPage.nextOffset ?? undefined,
+    initialPageParam: undefined as number | undefined,
+    enabled: !!accessToken && (params.search?.trim().length ?? 0) > 0,
   });
 }
 

@@ -10,7 +10,7 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import type { UserItemData } from "@/types/user";
 import { formatDateTime } from "@/utils/date";
-import { getUsernameLabel } from "@/utils/display";
+import { getDisplayName, getUsernameLabel } from "@/utils/display";
 import type { UserItemPopupAction } from "./user-item-helpers";
 
 type UserItemDialogProps = {
@@ -39,13 +39,14 @@ export function UserItemDialog({
   detailErrorMessage,
 }: UserItemDialogProps) {
   const usernameLabel = getUsernameLabel(user.username);
+  const displayName = getDisplayName(user);
   const hasMultipleActions = Boolean(actionButton && dialogAction);
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-md">
         <DialogHeader>
-          <DialogTitle>{user.displayName.trim()}</DialogTitle>
+          <DialogTitle>{displayName}</DialogTitle>
           <DialogDescription>
             Contact information and friend status.
           </DialogDescription>

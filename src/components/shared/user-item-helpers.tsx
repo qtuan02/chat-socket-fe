@@ -1,10 +1,6 @@
 import { CircleAlert, MessageCircleMore, UserRoundCheck } from "lucide-react";
 import type { ReactNode } from "react";
-import type { FriendRelationshipStatus } from "@/types/friend";
-import {
-  FriendRelationshipStatusEnum,
-  friendRelationshipStatusLabels,
-} from "@/types/friend-status";
+import { FriendStatus, friendStatusLabels } from "@/types/friend-status";
 import { PresenceStatusEnum, presenceStatusLabels } from "@/types/user";
 
 export type UserItemPopupAction = {
@@ -14,21 +10,21 @@ export type UserItemPopupAction = {
 
 const SIZE_4_ICON_CLASS = "size-4";
 
-function getStatusIcon(type: FriendRelationshipStatus): ReactNode {
-  if (type === FriendRelationshipStatusEnum.Friend)
+function getStatusIcon(type: FriendStatus): ReactNode {
+  if (type === FriendStatus.FRIEND)
     return <UserRoundCheck className={SIZE_4_ICON_CLASS} />;
-  if (type === FriendRelationshipStatusEnum.Sent)
+  if (type === FriendStatus.SENT)
     return <CircleAlert className={SIZE_4_ICON_CLASS} />;
+  if (type === FriendStatus.RECEIVED)
+    return <MessageCircleMore className={SIZE_4_ICON_CLASS} />;
 
   return <MessageCircleMore className={SIZE_4_ICON_CLASS} />;
 }
 
-export function getFriendStatusLabel(
-  friendStatus?: FriendRelationshipStatus,
-): string {
-  const normalized = friendStatus ?? FriendRelationshipStatusEnum.None;
+export function getFriendStatusLabel(friendStatus?: FriendStatus): string {
+  const normalized = friendStatus ?? FriendStatus.NONE;
 
-  return friendRelationshipStatusLabels[normalized];
+  return friendStatusLabels[normalized];
 }
 
 export function getPresenceStatusLabel(
@@ -43,61 +39,61 @@ export function getPresenceStatusLabel(
 }
 
 export function getFriendPopupAction(
-  friendStatus?: FriendRelationshipStatus,
+  friendStatus?: FriendStatus,
 ): UserItemPopupAction {
-  const normalized = friendStatus ?? FriendRelationshipStatusEnum.None;
+  const normalized = friendStatus ?? FriendStatus.NONE;
 
-  if (normalized === FriendRelationshipStatusEnum.Friend) {
+  if (normalized === FriendStatus.FRIEND) {
     return {
       label: "This user is your friend.",
-      icon: getStatusIcon(FriendRelationshipStatusEnum.Friend),
+      icon: getStatusIcon(FriendStatus.FRIEND),
     };
   }
 
-  if (normalized === FriendRelationshipStatusEnum.Sent) {
+  if (normalized === FriendStatus.SENT) {
     return {
       label: "Friend request has been sent. Waiting for reply.",
-      icon: getStatusIcon(FriendRelationshipStatusEnum.Sent),
+      icon: getStatusIcon(FriendStatus.SENT),
     };
   }
 
-  if (normalized === FriendRelationshipStatusEnum.Pending) {
+  if (normalized === FriendStatus.RECEIVED) {
     return {
-      label: "This user sent you a friend request. Waiting for your response.",
-      icon: getStatusIcon(FriendRelationshipStatusEnum.Pending),
+      label: "This user sent you a friend request.",
+      icon: getStatusIcon(FriendStatus.RECEIVED),
     };
   }
 
-  if (normalized === FriendRelationshipStatusEnum.Self) {
+  if (normalized === FriendStatus.SELF) {
     return {
       label: "This is your profile.",
-      icon: getStatusIcon(FriendRelationshipStatusEnum.Friend),
+      icon: getStatusIcon(FriendStatus.FRIEND),
     };
   }
 
   return {
     label: "Send friend request",
-    icon: getStatusIcon(FriendRelationshipStatusEnum.None),
+    icon: getStatusIcon(FriendStatus.NONE),
   };
 }
 
 export function getUserItemActionButtonLabel(
-  friendStatus: FriendRelationshipStatus | undefined,
+  friendStatus: FriendStatus | undefined,
   isActionLoading: boolean,
 ): string | null {
-  const normalized = friendStatus ?? FriendRelationshipStatusEnum.None;
+  const normalized = friendStatus ?? FriendStatus.NONE;
 
-  if (normalized === FriendRelationshipStatusEnum.Friend) {
+  if (normalized === FriendStatus.FRIEND) {
     return isActionLoading ? "Unfriending..." : "Unfriend";
   }
 
-  if (normalized === FriendRelationshipStatusEnum.Sent) {
+  if (normalized === FriendStatus.SENT) {
     return isActionLoading ? "Cancelling request..." : "Cancel request";
   }
 
-  if (normalized === FriendRelationshipStatusEnum.Pending) return null;
+  if (normalized === FriendStatus.RECEIVED) return "Pending request";
 
-  if (normalized === FriendRelationshipStatusEnum.Self) return null;
+  if (normalized === FriendStatus.SELF) return null;
 
   return isActionLoading ? "Sending request..." : "Send friend request";
 }
