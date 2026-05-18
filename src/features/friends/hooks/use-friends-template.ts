@@ -8,15 +8,23 @@ import {
   useFriendsInfiniteQuery,
 } from "@/hooks/api/friend";
 import { currentUserQueryKeys, useUserInfoQuery } from "@/hooks/api/user";
+import { useDebounce } from "@/hooks/use-debounce";
 import { useFriendRequestActions } from "./use-friend-request-actions";
 import { useOpenDirectConversation } from "./use-open-direct-conversation";
 
 const FRIEND_LIST_LIMIT = 50;
+const FRIEND_SEARCH_DEBOUNCE_MS = 500;
 
 export function useFriendsTemplate() {
   const queryClient = useQueryClient();
   const [friendSearchTerm, setFriendSearchTerm] = React.useState("");
-  const trimmedFriendSearchTerm = friendSearchTerm.trim();
+  const trimmedFriendSearchInput = friendSearchTerm.trim();
+  const debouncedFriendSearchTerm = useDebounce(
+    trimmedFriendSearchInput,
+    FRIEND_SEARCH_DEBOUNCE_MS,
+  );
+  const isDebouncingFriendSearch =
+    trimmedFriendSearchInput !== debouncedFriendSearchTerm;
   const [selectedFriendInfoId, setSelectedFriendInfoId] = React.useState<
     string | null
   >(null);
@@ -26,7 +34,7 @@ export function useFriendsTemplate() {
 
   const friendsQuery = useFriendsInfiniteQuery({
     limit: FRIEND_LIST_LIMIT,
-    search: trimmedFriendSearchTerm || undefined,
+    search: debouncedFriendSearchTerm || undefined,
   });
   const friendRequestsQuery = useFriendRequestsQuery();
   const friendInfoQuery = useUserInfoQuery(selectedFriendInfoId);
@@ -62,10 +70,10 @@ export function useFriendsTemplate() {
 
   return {
     friends: {
-      messages: friendsQuery.friends,
+      messages: isDebouncingFriendSearch ? [] : friendsQuery.friends,
       searchTerm: friendSearchTerm,
       setSearchTerm: setFriendSearchTerm,
-      isLoading: friendsQuery.isLoading,
+      isLoading: isDebouncingFriendSearch || friendsQuery.isLoading,
       isFetchingNextPage: friendsQuery.isFetchingNextPage,
       hasNextPage: Boolean(friendsQuery.hasNextPage),
       isError: friendsQuery.isError,
