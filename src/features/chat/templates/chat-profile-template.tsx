@@ -82,7 +82,7 @@ export function ChatProfileTemplate() {
         <div className="flex items-start justify-between gap-3">
           <div className="flex min-w-0 items-center gap-3">
             <ProfileAvatar
-              avatarUrl={currentUser.avatarUrl}
+              avatarUrl={currentUser.avatarUrl ?? undefined}
               displayName={displayName}
               initials={displayInitials}
             />

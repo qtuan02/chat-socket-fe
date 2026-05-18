@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import type { FriendRequestItem } from "@/types/friend";
+import type { ReceivedFriendRequest, SentFriendRequest } from "@/types/friend";
 import { getErrorMessage } from "@/utils/error";
 import { FriendRequestList } from "./friend-request-list";
 
@@ -8,8 +8,8 @@ type FriendRequestSectionProps = {
   isLoading: boolean;
   isError: boolean;
   error: unknown;
-  receivedRequests: FriendRequestItem[];
-  sentRequests: FriendRequestItem[];
+  receivedRequests: ReceivedFriendRequest[];
+  sentRequests: SentFriendRequest[];
   processingRequestId: string | null;
   onAccept: (requestId: string) => void;
   onDecline: (requestId: string) => void;

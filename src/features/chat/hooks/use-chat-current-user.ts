@@ -77,12 +77,12 @@ export function useChatCurrentUserSection() {
   const resetProfileForm = React.useCallback(() => {
     setProfileForm({
       username: currentUser?.username,
-      email: currentUser?.email,
+      email: currentUser?.email ?? undefined,
       firstName: currentUser?.firstName,
       lastName: currentUser?.lastName,
-      avatarUrl: currentUser?.avatarUrl,
-      bio: currentUser?.bio,
-      phone: currentUser?.phone,
+      avatarUrl: currentUser?.avatarUrl ?? undefined,
+      bio: currentUser?.bio ?? undefined,
+      phone: currentUser?.phone ?? undefined,
     });
   }, [currentUser]);
 

@@ -5,14 +5,13 @@ import { useCurrentUserQuery } from "@/hooks/api/user";
 import { useSocketStore } from "@/stores/useSocketStore";
 import type { Conversation, ConversationMember } from "@/types/conversation";
 import { ConversationTypeEnum } from "@/types/conversation";
-import type { Friend } from "@/types/friend";
 import type { MessageDto } from "@/types/message";
-import type { User } from "@/types/user";
+import type { DirectMessageUser, User } from "@/types/user";
 import { PresenceStatusEnum } from "@/types/user";
 import { getDisplayName } from "@/utils/display";
 
 type ChatLocationState = {
-  directMessageDraftFriend?: Friend | null;
+  directMessageDraftUser?: DirectMessageUser | null;
 };
 
 type UseDirectMessageDraftParams = {
@@ -24,42 +23,38 @@ type UseDirectMessageDraftParams = {
   onCloseDetails: () => void;
 };
 
-function getDraftFriendFromLocationState(state: unknown) {
+function getDraftUserFromLocationState(state: unknown) {
   if (!state || typeof state !== "object") return null;
 
-  const directMessageDraftFriend = (state as ChatLocationState)
-    .directMessageDraftFriend;
+  const directMessageDraftUser = (state as ChatLocationState)
+    .directMessageDraftUser;
 
-  if (
-    !directMessageDraftFriend ||
-    typeof directMessageDraftFriend.id !== "string" ||
-    typeof directMessageDraftFriend.displayName !== "string"
-  )
+  if (!directMessageDraftUser || typeof directMessageDraftUser.id !== "string")
     return null;
 
-  return directMessageDraftFriend;
+  return directMessageDraftUser;
 }
 
 function createDirectMessageDraftConversation({
   currentUser,
-  friend,
+  user,
   presenceStatus,
 }: {
   currentUser?: User;
-  friend: Friend;
+  user: DirectMessageUser;
   presenceStatus: PresenceStatusEnum;
 }): Conversation {
   const now = new Date().toISOString();
-  const friendMember: ConversationMember = {
-    id: friend.id,
-    userId: friend.id,
-    firstName: friend.firstName ?? "",
-    lastName: friend.lastName ?? "",
-    displayName: friend.displayName,
-    username: friend.username,
-    avatarUrl: friend.avatarUrl,
-    bio: friend.bio,
-    joinedAt: friend.joinedAt,
+  const userDisplayName = getDisplayName(user);
+  const directMember: ConversationMember = {
+    id: user.id,
+    userId: user.id,
+    firstName: user.firstName ?? "",
+    lastName: user.lastName ?? "",
+    displayName: userDisplayName,
+    username: user.username,
+    avatarUrl: user.avatarUrl,
+    joinedAt: user.joinedAt,
     lastReadMessageId: null,
     lastReadAt: null,
     presenceStatus,
@@ -81,20 +76,20 @@ function createDirectMessageDraftConversation({
       }
     : null;
   const members = currentUserMember
-    ? [currentUserMember, friendMember]
-    : [friendMember];
+    ? [currentUserMember, directMember]
+    : [directMember];
 
   return {
-    id: `draft:${friend.id}`,
+    id: `draft:${user.id}`,
     type: ConversationTypeEnum.DIRECT,
-    title: friend.displayName,
+    title: userDisplayName,
     lastMessage: "No messages yet.",
     lastMessageAt: "No messages yet.",
     participantCount: members.length,
     unreadCount: 0,
-    avatarUrl: friend.avatarUrl,
+    avatarUrl: user.avatarUrl ?? undefined,
     members,
-    directMember: friendMember,
+    directMember,
     currentUserId: currentUser?.id,
     lastMessageId: null,
     updatedAt: now,
@@ -113,33 +108,33 @@ export function useDirectMessageDraft({
   const navigate = useNavigate();
   const { data: currentUser } = useCurrentUserQuery();
   const onlineUsers = useSocketStore((state) => state.onlineUsers);
-  const locationDraftFriend = React.useMemo(
-    () => getDraftFriendFromLocationState(location.state),
+  const locationDraftUser = React.useMemo(
+    () => getDraftUserFromLocationState(location.state),
     [location.state],
   );
-  const [draftFriend, setDraftFriend] = React.useState<Friend | null>(
-    () => locationDraftFriend,
+  const [draftUser, setDraftUser] = React.useState<DirectMessageUser | null>(
+    () => locationDraftUser,
   );
 
   const draftConversation = React.useMemo(() => {
-    if (!draftFriend) return null;
+    if (!draftUser) return null;
 
-    const presenceStatus = onlineUsers.includes(draftFriend.id)
+    const presenceStatus = onlineUsers.includes(draftUser.id)
       ? PresenceStatusEnum.Online
       : PresenceStatusEnum.Offline;
 
     return createDirectMessageDraftConversation({
       currentUser,
-      friend: draftFriend,
+      user: draftUser,
       presenceStatus,
     });
-  }, [currentUser, draftFriend, onlineUsers]);
+  }, [currentUser, draftUser, onlineUsers]);
   const isDraftConversation = isChatHomeRoute && !!draftConversation;
 
   React.useEffect(() => {
-    if (!locationDraftFriend) return;
+    if (!locationDraftUser) return;
 
-    setDraftFriend(locationDraftFriend);
+    setDraftUser(locationDraftUser);
     navigate(
       {
         pathname: location.pathname,
@@ -152,48 +147,48 @@ export function useDirectMessageDraft({
     location.hash,
     location.pathname,
     location.search,
-    locationDraftFriend,
+    locationDraftUser,
     navigate,
   ]);
 
   React.useEffect(() => {
     if (isFriendsRoute || isProfileRoute) {
-      setDraftFriend(null);
+      setDraftUser(null);
       onCloseDetails();
       return;
     }
 
     if (
-      !draftFriend ||
+      !draftUser ||
       !activeConversation ||
       activeConversation.id !== conversationId ||
       activeConversation.type !== ConversationTypeEnum.DIRECT ||
-      activeConversation.directMember?.userId !== draftFriend.id
+      activeConversation.directMember?.userId !== draftUser.id
     )
       return;
 
-    setDraftFriend(null);
+    setDraftUser(null);
   }, [
     activeConversation,
     conversationId,
-    draftFriend,
+    draftUser,
     isFriendsRoute,
     isProfileRoute,
     onCloseDetails,
   ]);
 
   const clearDraftConversation = React.useCallback(() => {
-    setDraftFriend(null);
+    setDraftUser(null);
   }, []);
 
   const openDraftConversation = React.useCallback(
-    (friend: Friend) => {
-      setDraftFriend(friend);
+    (user: DirectMessageUser) => {
+      setDraftUser(user);
       onCloseDetails();
 
       if (location.pathname !== APP_ROUTES.chat) {
         navigate(APP_ROUTES.chat, {
-          state: { directMessageDraftFriend: friend },
+          state: { directMessageDraftUser: user },
         });
       }
     },

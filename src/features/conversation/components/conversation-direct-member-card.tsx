@@ -1,45 +1,43 @@
-import { DetailField } from "@/components/shared/detail-field";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { UserItem } from "@/components/shared/user-item";
 import type { ConversationMember } from "@/types/conversation";
-import { formatDateTime } from "@/utils/date";
-import {
-  getDisplayNameInitials,
-  getMemberPresenceLabel,
-  getUsernameLabel,
-} from "@/utils/display";
+import type { UserInfo } from "@/types/user";
 
 export function ConversationDirectMemberCard({
   member,
+  detailUser,
+  isDetailLoading = false,
+  detailErrorMessage,
+  onOpenDetails,
+  onSendFriendRequest,
+  sendingFriendRequestId,
 }: {
   member: ConversationMember;
+  detailUser?: UserInfo;
+  isDetailLoading?: boolean;
+  detailErrorMessage?: string | null;
+  onOpenDetails?: (userId: string) => void;
+  onSendFriendRequest?: (userId: string, message?: string) => void;
+  sendingFriendRequestId?: string | null;
 }) {
   return (
-    <>
-      <div className="w-full flex justify-center">
-        <Avatar className="size-40 border border-border bg-background text-muted-foreground shadow-sm">
-          {member.avatarUrl ? (
-            <AvatarImage
-              alt={member.displayName}
-              className="object-cover"
-              src={member.avatarUrl}
-            />
-          ) : null}
-          <AvatarFallback className="text-xl font-semibold">
-            {getDisplayNameInitials(member.displayName)}
-          </AvatarFallback>
-        </Avatar>
-      </div>
-
-      <div className="mt-4 grid gap-3">
-        <DetailField label="Full name" value={member.displayName} />
-        <DetailField
-          label="Username"
-          value={getUsernameLabel(member.username ?? undefined) ?? "-"}
-        />
-        <DetailField label="Bio" value={member.bio} />
-        <DetailField label="Status" value={getMemberPresenceLabel(member)} />
-        <DetailField label="Joined" value={formatDateTime(member.joinedAt)} />
-      </div>
-    </>
+    <UserItem
+      compact
+      user={{
+        id: member.userId,
+        displayName: member.displayName,
+        username: member.username ?? undefined,
+        avatarUrl: member.avatarUrl ?? undefined,
+        bio: member.bio ?? undefined,
+        joinedAt: member.joinedAt,
+        presenceStatus: member.presenceStatus,
+      }}
+      detailUser={detailUser}
+      friendStatus={detailUser?.statusFriend}
+      isActionLoading={sendingFriendRequestId === member.userId}
+      isDetailLoading={isDetailLoading}
+      detailErrorMessage={detailErrorMessage}
+      onOpenDetails={onOpenDetails}
+      onSendFriendRequest={onSendFriendRequest}
+    />
   );
 }

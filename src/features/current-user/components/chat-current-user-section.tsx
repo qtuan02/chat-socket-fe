@@ -9,12 +9,12 @@ import {
 import { APP_ROUTES } from "@/config/routes";
 import { useChatCurrentUserSection } from "@/features/chat/hooks/use-chat-current-user";
 import { cn } from "@/utils/cn";
+import { ChatCurrentUserProfileDialog } from "./chat-current-user-profile-dialog";
 import {
   CurrentUserError,
   CurrentUserSkeleton,
 } from "./chat-current-user-section-state";
 import { CurrentUserTrigger } from "./chat-current-user-trigger";
-import { ChatCurrentUserProfileDialog } from "./chat-current-user-profile-dialog";
 
 type ChatCurrentUserSectionProps = {
   className?: string;
@@ -70,7 +70,7 @@ export function ChatCurrentUserSection({
           <CurrentUserTrigger
             displayName={displayName}
             initials={displayInitials}
-            avatarUrl={currentUser.avatarUrl}
+            avatarUrl={currentUser.avatarUrl ?? undefined}
             username={currentUser.username}
           />
         </DropdownMenuTrigger>

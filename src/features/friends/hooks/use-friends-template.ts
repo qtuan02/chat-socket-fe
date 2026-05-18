@@ -5,30 +5,18 @@ import {
   friendQueryKeys,
   useDeleteFriendMutation,
   useFriendRequestsQuery,
-  useFriendsQuery,
+  useFriendsInfiniteQuery,
 } from "@/hooks/api/friend";
 import { currentUserQueryKeys, useUserInfoQuery } from "@/hooks/api/user";
-import type { Friend } from "@/types/friend";
-import { useAddFriendDialog } from "./use-add-friend-dialog";
 import { useFriendRequestActions } from "./use-friend-request-actions";
 import { useOpenDirectConversation } from "./use-open-direct-conversation";
 
-function getVisibleFriends(friends: Friend[], searchTerm: string) {
-  const normalizedSearch = searchTerm.trim().toLowerCase();
-  if (!normalizedSearch) return friends;
-
-  return friends.filter((friend) =>
-    [friend.displayName, friend.username]
-      .filter(Boolean)
-      .join(" ")
-      .toLowerCase()
-      .includes(normalizedSearch),
-  );
-}
+const FRIEND_LIST_LIMIT = 50;
 
 export function useFriendsTemplate() {
   const queryClient = useQueryClient();
   const [friendSearchTerm, setFriendSearchTerm] = React.useState("");
+  const trimmedFriendSearchTerm = friendSearchTerm.trim();
   const [selectedFriendInfoId, setSelectedFriendInfoId] = React.useState<
     string | null
   >(null);
@@ -36,10 +24,12 @@ export function useFriendsTemplate() {
     string | null
   >(null);
 
-  const friendsQuery = useFriendsQuery();
+  const friendsQuery = useFriendsInfiniteQuery({
+    limit: FRIEND_LIST_LIMIT,
+    search: trimmedFriendSearchTerm || undefined,
+  });
   const friendRequestsQuery = useFriendRequestsQuery();
   const friendInfoQuery = useUserInfoQuery(selectedFriendInfoId);
-  const addFriend = useAddFriendDialog();
   const friendRequests = useFriendRequestActions();
   const openDirectConversation = useOpenDirectConversation();
 
@@ -70,18 +60,17 @@ export function useFriendsTemplate() {
     });
   };
 
-  const allFriends = friendsQuery.data?.items ?? [];
-  const visibleFriends = getVisibleFriends(allFriends, friendSearchTerm);
-
   return {
-    addFriend,
     friends: {
-      items: visibleFriends,
+      messages: friendsQuery.friends,
       searchTerm: friendSearchTerm,
       setSearchTerm: setFriendSearchTerm,
-      isLoading: friendsQuery.isLoading || friendsQuery.isRefetching,
+      isLoading: friendsQuery.isLoading,
+      isFetchingNextPage: friendsQuery.isFetchingNextPage,
+      hasNextPage: Boolean(friendsQuery.hasNextPage),
       isError: friendsQuery.isError,
       error: friendsQuery.error,
+      fetchNextPage: friendsQuery.fetchNextPage,
       refetch: friendsQuery.refetch,
     },
     friendDetails: {

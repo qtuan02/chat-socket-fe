@@ -3,14 +3,12 @@ import axiosClient from "@/libs/axios";
 import type {
   UpdateUserRequestPayload,
   User,
-  UserDto,
-  UserInfoDto,
+  UserInfo,
   UserInfoResponse,
-  UserItemData,
   UserResponse,
+  UserSearchResponse,
 } from "@/types/user";
 import { PresenceStatusEnum } from "@/types/user";
-import { getDisplayName } from "@/utils/display";
 
 function normalizePresenceStatus(rawStatus?: string): PresenceStatusEnum {
   if (!rawStatus) {
@@ -30,40 +28,20 @@ function normalizePresenceStatus(rawStatus?: string): PresenceStatusEnum {
   return PresenceStatusEnum.Checking;
 }
 
-function toUserModel(dto: UserDto): User {
-  const { status, ...user } = dto;
-
-  return {
-    ...user,
-    presenceStatus: normalizePresenceStatus(status),
-  };
-}
-
-function toUserInfoModel(dto: UserInfoDto): UserItemData {
-  return {
-    id: dto.id,
-    username: dto.username,
-    firstName: dto.firstName,
-    lastName: dto.lastName,
-    displayName: getDisplayName(dto),
-    email: dto.email,
-    avatarUrl: dto.avatarUrl,
-    bio: dto.bio,
-    phone: dto.phone,
-    joinedAt: dto.joinedAt,
-  };
-}
-
 export const userService = {
   getCurrentUserProfile: async () => {
     const response = await axiosClient.get<UserResponse>(
       `${APP_API.v1.base}${APP_API.v1.user.me}`,
     );
+    const { status, ...user } = response.data.data;
 
-    return toUserModel(response.data.data);
+    return {
+      ...user,
+      presenceStatus: normalizePresenceStatus(status),
+    };
   },
 
-  getUserInfo: async (userId: string): Promise<UserItemData> => {
+  getUserInfo: async (userId: string): Promise<UserInfo> => {
     const response = await axiosClient.get<UserInfoResponse>(
       `${APP_API.v1.base}${APP_API.v1.user.info}`,
       {
@@ -73,7 +51,22 @@ export const userService = {
       },
     );
 
-    return toUserInfoModel(response.data.data);
+    return response.data.data;
+  },
+
+  searchUsers: async (params: {
+    search?: string;
+    offset?: number;
+    limit?: number;
+  }) => {
+    const response = await axiosClient.get<UserSearchResponse>(
+      `${APP_API.v1.base}${APP_API.v1.user.search}`,
+      {
+        params,
+      },
+    );
+
+    return response.data.data;
   },
 
   updateCurrentUserProfile: async (
@@ -83,7 +76,11 @@ export const userService = {
       `${APP_API.v1.base}${APP_API.v1.user.me}`,
       payload,
     );
+    const { status, ...user } = response.data.data;
 
-    return toUserModel(response.data.data);
+    return {
+      ...user,
+      presenceStatus: normalizePresenceStatus(status),
+    };
   },
 };

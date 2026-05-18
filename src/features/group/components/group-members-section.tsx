@@ -73,11 +73,11 @@ export function GroupMembersSection({
 
             return (
               <UserItem
-                key={member.id}
+                key={member.userId}
                 action={removeAction}
-                isActionLoading={sendingFriendRequestId === member.id}
+                isActionLoading={sendingFriendRequestId === member.userId}
                 user={{
-                  id: member.id,
+                  id: member.userId,
                   displayName: member.displayName,
                   username: member.username ?? undefined,
                   avatarUrl:

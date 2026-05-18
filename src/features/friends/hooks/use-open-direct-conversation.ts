@@ -6,19 +6,19 @@ import {
   type ConversationPage,
   ConversationTypeEnum,
 } from "@/types/conversation";
-import type { Friend } from "@/types/friend";
+import type { DirectMessageUser } from "@/types/user";
 
 type DirectConversationPages = { pages: ConversationPage[] } | undefined;
 
 function findDirectConversationId(
   data: DirectConversationPages,
-  friendId: string,
+  userId: string,
 ) {
   for (const page of data?.pages ?? []) {
     const conversation = page.items.find(
       (item) =>
         item.type === ConversationTypeEnum.DIRECT &&
-        (item.directUserAId === friendId || item.directUserBId === friendId),
+        (item.directUserAId === userId || item.directUserBId === userId),
     );
 
     if (conversation) return conversation.id;
@@ -42,12 +42,9 @@ export function useOpenDirectConversation() {
     });
 
   return React.useCallback(
-    async (friend: Friend) => {
+    async (user: DirectMessageUser) => {
       let conversationPages = data;
-      let conversationId = findDirectConversationId(
-        conversationPages,
-        friend.id,
-      );
+      let conversationId = findDirectConversationId(conversationPages, user.id);
 
       if (conversationId) {
         navigate(APP_ROUTES.conversationById(conversationId));
@@ -57,7 +54,7 @@ export function useOpenDirectConversation() {
       if (!conversationPages || isLoading) {
         const result = await refetch();
         conversationPages = result.data;
-        conversationId = findDirectConversationId(conversationPages, friend.id);
+        conversationId = findDirectConversationId(conversationPages, user.id);
 
         if (conversationId) {
           navigate(APP_ROUTES.conversationById(conversationId));
@@ -68,7 +65,7 @@ export function useOpenDirectConversation() {
       while (hasMoreConversationPages(conversationPages)) {
         const result = await fetchNextPage();
         conversationPages = result.data;
-        conversationId = findDirectConversationId(conversationPages, friend.id);
+        conversationId = findDirectConversationId(conversationPages, user.id);
 
         if (conversationId) {
           navigate(APP_ROUTES.conversationById(conversationId));
@@ -77,7 +74,7 @@ export function useOpenDirectConversation() {
       }
 
       navigate(APP_ROUTES.chat, {
-        state: { directMessageDraftFriend: friend },
+        state: { directMessageDraftUser: user },
       });
     },
     [data, fetchNextPage, isLoading, navigate, refetch],

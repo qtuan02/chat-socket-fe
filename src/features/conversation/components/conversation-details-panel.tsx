@@ -1,8 +1,10 @@
+import { useQueryClient } from "@tanstack/react-query";
 import * as React from "react";
 import { AddGroupMembersDialog } from "@/features/group/components/add-group-members-dialog";
 import { GroupConversationActions } from "@/features/group/components/group-conversation-actions";
 import { GroupMembersSection } from "@/features/group/components/group-members-section";
 import { RenameGroupDialog } from "@/features/group/components/rename-group-dialog";
+import { currentUserQueryKeys, useUserInfoQuery } from "@/hooks/api/user";
 import {
   type Conversation,
   ConversationTypeEnum,
@@ -15,6 +17,7 @@ import {
   getConversationActivityAt,
   getDirectConversationMember,
 } from "@/utils/display";
+import { getErrorMessage } from "@/utils/error";
 import { ConversationDetailsPanelHeader } from "./conversation-details-panel-header";
 import { ConversationDirectMemberCard } from "./conversation-direct-member-card";
 
@@ -51,6 +54,7 @@ export function ConversationDetailsPanel({
   onRemoveMember,
   onClose,
 }: ConversationDetailsPanelProps) {
+  const queryClient = useQueryClient();
   const isGroup = conversation.type === ConversationTypeEnum.GROUP;
   const members = conversation.members;
   const currentUserRole = members.find(
@@ -60,6 +64,11 @@ export function ConversationDetailsPanel({
   const [isRenameOpen, setIsRenameOpen] = React.useState(false);
   const [isAddMembersOpen, setIsAddMembersOpen] = React.useState(false);
   const directMember = getDirectConversationMember(conversation);
+  const directUserId = !isGroup && directMember ? directMember.userId : null;
+  const directMemberInfoQuery = useUserInfoQuery(directUserId, {
+    enabled: !!directUserId,
+    staleTime: 0,
+  });
   const lastActivityLabel = formatDateTime(
     getConversationActivityAt(conversation),
   );
@@ -104,6 +113,14 @@ export function ConversationDetailsPanel({
     [onRemoveMember],
   );
 
+  React.useEffect(() => {
+    if (!open || !directUserId) return;
+
+    void queryClient.invalidateQueries({
+      queryKey: currentUserQueryKeys.info(directUserId),
+    });
+  }, [directUserId, open, queryClient]);
+
   return (
     <aside
       className={cn(
@@ -128,7 +145,29 @@ export function ConversationDetailsPanel({
         <div className="px-4 py-4">
           <section className="grid gap-3">
             {isGroup || !directMember ? null : (
-              <ConversationDirectMemberCard member={directMember} />
+              <ConversationDirectMemberCard
+                member={directMember}
+                detailUser={directMemberInfoQuery.data}
+                isDetailLoading={
+                  directMemberInfoQuery.isLoading ||
+                  directMemberInfoQuery.isFetching
+                }
+                detailErrorMessage={
+                  directMemberInfoQuery.error
+                    ? getErrorMessage(
+                        directMemberInfoQuery.error,
+                        "Unable to load user details.",
+                      )
+                    : null
+                }
+                onOpenDetails={(userId) => {
+                  void queryClient.invalidateQueries({
+                    queryKey: currentUserQueryKeys.info(userId),
+                  });
+                }}
+                onSendFriendRequest={onSendFriendRequest}
+                sendingFriendRequestId={sendingFriendRequestId}
+              />
             )}
 
             {isGroup ? (

@@ -1,116 +1,65 @@
-import type { BaseResponse } from "@/types/base";
-import { FriendRelationshipStatusEnum } from "@/types/friend-status";
 import type {
-  PresenceStatusEnum,
-  UserIdentity,
-  UserItemData,
-} from "@/types/user";
+  BaseResponse,
+  PaginationRequest,
+  PaginationResponse,
+} from "@/types/base";
+import type { PresenceStatusEnum, UserIdentity } from "@/types/user";
 
-export { FriendRelationshipStatusEnum };
-
-export type FriendRelationshipStatus = FriendRelationshipStatusEnum;
-
-type FriendIdentityDto = Omit<UserIdentity, "avatarUrl"> & {
+export type Friend = {
+  id: string;
+  username: string;
+  firstName: string;
+  lastName: string;
   avatarUrl?: string | null;
-  status?: string;
+  joinedAt: string;
 };
 
-export interface FriendDto extends FriendIdentityDto {
-  joinedAt: string;
-}
+export type FriendWithPresence = Friend & {
+  presenceStatus?: PresenceStatusEnum;
+};
 
-export interface FriendSearchDto extends FriendIdentityDto {
-  joinedAt: string;
-  friendshipStatus?: string;
-  friendshipStatusText?: string;
-  friendshipState?: string;
-  friendship_state?: string;
-  state?: string;
-}
+export type FriendRequestUser = Pick<
+  UserIdentity,
+  "id" | "firstName" | "lastName" | "username"
+> & {
+  avatarUrl?: string | null;
+  bio?: string | null;
+};
 
-export interface AcceptFriendResponseDto extends FriendIdentityDto {}
-
-export interface FriendRequestSentDto {
+export type SentFriendRequest = {
   id: string;
   fromUser: string;
-  toUser: AcceptFriendResponseDto;
+  toUser: FriendRequestUser;
   message: string | null;
   createdAt: string;
   updatedAt: string;
-}
-
-export interface FriendRequestReceivedDto {
-  id: string;
-  toUser: string;
-  fromUser: AcceptFriendResponseDto;
-  message: string | null;
-  createdAt: string;
-  updatedAt: string;
-}
-
-export interface FriendRequestResponseDto {
-  sentRequests: FriendRequestSentDto[];
-  receivedRequests: FriendRequestReceivedDto[];
-}
-
-type FriendProfile = Pick<
-  UserItemData,
-  | "id"
-  | "username"
-  | "firstName"
-  | "lastName"
-  | "avatarUrl"
-  | "bio"
-  | "displayName"
->;
-
-export interface Friend extends FriendProfile {
-  joinedAt: string;
-  friendshipStatus?: FriendRelationshipStatus;
-  presenceStatus?: PresenceStatusEnum;
-}
-
-export type FriendRequestUser = FriendProfile;
-
-export interface FriendRequestItem {
-  id: string;
-  user: FriendRequestUser;
-  message?: string;
-  createdAt: string;
-  updatedAt: string;
-}
-
-export interface FriendSearchResult extends FriendProfile {
-  joinedAt: string;
-  friendshipStatus?: FriendRelationshipStatus;
-}
-
-export interface FriendsPage {
-  items: Friend[];
-  nextCursor: string | null;
-}
-
-export interface FriendRequests {
-  sentRequests: FriendRequestItem[];
-  receivedRequests: FriendRequestItem[];
-}
-
-export interface FriendListParams {
-  search?: string;
-  cursor?: string;
-  limit?: number;
-}
-
-export type CursorPageResponseDto<T> = {
-  messages: T[];
-  nextCursor: string | null;
 };
 
-export type FriendPageResponse = BaseResponse<CursorPageResponseDto<FriendDto>>;
-export type FriendSearchResponse = BaseResponse<FriendSearchDto[]>;
-export type FriendRequestsResponse = BaseResponse<FriendRequestResponseDto>;
+export type ReceivedFriendRequest = {
+  id: string;
+  toUser: string;
+  fromUser: FriendRequestUser;
+  message: string | null;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type FriendRequests = {
+  sentRequests: SentFriendRequest[];
+  receivedRequests: ReceivedFriendRequest[];
+};
+
+export type FriendListParams = Omit<PaginationRequest, "cursor"> & {
+  search?: string;
+};
+
+export type FriendsPage = PaginationResponse<FriendWithPresence>;
+
+export type FriendPageResponse = BaseResponse<PaginationResponse<Friend>>;
+
+export type FriendRequestsResponse = BaseResponse<FriendRequests>;
 export type FriendSendResponse = BaseResponse<string | null>;
-export type FriendAcceptResponse = BaseResponse<AcceptFriendResponseDto>;
+export type FriendAcceptResponse = BaseResponse<FriendRequestUser>;
 
 export type FriendSendRequestPayload = {
   toUserId: string;
