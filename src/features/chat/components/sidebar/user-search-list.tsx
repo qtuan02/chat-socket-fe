@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useUserSearchInfiniteQuery } from "@/hooks/api/user";
+import { useDebounce } from "@/hooks/use-debounce";
 import type { UserSearch } from "@/types/user";
 import { getErrorMessage } from "@/utils/error";
 import { UserSearchListItem } from "./user-search-list-item";
@@ -29,6 +30,7 @@ type UserSearchResultsProps = {
 };
 
 const USER_SEARCH_LIMIT = 50;
+const USER_SEARCH_DEBOUNCE_MS = 500;
 
 function UserSearchResults({
   conversationIdByUserId,
@@ -118,10 +120,16 @@ export function UserSearchList({
 }: UserSearchListProps) {
   const searchInputId = React.useId();
   const [searchTerm, setSearchTerm] = React.useState("");
-  const trimmedSearchTerm = searchTerm.trim();
+  const trimmedSearchInput = searchTerm.trim();
+  const debouncedSearchTerm = useDebounce(
+    trimmedSearchInput,
+    USER_SEARCH_DEBOUNCE_MS,
+  );
+  const isDebouncingSearch =
+    trimmedSearchInput.length > 0 && trimmedSearchInput !== debouncedSearchTerm;
   const userSearchQuery = useUserSearchInfiniteQuery({
     limit: USER_SEARCH_LIMIT,
-    search: trimmedSearchTerm,
+    search: debouncedSearchTerm,
   });
   const users =
     userSearchQuery.data?.pages.flatMap((page) => page.messages) ?? [];
@@ -164,11 +172,11 @@ export function UserSearchList({
           conversationIdByUserId={conversationIdByUserId}
           error={userSearchQuery.error}
           hasNextPage={userSearchQuery.hasNextPage}
-          hasSearchTerm={trimmedSearchTerm.length > 0}
+          hasSearchTerm={trimmedSearchInput.length > 0}
           isError={userSearchQuery.isError}
           isFetchingNextPage={userSearchQuery.isFetchingNextPage}
-          isLoading={userSearchQuery.isLoading}
-          users={users}
+          isLoading={isDebouncingSearch || userSearchQuery.isLoading}
+          users={isDebouncingSearch ? [] : users}
           onLoadMore={() => {
             void userSearchQuery.fetchNextPage();
           }}
