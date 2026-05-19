@@ -17,6 +17,7 @@ import {
   type UseMutationOptionsWrapper,
 } from "@/libs/query-key-factory";
 import { messageService } from "@/services/message-service";
+import { useSocketStore } from "@/stores/useSocketStore";
 import type {
   Message,
   MessagePage,
@@ -200,6 +201,7 @@ export function useSendDirectMessageMutation(
 ) {
   const queryClient = useQueryClient();
   const { data: currentUser } = useCurrentUserQuery();
+  const isSocketConnected = useSocketStore((state) => state.isConnected);
 
   return useMutation({
     mutationFn: messageService.sendDirectMessage,
@@ -208,9 +210,10 @@ export function useSendDirectMessageMutation(
       appendConversationMessageToCache(queryClient, message, {
         userId: currentUser?.id,
       });
-      void queryClient.invalidateQueries({
-        queryKey: conversationQueryKeys.lists(),
-      });
+      if (!isSocketConnected)
+        void queryClient.invalidateQueries({
+          queryKey: conversationQueryKeys.lists(),
+        });
       options?.onSuccess?.(message, variables, onMutateResult, context);
     },
   });
@@ -225,6 +228,7 @@ export function useSendGroupMessageMutation(
 ) {
   const queryClient = useQueryClient();
   const { data: currentUser } = useCurrentUserQuery();
+  const isSocketConnected = useSocketStore((state) => state.isConnected);
 
   return useMutation({
     mutationFn: messageService.sendGroupMessage,
@@ -233,9 +237,10 @@ export function useSendGroupMessageMutation(
       appendConversationMessageToCache(queryClient, message, {
         userId: currentUser?.id,
       });
-      void queryClient.invalidateQueries({
-        queryKey: conversationQueryKeys.lists(),
-      });
+      if (!isSocketConnected)
+        void queryClient.invalidateQueries({
+          queryKey: conversationQueryKeys.lists(),
+        });
       options?.onSuccess?.(message, variables, onMutateResult, context);
     },
   });
