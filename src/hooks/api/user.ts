@@ -23,6 +23,7 @@ import type {
 type UserSearchParams = Omit<PaginationRequest, "cursor"> & {
   search?: string;
 };
+const INITIAL_OFFSET_PAGE_PARAM: number | undefined = undefined;
 
 const userQueryKeyFactory = queryKeysFactory<"user">("user");
 
@@ -85,7 +86,7 @@ export function useUserSearchInfiniteQuery(
         offset: pageParam,
       }),
     getNextPageParam: (lastPage) => lastPage.nextOffset ?? undefined,
-    initialPageParam: undefined as number | undefined,
+    initialPageParam: INITIAL_OFFSET_PAGE_PARAM,
     enabled: !!accessToken && (params.search?.trim().length ?? 0) > 0,
   });
 }

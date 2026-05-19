@@ -11,10 +11,6 @@ import { PresenceStatusEnum } from "@/types/user";
 import { createDraftConversationId } from "@/utils/conversation";
 import { getDisplayName } from "@/utils/display";
 
-type ChatLocationState = {
-  directMessageDraftUser?: DirectMessageUser | null;
-};
-
 type UseDirectMessageDraftParams = {
   activeConversation?: Conversation;
   conversationId: string;
@@ -24,16 +20,36 @@ type UseDirectMessageDraftParams = {
   onCloseDetails: () => void;
 };
 
+function isDirectMessageUser(value: unknown): value is DirectMessageUser {
+  if (!isRecord(value)) return false;
+
+  const user = value;
+  const hasValidAvatarUrl =
+    user.avatarUrl === undefined ||
+    user.avatarUrl === null ||
+    typeof user.avatarUrl === "string";
+
+  return (
+    typeof user.id === "string" &&
+    typeof user.username === "string" &&
+    typeof user.firstName === "string" &&
+    typeof user.lastName === "string" &&
+    typeof user.joinedAt === "string" &&
+    hasValidAvatarUrl
+  );
+}
+
 function getDraftUserFromLocationState(state: unknown) {
-  if (!state || typeof state !== "object") return null;
+  if (!isRecord(state)) return null;
 
-  const directMessageDraftUser = (state as ChatLocationState)
-    .directMessageDraftUser;
+  const locationState = state;
+  const draftUser = locationState.directMessageDraftUser;
 
-  if (!directMessageDraftUser || typeof directMessageDraftUser.id !== "string")
-    return null;
+  return isDirectMessageUser(draftUser) ? draftUser : null;
+}
 
-  return directMessageDraftUser;
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return !!value && typeof value === "object";
 }
 
 function createDirectMessageDraftConversation({

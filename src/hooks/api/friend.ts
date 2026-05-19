@@ -22,6 +22,7 @@ const friendQueryKeyFactory = queryKeysFactory<"friend">("friend");
 
 const friendRequestQueryKeyFactory =
   queryKeysFactory<"friend-request">("friend-request");
+const INITIAL_OFFSET_PAGE_PARAM: number | undefined = undefined;
 
 export const friendQueryKeys = {
   ...friendQueryKeyFactory,
@@ -91,7 +92,7 @@ export function useFriendsInfiniteQuery(
         offset: pageParam,
       }),
     getNextPageParam: (lastPage) => lastPage.nextOffset ?? undefined,
-    initialPageParam: undefined as number | undefined,
+    initialPageParam: INITIAL_OFFSET_PAGE_PARAM,
     enabled: !!currentUser?.id,
     staleTime: 0,
   });
@@ -99,18 +100,18 @@ export function useFriendsInfiniteQuery(
   const friends = React.useMemo(
     () =>
       query.data?.pages.flatMap((page) =>
-        page.messages.map((friend) =>
-          getPresenceStatusFromOnlineUsers(friend.id, onlineUserIds) ===
-          friend.presenceStatus
-            ? friend
-            : {
-                ...friend,
-                presenceStatus: getPresenceStatusFromOnlineUsers(
-                  friend.id,
-                  onlineUserIds,
-                ),
-              },
-        ),
+        page.messages.map((friend) => {
+          const presenceStatus = getPresenceStatusFromOnlineUsers(
+            friend.id,
+            onlineUserIds,
+          );
+          if (presenceStatus === friend.presenceStatus) return friend;
+
+          return {
+            ...friend,
+            presenceStatus,
+          };
+        }),
       ) ?? [],
     [onlineUserIds, query.data?.pages],
   );

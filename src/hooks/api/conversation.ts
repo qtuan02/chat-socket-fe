@@ -28,6 +28,7 @@ import { PresenceStatusEnum } from "@/types/user";
 
 const conversationQueryKeyFactory =
   queryKeysFactory<"conversation">("conversation");
+const INITIAL_CURSOR_PAGE_PARAM: string | undefined = undefined;
 
 type ConversationInfiniteData = InfiniteData<
   ConversationPage,
@@ -404,6 +405,31 @@ function upsertConversation(
   );
 }
 
+function getConversationQueriesSnapshot(queryClient: QueryClient) {
+  return queryClient.getQueriesData<ConversationInfiniteData>({
+    queryKey: conversationQueryKeys.lists(),
+  });
+}
+
+async function snapshotConversationQueries(queryClient: QueryClient) {
+  await queryClient.cancelQueries({
+    queryKey: conversationQueryKeys.lists(),
+  });
+
+  return {
+    previousConversationQueries: getConversationQueriesSnapshot(queryClient),
+  } satisfies ConversationMutationContext;
+}
+
+function restoreConversationQueries(
+  queryClient: QueryClient,
+  context?: ConversationMutationContext,
+) {
+  for (const [queryKey, data] of context?.previousConversationQueries ?? []) {
+    queryClient.setQueryData(queryKey, data);
+  }
+}
+
 export function useConversationsInfiniteQuery(
   params: Omit<GetConversationsParams, "cursor"> & {
     limit?: number;
@@ -435,7 +461,7 @@ export function useConversationsInfiniteQuery(
         cursor: pageParam,
       }),
     getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
-    initialPageParam: undefined as string | undefined,
+    initialPageParam: INITIAL_CURSOR_PAGE_PARAM,
     enabled: !!currentUser?.id,
   });
 
@@ -465,27 +491,17 @@ export function useMarkConversationAsSeenMutation() {
   return useMutation<void, Error, string, ConversationMutationContext>({
     mutationFn: conversationService.markAsSeen,
     onMutate: async (conversationId) => {
-      await queryClient.cancelQueries({
-        queryKey: conversationQueryKeys.lists(),
-      });
-
-      const previousConversationQueries =
-        queryClient.getQueriesData<ConversationInfiniteData>({
-          queryKey: conversationQueryKeys.lists(),
-        });
+      const context = await snapshotConversationQueries(queryClient);
 
       queryClient.setQueriesData<ConversationInfiniteData>(
         { queryKey: conversationQueryKeys.lists() },
         (data) => updateConversationUnreadCount(data, conversationId, 0),
       );
 
-      return { previousConversationQueries };
+      return context;
     },
     onError: (_error, _conversationId, context) => {
-      for (const [queryKey, data] of context?.previousConversationQueries ??
-        []) {
-        queryClient.setQueryData(queryKey, data);
-      }
+      restoreConversationQueries(queryClient, context);
     },
   });
 }
@@ -503,17 +519,7 @@ export function useCreateGroupConversationMutation(options?: {
     ConversationMutationContext
   >({
     mutationFn: conversationService.createGroupConversation,
-    onMutate: async () => {
-      await queryClient.cancelQueries({
-        queryKey: conversationQueryKeys.lists(),
-      });
-      return {
-        previousConversationQueries:
-          queryClient.getQueriesData<ConversationInfiniteData>({
-            queryKey: conversationQueryKeys.lists(),
-          }),
-      };
-    },
+    onMutate: async () => snapshotConversationQueries(queryClient),
     onSuccess: (data, _variables, context) => {
       upsertConversation(queryClient, data, { moveToTop: true });
       void queryClient.invalidateQueries({
@@ -523,10 +529,7 @@ export function useCreateGroupConversationMutation(options?: {
       return context;
     },
     onError: (error, _variables, context) => {
-      for (const [queryKey, pageData] of context?.previousConversationQueries ??
-        []) {
-        queryClient.setQueryData(queryKey, pageData);
-      }
+      restoreConversationQueries(queryClient, context);
       options?.onError?.(error);
     },
   });
@@ -546,17 +549,7 @@ export function useUpdateGroupMutation(options?: {
   >({
     mutationFn: ({ conversationId, payload }) =>
       conversationService.updateGroup(conversationId, payload),
-    onMutate: async () => {
-      await queryClient.cancelQueries({
-        queryKey: conversationQueryKeys.lists(),
-      });
-      return {
-        previousConversationQueries:
-          queryClient.getQueriesData<ConversationInfiniteData>({
-            queryKey: conversationQueryKeys.lists(),
-          }),
-      };
-    },
+    onMutate: async () => snapshotConversationQueries(queryClient),
     onSuccess: (data) => {
       upsertConversation(queryClient, data, { moveToTop: true });
       void queryClient.invalidateQueries({
@@ -565,10 +558,7 @@ export function useUpdateGroupMutation(options?: {
       options?.onSuccess?.(data);
     },
     onError: (error, _variables, context) => {
-      for (const [queryKey, pageData] of context?.previousConversationQueries ??
-        []) {
-        queryClient.setQueryData(queryKey, pageData);
-      }
+      restoreConversationQueries(queryClient, context);
       options?.onError?.(error);
     },
   });
@@ -588,18 +578,7 @@ export function useAddGroupMembersMutation(options?: {
   >({
     mutationFn: ({ conversationId, payload }) =>
       conversationService.addGroupMembers(conversationId, payload),
-    onMutate: async () => {
-      await queryClient.cancelQueries({
-        queryKey: conversationQueryKeys.lists(),
-      });
-
-      return {
-        previousConversationQueries:
-          queryClient.getQueriesData<ConversationInfiniteData>({
-            queryKey: conversationQueryKeys.lists(),
-          }),
-      };
-    },
+    onMutate: async () => snapshotConversationQueries(queryClient),
     onSuccess: (data) => {
       upsertConversation(queryClient, data, { moveToTop: true });
       void queryClient.invalidateQueries({
@@ -608,10 +587,7 @@ export function useAddGroupMembersMutation(options?: {
       options?.onSuccess?.(data);
     },
     onError: (error, _variables, context) => {
-      for (const [queryKey, pageData] of context?.previousConversationQueries ??
-        []) {
-        queryClient.setQueryData(queryKey, pageData);
-      }
+      restoreConversationQueries(queryClient, context);
       options?.onError?.(error);
     },
   });
@@ -631,18 +607,7 @@ export function useRemoveGroupMemberMutation(options?: {
   >({
     mutationFn: ({ conversationId, memberId }) =>
       conversationService.removeGroupMember(conversationId, memberId),
-    onMutate: async () => {
-      await queryClient.cancelQueries({
-        queryKey: conversationQueryKeys.lists(),
-      });
-
-      return {
-        previousConversationQueries:
-          queryClient.getQueriesData<ConversationInfiniteData>({
-            queryKey: conversationQueryKeys.lists(),
-          }),
-      };
-    },
+    onMutate: async () => snapshotConversationQueries(queryClient),
     onSuccess: (data) => {
       upsertConversation(queryClient, data, { moveToTop: true });
       void queryClient.invalidateQueries({
@@ -651,10 +616,7 @@ export function useRemoveGroupMemberMutation(options?: {
       options?.onSuccess?.(data);
     },
     onError: (error, _variables, context) => {
-      for (const [queryKey, pageData] of context?.previousConversationQueries ??
-        []) {
-        queryClient.setQueryData(queryKey, pageData);
-      }
+      restoreConversationQueries(queryClient, context);
       options?.onError?.(error);
     },
   });
@@ -669,21 +631,14 @@ export function useLeaveGroupMutation(options?: {
   return useMutation<null, Error, string, ConversationMutationContext>({
     mutationFn: conversationService.leaveGroup,
     onMutate: async (conversationId) => {
-      await queryClient.cancelQueries({
-        queryKey: conversationQueryKeys.lists(),
-      });
-
-      const previousConversationQueries =
-        queryClient.getQueriesData<ConversationInfiniteData>({
-          queryKey: conversationQueryKeys.lists(),
-        });
+      const context = await snapshotConversationQueries(queryClient);
 
       queryClient.setQueriesData<ConversationInfiniteData>(
         { queryKey: conversationQueryKeys.lists() },
         (data) => upsertConversationInPages(data, conversationId, null),
       );
 
-      return { previousConversationQueries };
+      return context;
     },
     onSuccess: (_data, variables) => {
       void queryClient.invalidateQueries({
@@ -692,10 +647,7 @@ export function useLeaveGroupMutation(options?: {
       options?.onSuccess?.(variables);
     },
     onError: (error, _variables, context) => {
-      for (const [queryKey, pageData] of context?.previousConversationQueries ??
-        []) {
-        queryClient.setQueryData(queryKey, pageData);
-      }
+      restoreConversationQueries(queryClient, context);
       options?.onError?.(error);
     },
   });

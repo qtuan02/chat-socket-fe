@@ -12,6 +12,24 @@ interface SocketStore {
   disconnect: () => void;
 }
 
+function sanitizeOnlineUserIds(value: unknown): string[] | null {
+  if (!Array.isArray(value)) return null;
+
+  const uniqueUserIds = new Set<string>();
+  for (const userId of value) {
+    if (typeof userId !== "string") continue;
+    uniqueUserIds.add(userId);
+  }
+
+  return [...uniqueUserIds];
+}
+
+function areSameStringArrays(a: string[], b: string[]) {
+  if (a.length !== b.length) return false;
+
+  return a.every((value, index) => value === b[index]);
+}
+
 export const useSocketStore = create<SocketStore>((set, get) => ({
   client: null,
   isConnected: false,
@@ -35,33 +53,38 @@ export const useSocketStore = create<SocketStore>((set, get) => ({
 
     set({ client });
 
+    const resetConnectionState = () => {
+      set({ isConnected: false, onlineUsers: [] });
+    };
+
     client.onConnect = () => {
       set({ isConnected: true, onlineUsers: [] });
 
       const handleOnlineUsers = (message: IMessage) => {
-        const onlineUsers = parseToJson<string[]>(message.body);
+        const payload = parseToJson<unknown>(message.body);
+        if (!payload) return;
 
-        if (!Array.isArray(onlineUsers)) return;
+        const onlineUsers = sanitizeOnlineUserIds(payload);
+        if (!onlineUsers) return;
 
-        set({ onlineUsers });
+        set((state) =>
+          areSameStringArrays(state.onlineUsers, onlineUsers)
+            ? state
+            : { onlineUsers },
+        );
       };
 
       client.subscribe("/topic/online-users", handleOnlineUsers);
       client.subscribe("/app/online-users", handleOnlineUsers);
     };
 
-    client.onStompError = (frame) => {
-      console.error("STOMP error:", frame.headers.message);
-      set({ isConnected: false, onlineUsers: [] });
+    client.onStompError = () => {
+      resetConnectionState();
     };
 
-    client.onDisconnect = () => {
-      set({ isConnected: false, onlineUsers: [] });
-    };
+    client.onDisconnect = resetConnectionState;
 
-    client.onWebSocketClose = () => {
-      set({ isConnected: false, onlineUsers: [] });
-    };
+    client.onWebSocketClose = resetConnectionState;
 
     client.activate();
   },

@@ -36,7 +36,11 @@ export function App() {
   );
 
   React.useEffect(() => {
-    (window as any).toggleDevtools = () => setShowDevtools((old) => !old);
+    window.toggleDevtools = () => setShowDevtools((old) => !old);
+
+    return () => {
+      window.toggleDevtools = undefined;
+    };
   }, []);
 
   return (
