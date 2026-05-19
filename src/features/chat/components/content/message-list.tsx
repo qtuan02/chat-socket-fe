@@ -10,6 +10,7 @@ import { useCurrentUserQuery } from "@/hooks/api/user";
 import type { Conversation } from "@/types/conversation";
 import type { Message } from "@/types/message";
 import { cn } from "@/utils/cn";
+import { isDraftConversationId } from "@/utils/conversation";
 import { MessageListSkeleton } from "../skeleton/message-list-skeleton";
 import { MessageRow } from "./message-row";
 
@@ -17,6 +18,11 @@ type MessageListProps = {
   className?: string;
   conversation: Conversation;
   isDraft?: boolean;
+};
+
+type ConversationMessageListProps = {
+  className?: string;
+  conversation: Conversation;
 };
 
 function MessageListError({
@@ -70,6 +76,22 @@ export function MessageList({
   conversation,
   isDraft = false,
 }: MessageListProps) {
+  if (isDraft || isDraftConversationId(conversation.id)) {
+    return <MessageListEmpty className={className} />;
+  }
+
+  return (
+    <ConversationMessageList
+      className={className}
+      conversation={conversation}
+    />
+  );
+}
+
+function ConversationMessageList({
+  className,
+  conversation,
+}: ConversationMessageListProps) {
   const virtuosoRef = React.useRef<VirtuosoHandle>(null);
   const { data: currentUser } = useCurrentUserQuery();
   const {
@@ -85,7 +107,6 @@ export function MessageList({
     refetch,
   } = useMessagesInfiniteQuery({
     conversationId: conversation.id,
-    enabled: !isDraft,
     members: conversation.members,
   });
   const currentUserId = currentUser?.id;
@@ -101,7 +122,7 @@ export function MessageList({
 
   useLatestMessageRefetch({
     conversationId: conversation.id,
-    isDraft,
+    isDraft: false,
     isFetching,
     isLoading,
     lastMessageId: conversation.lastMessageId,

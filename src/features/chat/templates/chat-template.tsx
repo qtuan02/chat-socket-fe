@@ -56,9 +56,10 @@ export function ChatTemplate() {
     isProfileRoute,
     onCloseDetails: closeDetails,
   });
-  const displayedConversation =
-    isConversationRoute || isChatHomeRoute
-      ? (draftConversation ?? activeConversation)
+  const displayedConversation = isChatHomeRoute
+    ? draftConversation
+    : isConversationRoute
+      ? activeConversation
       : null;
   const sidebarActiveConversationId =
     isDraftConversation || isFriendsRoute || isProfileRoute

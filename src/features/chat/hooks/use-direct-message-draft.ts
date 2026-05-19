@@ -8,6 +8,7 @@ import { ConversationTypeEnum } from "@/types/conversation";
 import type { MessageDto } from "@/types/message";
 import type { DirectMessageUser, User } from "@/types/user";
 import { PresenceStatusEnum } from "@/types/user";
+import { createDraftConversationId } from "@/utils/conversation";
 import { getDisplayName } from "@/utils/display";
 
 type ChatLocationState = {
@@ -80,7 +81,7 @@ function createDirectMessageDraftConversation({
     : [directMember];
 
   return {
-    id: `draft:${user.id}`,
+    id: createDraftConversationId(user.id),
     type: ConversationTypeEnum.DIRECT,
     title: userDisplayName,
     groupName: null,
@@ -202,6 +203,7 @@ export function useDirectMessageDraft({
 
   const handleDraftMessageSent = React.useCallback(
     (message: MessageDto) => {
+      setDraftUser(null);
       onCloseDetails();
       navigate(APP_ROUTES.conversationById(message.conversationId));
     },

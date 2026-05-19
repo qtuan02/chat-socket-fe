@@ -24,6 +24,7 @@ import type {
   UseMessagesInfiniteQueryParams,
 } from "@/types/message";
 import { MessageStatus } from "@/types/message";
+import { isDraftConversationId } from "@/utils/conversation";
 
 const messageQueryKeyFactory = queryKeysFactory<"message">("message");
 
@@ -36,10 +37,6 @@ export const messageQueryKeys = {
   messages: (userId: string, conversationId: string, limit = 50) =>
     messageQueryKeyFactory.detail(conversationId, { userId, limit }),
 };
-
-function isDraftConversationId(conversationId: string) {
-  return conversationId.startsWith("draft:");
-}
 
 function mapMessageToUiModel(
   message: MessageDto,

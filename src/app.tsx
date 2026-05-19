@@ -23,6 +23,7 @@ import { GuestRoute } from "@/providers/guest-route";
 import { ProtectedRoute } from "@/providers/protected-route";
 import useAuthStore from "@/stores/useAuthStore";
 import { useSocketStore } from "@/stores/useSocketStore";
+import { isDraftConversationId } from "@/utils/conversation";
 
 const LazyReactQueryDevtools = React.lazy(async () => {
   const { ReactQueryDevtools } = await import("@tanstack/react-query-devtools");
@@ -109,7 +110,10 @@ function ChatSocketRouteBoundary() {
     APP_ROUTES.chatConversation,
     location.pathname,
   );
-  const activeConversationId = conversationMatch?.params.conversationId ?? "";
+  const routeConversationId = conversationMatch?.params.conversationId ?? "";
+  const activeConversationId = isDraftConversationId(routeConversationId)
+    ? ""
+    : routeConversationId;
 
   return (
     <ChatSocketProvider activeConversationId={activeConversationId}>
