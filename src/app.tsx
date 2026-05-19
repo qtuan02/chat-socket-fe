@@ -10,7 +10,7 @@ import {
   Routes,
   useLocation,
 } from "react-router";
-import { Toaster, toast } from "sonner";
+import { Toaster } from "sonner";
 import { env } from "@/config/env";
 import { APP_ROUTES } from "@/config/routes";
 import { useBackendHealthQuery } from "@/hooks/api/health";
@@ -42,7 +42,6 @@ export function App() {
   return (
     <>
       <Toaster richColors />
-      <SessionExpiredNotice />
       <QueryClientProvider client={queryClient}>
         <BackendHealthGate>
           <AppRoutes />
@@ -55,24 +54,6 @@ export function App() {
       </QueryClientProvider>
     </>
   );
-}
-
-function SessionExpiredNotice() {
-  const sessionExpiredAt = useAuthStore((state) => state.sessionExpiredAt);
-  const clearSessionExpired = useAuthStore(
-    (state) => state.clearSessionExpired,
-  );
-
-  React.useEffect(() => {
-    if (!sessionExpiredAt) return;
-
-    toast.error("Your session has expired. Please sign in again.", {
-      id: "session-expired",
-    });
-    clearSessionExpired();
-  }, [clearSessionExpired, sessionExpiredAt]);
-
-  return null;
 }
 
 function BackendHealthGate({ children }: { children: React.ReactNode }) {
