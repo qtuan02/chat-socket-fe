@@ -4,7 +4,7 @@ import { useUserInfoQuery } from "@/hooks/api/user";
 import type { Conversation, ConversationMember } from "@/types/conversation";
 import { ConversationTypeEnum } from "@/types/conversation";
 import { FriendStatus } from "@/types/friend-status";
-import type { MessageDto } from "@/types/message";
+import type { MessageRecord } from "@/types/message";
 import { getDirectConversationMember } from "@/utils/display";
 import { getErrorMessage } from "@/utils/error";
 import { ChatHeader } from "./chat-header";
@@ -15,7 +15,7 @@ type ChatConversationContentProps = {
   conversation: Conversation;
   isDraft: boolean;
   onBack?: () => void;
-  onMessageSent?: (message: MessageDto) => void;
+  onMessageSent?: (message: MessageRecord) => void;
   onSendFriendRequest?: (userId: string, message?: string) => void;
   onOpenDetails?: () => void;
   sendingFriendRequestId?: string | null;

@@ -48,6 +48,7 @@ export function ChatTemplate() {
     handleDraftMessageSent,
     isDraftConversation,
     openDraftConversation,
+    sentDraftConversation,
   } = useDirectMessageDraft({
     activeConversation,
     conversationId,
@@ -59,7 +60,10 @@ export function ChatTemplate() {
   const displayedConversation = isChatHomeRoute
     ? draftConversation
     : isConversationRoute
-      ? activeConversation
+      ? (activeConversation ??
+        (sentDraftConversation?.id === conversationId
+          ? sentDraftConversation
+          : null))
       : null;
   const sidebarActiveConversationId =
     isDraftConversation || isFriendsRoute || isProfileRoute

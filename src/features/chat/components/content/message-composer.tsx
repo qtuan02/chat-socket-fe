@@ -6,13 +6,13 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { useMessageComposer } from "@/features/chat/hooks/use-message-composer";
 import type { Conversation } from "@/types/conversation";
-import type { MessageDto } from "@/types/message";
+import type { MessageRecord } from "@/types/message";
 import { cn } from "@/utils/cn";
 
 type MessageComposerProps = {
   className?: string;
   conversation: Conversation;
-  onMessageSent?: (message: MessageDto) => void;
+  onMessageSent?: (message: MessageRecord) => void;
 };
 
 function MessageComposerActions({

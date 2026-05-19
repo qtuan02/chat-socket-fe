@@ -7,7 +7,7 @@ import {
 } from "@/features/chat/hooks/use-message-emoji";
 import { useSendMessage } from "@/features/chat/hooks/use-send-message";
 import type { Conversation } from "@/types/conversation";
-import type { MessageDto } from "@/types/message";
+import type { MessageRecord } from "@/types/message";
 
 type ComposerState = {
   content: string;
@@ -33,7 +33,7 @@ export function useMessageComposer({
   onMessageSent,
 }: {
   conversation: Conversation;
-  onMessageSent?: (message: MessageDto) => void;
+  onMessageSent?: (message: MessageRecord) => void;
 }): ComposerState & ComposerActions {
   const textareaRef = React.useRef<HTMLTextAreaElement>(null);
   const {

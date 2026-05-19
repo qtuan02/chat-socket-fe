@@ -4,7 +4,7 @@ import type {
   ConversationEvent,
   ConversationSeenEvent,
 } from "@/types/conversation";
-import type { MessageDto } from "@/types/message";
+import type { MessageRecord } from "@/types/message";
 import { parseToJson } from "@/utils/string";
 
 const socketDestinations = {
@@ -47,12 +47,12 @@ export function subscribeToConversationUpdates(
 export function subscribeToConversationMessages(
   client: Client,
   conversationId: string,
-  onMessage: (message: MessageDto) => void,
+  onMessage: (message: MessageRecord) => void,
 ) {
   const subscription = client.subscribe(
     socketDestinations.conversationMessages(conversationId),
     (message: IMessage) => {
-      const incomingMessage = parseToJson<MessageDto>(message.body);
+      const incomingMessage = parseToJson<MessageRecord>(message.body);
 
       if (!incomingMessage) return;
 
