@@ -28,6 +28,7 @@ Rules:
 - Review generated files after adding.
 - Verify generated imports use `@/components/ui` and `@/utils/cn`.
 - Keep generated code close to upstream unless local aliases, tokens, or accessibility fixes are required.
+- If registry code pulls new dependencies, confirm they are needed and committed through Bun.
 
 ## Styling
 
@@ -35,6 +36,7 @@ Rules:
 - Do not replace token styling with hardcoded colors.
 - Preserve dark-mode compatibility when tokens exist.
 - Preserve focus-visible, disabled, ARIA, and keyboard states.
+- Do not add product-specific visual variants to a primitive if a feature/shared wrapper can own them.
 
 ## API
 

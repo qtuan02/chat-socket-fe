@@ -9,11 +9,11 @@ These rules apply to `src/utils`.
 Good examples:
 
 - `cn.ts`
-- `format-date.ts`
-- `parse-error.ts`
-- `assert.ts`
-- `sleep.ts`
-- `build-url.ts`
+- `date.ts`
+- `error.ts`
+- `display.ts`
+- `conversation.ts`
+- `string.ts`
 
 ## Rules
 
@@ -28,6 +28,7 @@ Good examples:
 - Keep functions small and easy to test.
 - Handle invalid input predictably.
 - Avoid mutating arguments.
+- Add unit tests for utilities with branching, parsing, date math, cache identity, or error normalization when test infrastructure exists.
 
 ## Placement
 

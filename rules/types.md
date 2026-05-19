@@ -8,11 +8,12 @@ These rules apply to `src/types`.
 
 Good examples:
 
-- `api.ts`
+- `base.ts`
 - `auth.ts`
-- `chat.ts`
 - `user.ts`
-- `common.ts` only when the types are genuinely cross-domain
+- `conversation.ts`
+- `message.ts`
+- `friend.ts`
 
 ## Rules
 
@@ -22,6 +23,8 @@ Good examples:
 - Prefer type-only imports when consuming types.
 - Avoid `any`.
 - Keep DTO/API contract types separate from app/domain types when mapping is needed.
+- Model nullable and optional fields intentionally; do not use optional fields to avoid handling missing backend data.
+- Use discriminated unions for variant-heavy chat states when they improve correctness.
 
 ## Chat Types
 
@@ -44,3 +47,4 @@ Common shared chat types may include:
 - Do not dump every type into one file.
 - Do not move a type here only because it might be reused later.
 - Do not expose unclear backend field names to the whole app if they can be mapped in a service.
+- Do not use `I` prefixes for interfaces.

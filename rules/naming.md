@@ -1,6 +1,6 @@
 # Naming Rules
 
-These rules apply to all source files, rules, prompts, and new folders.
+These rules apply to source files, rules, prompts, and new folders.
 
 ## Core Principle
 
@@ -11,7 +11,7 @@ Use `auth`, not `authen`.
 ## Language
 
 - Use English for code identifiers, file names, folder names, routes, types, functions, and variables.
-- Visible UI copy can be Vietnamese or English depending on the product direction. Keep it consistent per screen.
+- Visible UI copy can be Vietnamese or English depending on product direction. Keep it consistent within a screen.
 - Do not use Vietnamese without accents in code identifiers.
 - Keep backend/API field names only when they are part of a contract. Map unclear backend names before exposing app types.
 
@@ -37,7 +37,7 @@ src/features/userProfile
 src/features/user_profile
 ```
 
-## Standard Layer Folder Names
+## Standard Feature Folder Names
 
 Inside `src/features/<feature>/`, use only these folders unless there is a strong reason and project rules are updated:
 
@@ -56,8 +56,7 @@ Do not create duplicate layer names such as `pages`, `views`, `containers`, `mod
 
 ## Files
 
-Use lowercase `kebab-case` file names.
-Do not use PascalCase file names for React components. The file stays kebab-case even when the exported component is PascalCase.
+Use lowercase `kebab-case` file names. Do not use PascalCase file names for React components.
 
 Good:
 
@@ -68,12 +67,11 @@ sign-in-form.tsx
 conversation-list.tsx
 message-composer.tsx
 message-bubble.tsx
-use-current-user-query.ts
-use-message-composer.ts
 chat-service.ts
+socket-service.ts
 socket-client.ts
 auth-store.ts
-chat.ts
+conversation.ts
 format-message-time.ts
 ```
 
@@ -91,22 +89,24 @@ common.ts
 new.tsx
 ```
 
-## File Suffixes
+## File Patterns
 
-| Responsibility | File pattern | Export examples |
+| Responsibility | Preferred pattern | Export examples |
 |---|---|---|
 | Route page | `<screen>-page.tsx` | `SignInPage`, `ChatPage` |
 | Feature template | `<screen>-template.tsx` | `SignInTemplate`, `ChatTemplate` |
 | Component | `<component-name>.tsx` | `MessageComposer`, `ConversationList` |
-| Hook | `use-<concern>.ts` | `useMessageComposer`, `useCurrentUserQuery` |
+| Feature/global hook | `use-<concern>.ts` | `useMessageComposer`, `useLocalStorage` |
+| API hook domain module | `<domain>.ts` | `useCurrentUserQuery`, `useSendMessageMutation` |
+| Single API hook module | `use-<concern>-query.ts` or `use-<concern>-mutation.ts` | `useCurrentUserQuery` |
 | API service | `<domain>-service.ts` | `getConversations`, `sendMessage` |
-| Socket service | `<domain>-socket-service.ts` | `subscribeToMessages` |
-| Store | `<domain>-store.ts` | `useAuthStore`, `useSocketStore` |
+| Socket service | `<domain>-socket-service.ts` or `socket-service.ts` | `subscribeToMessages` |
+| Store | `<domain>-store.ts` for new stores | `useAuthStore`, `useSocketStore` |
 | Type module | `<domain>.ts` | `Message`, `Conversation` |
 | Utility | `<verb-or-purpose>.ts` | `formatMessageTime`, `parseApiError` |
 | Constants | `<domain>-constants.ts` | `messageStatusLabels` |
 
-Do not rename existing files only to satisfy naming rules unless the task is a naming/refactor task.
+Existing files that predate these patterns may remain until a scoped refactor is requested. Do not rename files only to satisfy naming rules unless naming/refactor is the task.
 
 ## React Components
 
@@ -132,17 +132,17 @@ Bad:
 
 ```ts
 export function chatPage() {}
-export function Chat() {} // too vague when it renders a large screen
-export function Modal() {} // too generic outside components/ui
+export function Chat() {}
+export function Modal() {}
 ```
 
 ## Hooks
 
 - Hook exports use `useXxx`.
-- Hook files start with `use-`.
+- Reusable/feature hook files start with `use-`.
+- API query hooks end with `Query`.
+- API mutation hooks end with `Mutation`.
 - Feature hooks should include the feature/workflow when useful.
-- API query hooks should end with `Query`.
-- API mutation hooks should end with `Mutation`.
 
 Good:
 
@@ -202,16 +202,6 @@ shouldShowTypingIndicator
 didReconnect
 ```
 
-Bad:
-
-```ts
-connected
-sending
-unread
-send
-typing
-```
-
 Library props such as `disabled`, `checked`, `open`, and `selected` are allowed.
 
 ## Events And Actions
@@ -251,18 +241,7 @@ const submit2 = () => {};
 - DTOs: `<Entity>Dto`.
 - Requests: `<Action><Entity>Request`.
 - Responses: `<Entity>Response` or `<Entity>ListResponse`.
-
-Good:
-
-```ts
-type MessageStatus = "pending" | "sent" | "delivered" | "read" | "failed";
-interface MessageComposerProps {}
-type SignInFormValues = z.infer<typeof signInSchema>;
-type MessageDto = {};
-type SendMessageRequest = {};
-```
-
-Do not use `I` prefixes such as `IUser`, `IProps`, or `IService`.
+- Do not use `I` prefixes such as `IUser`, `IProps`, or `IService`.
 
 ## Constants
 

@@ -13,6 +13,7 @@ These rules apply to `src/pages`.
 - Do not put API calls, socket subscriptions, complex forms, or large UI sections in pages.
 - Do not create reusable UI inside pages.
 - Do not import one page from another page unless defining route composition explicitly.
+- If a page grows beyond route composition, extract the behavior into a feature template/hook.
 
 ## Example
 
@@ -28,19 +29,14 @@ export function SignInPage() {
 
 - File: `<screen>-page.tsx`.
 - Export: `<Screen>Page`.
-- Do not name page files with PascalCase, even when the exported component is PascalCase.
-- Use `auth` instead of `authen`.
+- Do not name page files with PascalCase.
+- Use `auth`, not `authen`.
 
 Examples:
 
 - `sign-in-page.tsx` exports `SignInPage`.
 - `chat-page.tsx` exports `ChatPage`.
 - `settings-page.tsx` exports `SettingsPage`.
-
-Bad:
-
-- `SignInPage.tsx`
-- `ChatPage.tsx`
 
 ## Avoid
 

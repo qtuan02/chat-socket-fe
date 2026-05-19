@@ -3,7 +3,7 @@
 Copy this prompt when you want Codex to build or update a feature.
 
 ```md
-You are working in this chat frontend project.
+You are working in this realtime chat frontend project.
 Read `AGENTS.md` and the relevant files in `rules/` before editing.
 
 ## Task
@@ -20,6 +20,7 @@ Scope:
 - [Hooks/stores/providers]
 - [Services/API/socket events]
 - [Routes/config, if needed]
+- [Tests, if needed]
 
 Do not:
 - [Things that must not change]
@@ -32,30 +33,23 @@ Entities involved:
 - [User / Conversation / Message / Participant / Attachment / etc.]
 
 Behavior rules:
-- [Rule 1]
-- [Rule 2]
-- [Validation, optimistic update, socket cleanup, reconnect behavior, etc.]
-
-Required states:
-- Loading
-- Error
-- Empty
-- Success
-- Disabled/submitting
-- Mobile responsive
+- [Validation, optimistic update, socket cleanup, reconnect behavior, query invalidation, etc.]
+- [Loading/error/empty/success/disabled states]
+- [Mobile responsive and accessibility requirements]
 
 ## Implementation Rules
 
 - Keep `src/pages` thin. Pages should render templates from `src/features/<feature>/templates`.
-- Put feature-only UI in `src/features/<feature>/components`.
+- Put feature-only UI and orchestration in `src/features/<feature>`.
 - Put reusable app UI in `src/components/shared`.
-- Put raw shadcn primitives in `src/components/ui`.
+- Put raw shadcn/ui primitives in `src/components/ui`.
 - Put API and socket functions in `src/services`.
-- Put low-level clients in `src/libs`.
+- Put low-level clients in `src/libs` or the established global socket store.
 - Put reusable API hooks in `src/hooks/api`.
+- Use TanStack Query for server state and Zustand only for client state.
 - Use Tailwind CSS and `cn` from `@/utils/cn`.
 - Use TypeScript strictly and avoid `any`.
-- Clean up socket listeners.
+- Clean up socket listeners and avoid duplicate subscriptions.
 - Do not log tokens or private message payloads.
 
 ## Workflow
@@ -67,5 +61,6 @@ Required states:
    - `bun.cmd run check`
    - `bun.cmd run typecheck`
    - `bun.cmd run build` if UI/config/build behavior changed
+   - relevant test scripts if they exist or you add tests
 5. Final answer: changed files, what works, verification result, and any assumption.
 ```

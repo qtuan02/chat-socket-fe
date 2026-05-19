@@ -4,15 +4,16 @@ These rules apply to `src/config`.
 
 ## Purpose
 
-`src/config` contains important app configuration.
+`src/config` contains deterministic app configuration.
 
 Good examples:
 
 - `env.ts`
-- `constants.ts`
+- `constant.ts` or `constants.ts`
 - `routes.ts`
 - `storage-keys.ts`
 - `socket-events.ts`
+- `feature-flags.ts`
 - `app.ts`
 
 ## Rules
@@ -26,11 +27,20 @@ Good examples:
 
 ## Env
 
+- Follow `rules/security.md`.
 - Do not expose secrets in frontend code.
 - Only frontend-safe public env variables should be read by the client.
-- Normalize env values before other modules consume them.
+- Read `import.meta.env` only in `env.ts`; other modules should consume normalized `env`.
+- Keep `.env.template` limited to safe public values and local examples.
 
 ## Routes
 
-- When adding routes, prefer a centralized `routes.ts` with path constants/builders.
+- Prefer centralized route constants/builders in `routes.ts`.
 - Avoid hardcoded route strings across components and features once a route config exists.
+- Validate route params before using them in API calls or subscriptions.
+
+## Socket Events
+
+- Prefer typed builder functions for destinations with ids.
+- Do not concatenate topic strings throughout components.
+- Keep backend event names consistent with service parsing and feature cache updates.
