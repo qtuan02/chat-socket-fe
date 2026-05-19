@@ -5,9 +5,10 @@ import { useCurrentUserQuery } from "@/hooks/api/user";
 import { useSocketStore } from "@/stores/useSocketStore";
 import type { Conversation, ConversationMember } from "@/types/conversation";
 import { ConversationTypeEnum } from "@/types/conversation";
-import type { MessageDto } from "@/types/message";
+import type { MessageRecord } from "@/types/message";
 import type { DirectMessageUser, User } from "@/types/user";
 import { PresenceStatusEnum } from "@/types/user";
+import { createDraftConversationId } from "@/utils/conversation";
 import { getDisplayName } from "@/utils/display";
 
 type ChatLocationState = {
@@ -80,7 +81,7 @@ function createDirectMessageDraftConversation({
     : [directMember];
 
   return {
-    id: `draft:${user.id}`,
+    id: createDraftConversationId(user.id),
     type: ConversationTypeEnum.DIRECT,
     title: userDisplayName,
     groupName: null,
@@ -120,6 +121,8 @@ export function useDirectMessageDraft({
   const [draftUser, setDraftUser] = React.useState<DirectMessageUser | null>(
     () => locationDraftUser,
   );
+  const [sentDraftConversation, setSentDraftConversation] =
+    React.useState<Conversation | null>(null);
 
   const draftConversation = React.useMemo(() => {
     if (!draftUser) return null;
@@ -159,8 +162,16 @@ export function useDirectMessageDraft({
   React.useEffect(() => {
     if (isFriendsRoute || isProfileRoute) {
       setDraftUser(null);
+      setSentDraftConversation(null);
       onCloseDetails();
       return;
+    }
+
+    if (
+      sentDraftConversation &&
+      activeConversation?.id === sentDraftConversation.id
+    ) {
+      setSentDraftConversation(null);
     }
 
     if (
@@ -180,10 +191,12 @@ export function useDirectMessageDraft({
     isFriendsRoute,
     isProfileRoute,
     onCloseDetails,
+    sentDraftConversation,
   ]);
 
   const clearDraftConversation = React.useCallback(() => {
     setDraftUser(null);
+    setSentDraftConversation(null);
   }, []);
 
   const openDraftConversation = React.useCallback(
@@ -201,11 +214,24 @@ export function useDirectMessageDraft({
   );
 
   const handleDraftMessageSent = React.useCallback(
-    (message: MessageDto) => {
+    (message: MessageRecord) => {
+      if (draftConversation) {
+        setSentDraftConversation({
+          ...draftConversation,
+          id: message.conversationId,
+          lastMessage: message.content.trim() || "No messages yet.",
+          lastMessageAt: message.createdAt,
+          lastMessageId: message.id,
+          lastMessageSenderId: message.senderId,
+          updatedAt: message.updatedAt,
+        });
+      }
+
+      setDraftUser(null);
       onCloseDetails();
       navigate(APP_ROUTES.conversationById(message.conversationId));
     },
-    [navigate, onCloseDetails],
+    [draftConversation, navigate, onCloseDetails],
   );
 
   return {
@@ -214,5 +240,6 @@ export function useDirectMessageDraft({
     handleDraftMessageSent,
     isDraftConversation,
     openDraftConversation,
+    sentDraftConversation,
   };
 }

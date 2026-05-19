@@ -48,6 +48,7 @@ export function ChatTemplate() {
     handleDraftMessageSent,
     isDraftConversation,
     openDraftConversation,
+    sentDraftConversation,
   } = useDirectMessageDraft({
     activeConversation,
     conversationId,
@@ -56,9 +57,13 @@ export function ChatTemplate() {
     isProfileRoute,
     onCloseDetails: closeDetails,
   });
-  const displayedConversation =
-    isConversationRoute || isChatHomeRoute
-      ? (draftConversation ?? activeConversation)
+  const displayedConversation = isChatHomeRoute
+    ? draftConversation
+    : isConversationRoute
+      ? (activeConversation ??
+        (sentDraftConversation?.id === conversationId
+          ? sentDraftConversation
+          : null))
       : null;
   const sidebarActiveConversationId =
     isDraftConversation || isFriendsRoute || isProfileRoute

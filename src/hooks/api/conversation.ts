@@ -13,10 +13,10 @@ import { conversationService } from "@/services/conversation-service";
 import { useSocketStore } from "@/stores/useSocketStore";
 import type {
   Conversation,
-  ConversationDto,
   ConversationEvent,
   ConversationMember,
   ConversationPage,
+  ConversationRecord,
   ConversationSeenEvent,
   CreateGroupConversationRequest,
   GetConversationsParams,
@@ -49,7 +49,7 @@ type ConversationCacheUpdateOptions = {
   moveToTop?: boolean;
 };
 
-const conversationQueryKeys = {
+export const conversationQueryKeys = {
   ...conversationQueryKeyFactory,
   list: (userId: string, type?: ConversationTypeEnum, limit = 30) =>
     conversationQueryKeyFactory.list({ userId, type, limit }),
@@ -58,7 +58,7 @@ const conversationQueryKeys = {
 const CONVERSATIONS_DEFAULT_LIMIT = 30;
 
 function mapConversationToUiModel(
-  conversation: ConversationDto,
+  conversation: ConversationRecord,
   currentUserId: string,
   onlineUserIds: ReadonlySet<string>,
 ): Conversation {
@@ -164,7 +164,7 @@ function getHasLoadedConversationQueries(queryClient: QueryClient) {
 function upsertConversationInPages(
   data: ConversationInfiniteData | undefined,
   conversationId: string,
-  replacement: ConversationDto | null | undefined,
+  replacement: ConversationRecord | null | undefined,
   options: ConversationCacheUpdateOptions = {},
 ) {
   if (!data) return data;
@@ -174,7 +174,7 @@ function upsertConversationInPages(
   let hasChanges = false;
 
   const nextPages = data.pages.map((page) => {
-    const items: ConversationDto[] = [];
+    const items: ConversationRecord[] = [];
     let didProcess = false;
 
     for (const conversation of page.items) {
@@ -236,7 +236,7 @@ function upsertConversationInPages(
 function updateConversationInPages(
   data: ConversationInfiniteData | undefined,
   conversationId: string,
-  updater: (conversation: ConversationDto) => ConversationDto,
+  updater: (conversation: ConversationRecord) => ConversationRecord,
   options: ConversationCacheUpdateOptions = {},
 ) {
   if (!data) return data;
@@ -390,7 +390,7 @@ export function applyConversationSeenToCache(
 
 function upsertConversation(
   queryClient: QueryClient,
-  conversation?: ConversationDto | null,
+  conversation?: ConversationRecord | null,
   options?: ConversationCacheUpdateOptions,
 ) {
   if (!conversation) return;
@@ -491,13 +491,13 @@ export function useMarkConversationAsSeenMutation() {
 }
 
 export function useCreateGroupConversationMutation(options?: {
-  onSuccess?: (conversation: ConversationDto) => void;
+  onSuccess?: (conversation: ConversationRecord) => void;
   onError?: (error: Error) => void;
 }) {
   const queryClient = useQueryClient();
 
   return useMutation<
-    ConversationDto,
+    ConversationRecord,
     Error,
     CreateGroupConversationRequest,
     ConversationMutationContext
@@ -533,13 +533,13 @@ export function useCreateGroupConversationMutation(options?: {
 }
 
 export function useUpdateGroupMutation(options?: {
-  onSuccess?: (conversation: ConversationDto) => void;
+  onSuccess?: (conversation: ConversationRecord) => void;
   onError?: (error: Error) => void;
 }) {
   const queryClient = useQueryClient();
 
   return useMutation<
-    ConversationDto,
+    ConversationRecord,
     Error,
     { conversationId: string; payload: UpdateGroupRequest },
     ConversationMutationContext
@@ -575,13 +575,13 @@ export function useUpdateGroupMutation(options?: {
 }
 
 export function useAddGroupMembersMutation(options?: {
-  onSuccess?: (conversation: ConversationDto) => void;
+  onSuccess?: (conversation: ConversationRecord) => void;
   onError?: (error: Error) => void;
 }) {
   const queryClient = useQueryClient();
 
   return useMutation<
-    ConversationDto,
+    ConversationRecord,
     Error,
     { conversationId: string; payload: GroupMembersRequest },
     ConversationMutationContext
@@ -618,13 +618,13 @@ export function useAddGroupMembersMutation(options?: {
 }
 
 export function useRemoveGroupMemberMutation(options?: {
-  onSuccess?: (conversation: ConversationDto) => void;
+  onSuccess?: (conversation: ConversationRecord) => void;
   onError?: (error: Error) => void;
 }) {
   const queryClient = useQueryClient();
 
   return useMutation<
-    ConversationDto,
+    ConversationRecord,
     Error,
     { conversationId: string; memberId: string },
     ConversationMutationContext

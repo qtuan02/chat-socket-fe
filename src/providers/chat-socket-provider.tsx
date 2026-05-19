@@ -82,7 +82,9 @@ export function ChatSocketProvider({
       client,
       activeConversationId,
       (message) => {
-        appendConversationMessageToCache(queryClient, message);
+        appendConversationMessageToCache(queryClient, message, {
+          userId: currentUserId,
+        });
 
         if (isMessageFromOtherUser(message.senderId, currentUserId))
           markConversationAsSeen(message.conversationId);

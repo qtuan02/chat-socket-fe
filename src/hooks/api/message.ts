@@ -3,12 +3,14 @@ import {
   type QueryClient,
   useInfiniteQuery,
   useMutation,
+  useQueryClient,
 } from "@tanstack/react-query";
 import * as React from "react";
 import {
   MESSAGE_LIST_FIRST_ITEM_INDEX,
   MESSAGES_DEFAULT_LIMIT,
 } from "@/config/constant";
+import { conversationQueryKeys } from "@/hooks/api/conversation";
 import { useCurrentUserQuery } from "@/hooks/api/user";
 import {
   queryKeysFactory,
@@ -17,13 +19,14 @@ import {
 import { messageService } from "@/services/message-service";
 import type {
   Message,
-  MessageDto,
   MessagePage,
+  MessageRecord,
   SendDirectMessageRequest,
   SendGroupMessageRequest,
   UseMessagesInfiniteQueryParams,
 } from "@/types/message";
 import { MessageStatus } from "@/types/message";
+import { isDraftConversationId } from "@/utils/conversation";
 
 const messageQueryKeyFactory = queryKeysFactory<"message">("message");
 
@@ -37,12 +40,8 @@ export const messageQueryKeys = {
     messageQueryKeyFactory.detail(conversationId, { userId, limit }),
 };
 
-function isDraftConversationId(conversationId: string) {
-  return conversationId.startsWith("draft:");
-}
-
 function mapMessageToUiModel(
-  message: MessageDto,
+  message: MessageRecord,
   senderNameById: Map<string, string>,
 ): Message {
   return {
@@ -61,7 +60,7 @@ function mapMessageToUiModel(
 
 function appendMessageToInfiniteData(
   data: MessageInfiniteData | undefined,
-  message: MessageDto,
+  message: MessageRecord,
 ): MessageInfiniteData | undefined {
   if (!data) return data;
 
@@ -91,13 +90,39 @@ function appendMessageToInfiniteData(
   };
 }
 
+function upsertMessageToInfiniteData(
+  data: MessageInfiniteData | undefined,
+  message: MessageRecord,
+): MessageInfiniteData {
+  if (!data) {
+    return {
+      pages: [{ items: [message], nextCursor: null }],
+      pageParams: [undefined],
+    };
+  }
+
+  return appendMessageToInfiniteData(data, message) ?? data;
+}
+
 export function appendConversationMessageToCache(
   queryClient: QueryClient,
-  message: MessageDto,
+  message: MessageRecord,
+  options: { userId?: string; limit?: number } = {},
 ) {
   queryClient.setQueriesData<MessageInfiniteData>(
     { queryKey: messageQueryKeys.conversation(message.conversationId) },
     (data) => appendMessageToInfiniteData(data, message),
+  );
+
+  if (!options.userId) return;
+
+  queryClient.setQueryData<MessageInfiniteData>(
+    messageQueryKeys.messages(
+      options.userId,
+      message.conversationId,
+      options.limit ?? MESSAGES_DEFAULT_LIMIT,
+    ),
+    (data) => upsertMessageToInfiniteData(data, message),
   );
 }
 
@@ -169,25 +194,49 @@ export function useMessagesInfiniteQuery({
 export function useSendDirectMessageMutation(
   options?: UseMutationOptionsWrapper<
     SendDirectMessageRequest,
-    MessageDto,
+    MessageRecord,
     Error
   >,
 ) {
+  const queryClient = useQueryClient();
+  const { data: currentUser } = useCurrentUserQuery();
+
   return useMutation({
     mutationFn: messageService.sendDirectMessage,
     ...options,
+    onSuccess: (message, variables, onMutateResult, context) => {
+      appendConversationMessageToCache(queryClient, message, {
+        userId: currentUser?.id,
+      });
+      void queryClient.invalidateQueries({
+        queryKey: conversationQueryKeys.lists(),
+      });
+      options?.onSuccess?.(message, variables, onMutateResult, context);
+    },
   });
 }
 
 export function useSendGroupMessageMutation(
   options?: UseMutationOptionsWrapper<
     SendGroupMessageRequest,
-    MessageDto,
+    MessageRecord,
     Error
   >,
 ) {
+  const queryClient = useQueryClient();
+  const { data: currentUser } = useCurrentUserQuery();
+
   return useMutation({
     mutationFn: messageService.sendGroupMessage,
     ...options,
+    onSuccess: (message, variables, onMutateResult, context) => {
+      appendConversationMessageToCache(queryClient, message, {
+        userId: currentUser?.id,
+      });
+      void queryClient.invalidateQueries({
+        queryKey: conversationQueryKeys.lists(),
+      });
+      options?.onSuccess?.(message, variables, onMutateResult, context);
+    },
   });
 }

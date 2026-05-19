@@ -2,9 +2,9 @@ import { APP_API } from "@/config/routes";
 import axiosClient from "@/libs/axios";
 import type {
   GetMessagesParams,
-  MessageDto,
   MessagePage,
   MessagePageResponse,
+  MessageRecord,
   MessageResponse,
   SendDirectMessageRequest,
   SendGroupMessageRequest,
@@ -34,7 +34,7 @@ export const messageService = {
 
   sendDirectMessage: async (
     payload: SendDirectMessageRequest,
-  ): Promise<MessageDto> => {
+  ): Promise<MessageRecord> => {
     const response = await axiosClient.post<MessageResponse>(
       `${APP_API.v1.base}${APP_API.v1.chat.sendDirectMessage}`,
       payload,
@@ -45,7 +45,7 @@ export const messageService = {
 
   sendGroupMessage: async (
     payload: SendGroupMessageRequest,
-  ): Promise<MessageDto> => {
+  ): Promise<MessageRecord> => {
     const response = await axiosClient.post<MessageResponse>(
       `${APP_API.v1.base}${APP_API.v1.chat.sendGroupMessage}`,
       payload,

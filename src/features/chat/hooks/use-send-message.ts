@@ -8,7 +8,7 @@ import { useCurrentUserQuery } from "@/hooks/api/user";
 import { useThrottle } from "@/hooks/use-throttle";
 import type { Conversation } from "@/types/conversation";
 import { ConversationTypeEnum } from "@/types/conversation";
-import { type MessageDto, MessageTypeEnum } from "@/types/message";
+import { type MessageRecord, MessageTypeEnum } from "@/types/message";
 import { getErrorMessage } from "@/utils/error";
 
 type UseSendMessageOptions = {
@@ -16,7 +16,7 @@ type UseSendMessageOptions = {
   content: string;
   onAfterMessageSent: () => void;
   onClearContent: () => void;
-  onMessageSent?: (message: MessageDto) => void;
+  onMessageSent?: (message: MessageRecord) => void;
   onRestoreContent: (content: string) => void;
 };
 
@@ -63,7 +63,7 @@ export function useSendMessage({
   );
 
   const handleMessageSent = React.useCallback(
-    (sentMessage: MessageDto) => {
+    (sentMessage: MessageRecord) => {
       onMessageSent?.(sentMessage);
       onAfterMessageSent();
     },

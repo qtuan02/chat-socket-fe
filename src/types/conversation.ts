@@ -1,6 +1,6 @@
 import type { SOCKET_EVENT } from "@/config/constant";
 import type { BaseResponse } from "./base";
-import type { MessageDto } from "./message";
+import type { MessageRecord } from "./message";
 import type { PresenceStatusEnum } from "./user";
 
 export enum ParticipantRole {
@@ -19,7 +19,7 @@ export enum ConversationTypeEnum {
 }
 
 type ConversationParticipantIdentity = Pick<
-  ConversationParticipantDto,
+  ConversationParticipant,
   | "userId"
   | "username"
   | "firstName"
@@ -31,7 +31,7 @@ type ConversationParticipantIdentity = Pick<
   | "lastReadAt"
 >;
 
-interface ConversationParticipantDto {
+interface ConversationParticipant {
   userId: string;
   username?: string | null;
   firstName: string;
@@ -44,7 +44,7 @@ interface ConversationParticipantDto {
   lastReadAt?: string | null;
 }
 
-export interface ConversationDto {
+export interface ConversationRecord {
   id: string;
   type: ConversationTypeEnum;
   groupName: string | null;
@@ -52,12 +52,12 @@ export interface ConversationDto {
   directUserAId: string | null;
   directUserBId: string | null;
   lastMessageId: string | null;
-  lastMessage: MessageDto | null;
+  lastMessage: MessageRecord | null;
   lastMessageAt: string | null;
   createdAt: string;
   updatedAt: string;
   unreadCount: number;
-  participants: ConversationParticipantDto[];
+  participants: ConversationParticipant[];
 }
 
 export interface ConversationMember extends ConversationParticipantIdentity {
@@ -96,7 +96,7 @@ export interface Conversation {
 export interface ConversationEvent {
   eventType: typeof SOCKET_EVENT.CONVERSATION_UPDATED;
   conversationId: string;
-  lastMessage: MessageDto | null;
+  lastMessage: MessageRecord | null;
   lastMessageAt: string;
   unreadCount: number;
 }
@@ -116,7 +116,7 @@ export interface GetConversationsParams {
 }
 
 export interface ConversationPage {
-  items: ConversationDto[];
+  items: ConversationRecord[];
   nextCursor: string | null;
 }
 
@@ -134,7 +134,7 @@ export type GroupMembersRequest = {
   memberIds: string[];
 };
 
-type ConversationMutationResponse = BaseResponse<ConversationDto>;
+type ConversationMutationResponse = BaseResponse<ConversationRecord>;
 
 export type CreateGroupConversationResponse = ConversationMutationResponse;
 export type UpdateGroupResponse = ConversationMutationResponse;
@@ -143,6 +143,6 @@ export type RemoveGroupMemberResponse = ConversationMutationResponse;
 export type LeaveGroupResponse = BaseResponse<null>;
 
 export type ConversationPageResponse = BaseResponse<{
-  messages: ConversationDto[];
+  messages: ConversationRecord[];
   nextCursor: string | null;
 }>;

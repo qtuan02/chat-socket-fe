@@ -20,7 +20,7 @@ export const messageStatusLabels: Record<MessageStatus, string> = {
   [MessageStatus.Failed]: "Failed",
 };
 
-export interface MessageDto {
+export interface MessageRecord {
   id: string;
   conversationId: string;
   senderId: string;
@@ -66,16 +66,16 @@ export interface SendGroupMessageRequest {
 }
 
 export interface MessagePage {
-  items: MessageDto[];
+  items: MessageRecord[];
   nextCursor: string | null;
 }
 
 export type MessagePageResponse = BaseResponse<{
-  messages: MessageDto[];
+  messages: MessageRecord[];
   nextCursor: string | null;
 }>;
 
-export type MessageResponse = BaseResponse<MessageDto>;
+export type MessageResponse = BaseResponse<MessageRecord>;
 
 type MessageSender = Pick<ConversationMember, "userId" | "displayName">;
 
