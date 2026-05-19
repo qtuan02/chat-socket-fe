@@ -1,6 +1,7 @@
 import * as React from "react";
 import { authService } from "@/services/auth-service";
 import useAuthStore from "@/stores/useAuthStore";
+import { isRefreshTokenExpiredError } from "@/utils/auth-error";
 
 let refreshSessionPromise: ReturnType<typeof authService.refreshToken> | null =
   null;
@@ -18,6 +19,7 @@ function refreshSessionOnce() {
 export function useSessionCheck() {
   const accessToken = useAuthStore((state) => state.accessToken);
   const setAccessToken = useAuthStore((state) => state.setAccessToken);
+  const markSessionExpired = useAuthStore((state) => state.markSessionExpired);
   const [isCheckingSession, setIsCheckingSession] = React.useState(
     !accessToken,
   );
@@ -38,8 +40,10 @@ export function useSessionCheck() {
         if (ignore) return;
 
         setAccessToken(data.data.accessToken);
-      } catch {
-        console.error("Refresh token failed. Please try again.");
+      } catch (error) {
+        if (!ignore && isRefreshTokenExpiredError(error)) {
+          markSessionExpired();
+        }
       }
 
       if (!ignore) setIsCheckingSession(false);
@@ -50,7 +54,7 @@ export function useSessionCheck() {
     return () => {
       ignore = true;
     };
-  }, [accessToken, setAccessToken]);
+  }, [accessToken, markSessionExpired, setAccessToken]);
 
   return {
     accessToken,
