@@ -4,7 +4,6 @@ import { APP_API } from "@/config/routes";
 import { queryClient } from "@/libs/query-client";
 import useAuthStore from "@/stores/useAuthStore";
 import type { SignInResponse } from "@/types/auth";
-import { isRefreshTokenExpiredError } from "@/utils/auth-error";
 
 type RetryableRequestConfig = InternalAxiosRequestConfig & {
   _retryCount?: number;
@@ -81,12 +80,7 @@ axiosClient.interceptors.response.use(
           return axiosClient(originalRequest);
         } catch (refreshError) {
           queryClient.clear();
-          const authStore = useAuthStore.getState();
-          if (isRefreshTokenExpiredError(refreshError)) {
-            authStore.markSessionExpired();
-          } else {
-            authStore.clearState();
-          }
+          useAuthStore.getState().clearState();
           return Promise.reject(refreshError);
         }
       }
