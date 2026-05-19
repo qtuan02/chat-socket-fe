@@ -37,6 +37,10 @@ export const messageQueryKeys = {
     messageQueryKeyFactory.detail(conversationId, { userId, limit }),
 };
 
+function isDraftConversationId(conversationId: string) {
+  return conversationId.startsWith("draft:");
+}
+
 function mapMessageToUiModel(
   message: MessageDto,
   senderNameById: Map<string, string>,
@@ -104,6 +108,11 @@ export function useMessagesInfiniteQuery({
   limit = MESSAGES_DEFAULT_LIMIT,
 }: UseMessagesInfiniteQueryParams) {
   const { data: currentUser } = useCurrentUserQuery();
+  const canFetchMessages =
+    enabled &&
+    !!conversationId &&
+    !!currentUser?.id &&
+    !isDraftConversationId(conversationId);
   const query = useInfiniteQuery<
     MessagePage,
     Error,
@@ -127,7 +136,7 @@ export function useMessagesInfiniteQuery({
       }),
     getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
     initialPageParam: undefined as string | undefined,
-    enabled: enabled && !!conversationId && !!currentUser?.id,
+    enabled: canFetchMessages,
   });
 
   const senderNameById = React.useMemo(() => {
