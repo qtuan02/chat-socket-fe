@@ -83,8 +83,12 @@ function createDirectMessageDraftConversation({
     id: `draft:${user.id}`,
     type: ConversationTypeEnum.DIRECT,
     title: userDisplayName,
+    groupName: null,
+    createdById: currentUser?.id ?? null,
+    directUserAId: currentUser?.id ?? null,
+    directUserBId: user.id,
     lastMessage: "No messages yet.",
-    lastMessageAt: "No messages yet.",
+    lastMessageAt: null,
     participantCount: members.length,
     unreadCount: 0,
     avatarUrl: user.avatarUrl ?? undefined,
@@ -92,6 +96,7 @@ function createDirectMessageDraftConversation({
     directMember,
     currentUserId: currentUser?.id,
     lastMessageId: null,
+    createdAt: now,
     updatedAt: now,
   };
 }

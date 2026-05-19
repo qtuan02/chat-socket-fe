@@ -16,14 +16,8 @@ function normalizePresenceStatus(rawStatus?: string): PresenceStatusEnum {
   }
 
   const normalizedStatus = rawStatus.trim().toLowerCase();
-
-  if (normalizedStatus === "online") {
-    return PresenceStatusEnum.Online;
-  }
-
-  if (normalizedStatus === "offline") {
-    return PresenceStatusEnum.Offline;
-  }
+  if (normalizedStatus === "online") return PresenceStatusEnum.Online;
+  if (normalizedStatus === "offline") return PresenceStatusEnum.Offline;
 
   return PresenceStatusEnum.Checking;
 }

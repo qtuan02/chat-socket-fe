@@ -13,7 +13,7 @@ export interface SignUpPayload {
   password: string;
 }
 
-export interface AuthTokenResponse {
+interface AuthTokenResponse {
   accessToken: string;
 }
 

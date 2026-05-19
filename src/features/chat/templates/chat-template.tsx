@@ -101,7 +101,9 @@ export function ChatTemplate() {
         isDraft={isDraftConversation}
         onBack={showBackButton ? goToChatHome : undefined}
         onMessageSent={isDraftConversation ? handleDraftMessageSent : undefined}
+        onSendFriendRequest={detailsActions.onSendFriendRequest}
         onOpenDetails={isDraftConversation ? undefined : toggleDetails}
+        sendingFriendRequestId={detailsActions.sendingFriendRequestId}
         showBackButton={showBackButton}
       />
     );

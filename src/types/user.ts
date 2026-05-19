@@ -13,7 +13,7 @@ export const presenceStatusLabels: Record<PresenceStatusEnum, string> = {
   [PresenceStatusEnum.Checking]: "Checking",
 };
 
-export interface UserProfile {
+interface UserProfile {
   id: string;
   username: string;
   firstName: string;

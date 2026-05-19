@@ -1,13 +1,14 @@
 import { Check, Loader2, X } from "lucide-react";
-import { UserItem } from "@/components/shared/user-item";
+import { UserItemAvatar } from "@/components/shared/user-item-avatar";
 import { Button } from "@/components/ui/button";
 import type {
   FriendRequestUser,
   ReceivedFriendRequest,
   SentFriendRequest,
 } from "@/types/friend";
-import { FriendStatus } from "@/types/friend-status";
+import { cn } from "@/utils/cn";
 import { formatRelativeTime } from "@/utils/date";
+import { getDisplayName, getUsernameLabel } from "@/utils/display";
 
 type FriendRequest = ReceivedFriendRequest | SentFriendRequest;
 
@@ -59,8 +60,9 @@ function FriendRequestActions({
     return (
       <Button
         type="button"
-        size="icon-xs"
+        size="icon-sm"
         variant="outline"
+        className="size-7"
         onClick={() => {
           onCancel?.(requestId);
         }}
@@ -77,11 +79,12 @@ function FriendRequestActions({
   }
 
   return (
-    <div className="flex items-center gap-2">
+    <div className="flex shrink-0 items-center gap-1.5">
       <Button
         type="button"
-        size="icon-xs"
+        size="icon-sm"
         variant="destructive"
+        className="size-7"
         onClick={() => {
           onDecline?.(requestId);
         }}
@@ -96,7 +99,8 @@ function FriendRequestActions({
       </Button>
       <Button
         type="button"
-        size="icon-xs"
+        size="icon-sm"
+        className="size-7"
         onClick={() => {
           onAccept?.(requestId);
         }}
@@ -111,6 +115,10 @@ function FriendRequestActions({
       </Button>
     </div>
   );
+}
+
+function getRequestStatusLabel(variant: "received" | "sent") {
+  return variant === "received" ? "Received" : "Sent";
 }
 
 export function FriendRequestList({
@@ -130,7 +138,7 @@ export function FriendRequestList({
       </p>
 
       {requests.length === 0 ? (
-        <p className="rounded-lg border border-dashed border-border/80 bg-muted/40 px-3 py-2.5 text-sm text-muted-foreground">
+        <p className="rounded-md border border-dashed border-border/80 bg-muted/40 px-3 py-2 text-sm text-muted-foreground">
           {emptyMessage}
         </p>
       ) : (
@@ -138,18 +146,35 @@ export function FriendRequestList({
           {requests.map((request) => {
             const isProcessing = processingRequestId === request.id;
             const requestUser = getRequestUser(request, variant);
+            const displayName = getDisplayName(requestUser);
+            const usernameLabel = getUsernameLabel(requestUser.username);
+            const subtitle = buildSubtitle(request.message, request.createdAt);
 
             return (
-              <UserItem
+              <li
                 key={request.id}
-                friendStatus={
-                  variant === "received"
-                    ? FriendStatus.RECEIVED
-                    : FriendStatus.SENT
-                }
-                user={requestUser}
-                subtitle={buildSubtitle(request.message, request.createdAt)}
-                action={
+                className={cn(
+                  "list-none rounded-md border border-border/80 bg-background p-2",
+                  "transition hover:border-primary/50 hover:bg-muted/40",
+                )}
+              >
+                <div className="flex min-w-0 items-center justify-between gap-2">
+                  <div className="flex min-w-0 items-center gap-2">
+                    <UserItemAvatar
+                      compact
+                      displayName={displayName}
+                      avatarUrl={requestUser.avatarUrl ?? undefined}
+                    />
+                    <div className="min-w-0">
+                      <p className="truncate text-sm font-medium">
+                        {displayName}
+                      </p>
+                      <p className="truncate text-[11px] text-muted-foreground">
+                        {usernameLabel ?? "-"}
+                      </p>
+                    </div>
+                  </div>
+
                   <FriendRequestActions
                     isProcessing={isProcessing}
                     requestId={request.id}
@@ -158,8 +183,15 @@ export function FriendRequestList({
                     onDecline={onDecline}
                     onCancel={onCancel}
                   />
-                }
-              />
+                </div>
+
+                <div className="mt-1 flex items-center justify-between gap-2 text-[11px] text-muted-foreground">
+                  <p className="min-w-0 flex-1 truncate">{subtitle}</p>
+                  <span className="shrink-0">
+                    {getRequestStatusLabel(variant)}
+                  </span>
+                </div>
+              </li>
             );
           })}
         </ul>

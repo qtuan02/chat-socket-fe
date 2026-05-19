@@ -4,7 +4,7 @@ import { ConversationTypeEnum } from "@/types/conversation";
 import { PresenceStatusEnum, presenceStatusLabels } from "@/types/user";
 import { formatRelativeActivity as formatRelativeActivityWithLabels } from "@/utils/date";
 
-export type DisplayableNameInput = {
+type DisplayableNameInput = {
   displayName?: string | null;
   firstName?: string | null;
   id?: string | null;
@@ -70,7 +70,7 @@ export function getConversationAvatarMembers(conversation: Conversation) {
   return directMember ? [directMember] : [];
 }
 
-export function getActiveMembersCount(conversation: Conversation) {
+function getActiveMembersCount(conversation: Conversation) {
   return (
     conversation.onlineUsersCount ??
     conversation.members.filter(
@@ -79,7 +79,7 @@ export function getActiveMembersCount(conversation: Conversation) {
   );
 }
 
-export function isConversationPresenceKnown(conversation: Conversation) {
+function isConversationPresenceKnown(conversation: Conversation) {
   if (conversation.type === ConversationTypeEnum.GROUP) {
     return conversation.members.every((member) => isPresenceKnown(member));
   }
@@ -101,7 +101,7 @@ export function isConversationOnline(conversation: Conversation) {
   );
 }
 
-export function getConversationActivityAt(conversation: Conversation) {
+function getConversationActivityAt(conversation: Conversation) {
   const directMember = getDirectConversationMember(conversation);
   const activityAt = directMember?.lastActiveAt ?? conversation.lastMessageAt;
 
@@ -112,7 +112,7 @@ export function getConversationActivityAt(conversation: Conversation) {
   return conversation.updatedAt;
 }
 
-export function formatRelativeActivity(value?: string | null) {
+function formatRelativeActivity(value?: string | null) {
   return formatRelativeActivityWithLabels(value, {
     noActivityLabel: CONVERSATION_LABELS.noActivity,
     activeJustNowLabel: CONVERSATION_LABELS.activeJustNow,

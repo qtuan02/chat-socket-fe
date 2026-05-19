@@ -49,13 +49,13 @@ type ConversationCacheUpdateOptions = {
   moveToTop?: boolean;
 };
 
-export const conversationQueryKeys = {
+const conversationQueryKeys = {
   ...conversationQueryKeyFactory,
   list: (userId: string, type?: ConversationTypeEnum, limit = 30) =>
     conversationQueryKeyFactory.list({ userId, type, limit }),
 };
 
-export const CONVERSATIONS_DEFAULT_LIMIT = 30;
+const CONVERSATIONS_DEFAULT_LIMIT = 30;
 
 function mapConversationToUiModel(
   conversation: ConversationDto,
@@ -102,9 +102,13 @@ function mapConversationToUiModel(
     title: isGroup
       ? conversation.groupName || "Group conversation"
       : otherParticipant?.displayName || "Direct message",
+    groupName: conversation.groupName,
+    createdById: conversation.createdById,
+    directUserAId: conversation.directUserAId,
+    directUserBId: conversation.directUserBId,
     lastMessage:
       conversation.lastMessage?.content?.trim() || "No messages yet.",
-    lastMessageAt: conversation.lastMessageAt || "No messages yet.",
+    lastMessageAt: conversation.lastMessageAt,
     lastMessageSenderId: conversation.lastMessage?.senderId,
     lastMessageSenderName: lastMessageSender?.displayName,
     participantCount: members.length,
@@ -120,6 +124,7 @@ function mapConversationToUiModel(
     onlineUsersCount: members.filter(
       (member) => member.presenceStatus === PresenceStatusEnum.Online,
     ).length,
+    createdAt: conversation.createdAt,
     updatedAt: conversation.updatedAt,
   };
 }
