@@ -4,7 +4,7 @@ import type {
   ConversationEvent,
   ConversationSeenEvent,
 } from "@/types/conversation";
-import type { MessageRecord } from "@/types/message";
+import { type MessageRecord, MessageTypeEnum } from "@/types/message";
 import { parseToJson } from "@/utils/string";
 
 const socketDestinations = {
@@ -15,6 +15,65 @@ const socketDestinations = {
     `/topic/conversations/${conversationId}/seen`,
 } as const;
 
+const messageTypes = new Set<string>(Object.values(MessageTypeEnum));
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return !!value && typeof value === "object";
+}
+
+function isMessageRecord(value: unknown): value is MessageRecord {
+  if (!isRecord(value)) return false;
+
+  const hasValidAttachmentUrl =
+    value.attachmentUrl === undefined ||
+    value.attachmentUrl === null ||
+    typeof value.attachmentUrl === "string";
+
+  return (
+    typeof value.id === "string" &&
+    typeof value.conversationId === "string" &&
+    typeof value.senderId === "string" &&
+    typeof value.content === "string" &&
+    typeof value.createdAt === "string" &&
+    typeof value.updatedAt === "string" &&
+    typeof value.type === "string" &&
+    messageTypes.has(value.type) &&
+    hasValidAttachmentUrl
+  );
+}
+
+function isConversationUpdatedEvent(
+  value: unknown,
+): value is ConversationEvent {
+  if (!isRecord(value)) return false;
+
+  const hasValidLastMessage =
+    value.lastMessage === null || isMessageRecord(value.lastMessage);
+
+  return (
+    value.eventType === SOCKET_EVENT.CONVERSATION_UPDATED &&
+    typeof value.conversationId === "string" &&
+    typeof value.lastMessageAt === "string" &&
+    typeof value.unreadCount === "number" &&
+    Number.isFinite(value.unreadCount) &&
+    hasValidLastMessage
+  );
+}
+
+function isConversationSeenEvent(
+  value: unknown,
+): value is ConversationSeenEvent {
+  if (!isRecord(value)) return false;
+
+  return (
+    value.eventType === SOCKET_EVENT.CONVERSATION_SEEN &&
+    typeof value.conversationId === "string" &&
+    typeof value.seenByUserId === "string" &&
+    typeof value.lastReadMessageId === "string" &&
+    typeof value.lastReadAt === "string"
+  );
+}
+
 export function subscribeToConversationUpdates(
   client: Client,
   onConversationUpdate: (
@@ -24,18 +83,14 @@ export function subscribeToConversationUpdates(
   const subscription = client.subscribe(
     socketDestinations.conversationUpdates,
     (message: IMessage) => {
-      const event = parseToJson<ConversationEvent | ConversationSeenEvent>(
-        message.body,
-      );
-
+      const payload = parseToJson<unknown>(message.body);
       if (
-        !event ||
-        (event.eventType !== SOCKET_EVENT.CONVERSATION_UPDATED &&
-          event.eventType !== SOCKET_EVENT.CONVERSATION_SEEN)
+        !isConversationUpdatedEvent(payload) &&
+        !isConversationSeenEvent(payload)
       )
         return;
 
-      onConversationUpdate(event);
+      onConversationUpdate(payload);
     },
   );
 
@@ -52,11 +107,10 @@ export function subscribeToConversationMessages(
   const subscription = client.subscribe(
     socketDestinations.conversationMessages(conversationId),
     (message: IMessage) => {
-      const incomingMessage = parseToJson<MessageRecord>(message.body);
-
-      if (!incomingMessage) return;
-
-      onMessage(incomingMessage);
+      const payload = parseToJson<unknown>(message.body);
+      if (!isMessageRecord(payload)) return;
+      if (payload.conversationId !== conversationId) return;
+      onMessage(payload);
     },
   );
 
@@ -73,11 +127,10 @@ export function subscribeToConversationSeen(
   const subscription = client.subscribe(
     socketDestinations.conversationSeen(conversationId),
     (message: IMessage) => {
-      const event = parseToJson<ConversationSeenEvent>(message.body);
-
-      if (!event || event.eventType !== SOCKET_EVENT.CONVERSATION_SEEN) return;
-
-      onConversationSeen(event);
+      const payload = parseToJson<unknown>(message.body);
+      if (!isConversationSeenEvent(payload)) return;
+      if (payload.conversationId !== conversationId) return;
+      onConversationSeen(payload);
     },
   );
 

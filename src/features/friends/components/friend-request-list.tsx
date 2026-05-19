@@ -26,10 +26,12 @@ type FriendRequestListProps = {
 function getRequestUser(
   request: FriendRequest,
   variant: "received" | "sent",
-): FriendRequestUser {
-  return variant === "received"
-    ? (request as ReceivedFriendRequest).fromUser
-    : (request as SentFriendRequest).toUser;
+): FriendRequestUser | null {
+  if (variant === "received") {
+    return typeof request.fromUser === "string" ? null : request.fromUser;
+  }
+
+  return typeof request.toUser === "string" ? null : request.toUser;
 }
 
 function buildSubtitle(message?: string | null, createdAt?: string) {
@@ -146,6 +148,7 @@ export function FriendRequestList({
           {requests.map((request) => {
             const isProcessing = processingRequestId === request.id;
             const requestUser = getRequestUser(request, variant);
+            if (!requestUser) return null;
             const displayName = getDisplayName(requestUser);
             const usernameLabel = getUsernameLabel(requestUser.username);
             const subtitle = buildSubtitle(request.message, request.createdAt);

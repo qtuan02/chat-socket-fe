@@ -1,5 +1,9 @@
 /// <reference types="@rsbuild/core/types" />
 
+interface Window {
+  toggleDevtools?: () => void;
+}
+
 /**
  * Imports the SVG file as a React component.
  * @requires [@rsbuild/plugin-svgr](https://npmjs.com/package/@rsbuild/plugin-svgr)

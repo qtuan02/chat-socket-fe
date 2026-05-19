@@ -30,6 +30,7 @@ import { MessageStatus } from "@/types/message";
 import { isDraftConversationId } from "@/utils/conversation";
 
 const messageQueryKeyFactory = queryKeysFactory<"message">("message");
+const INITIAL_CURSOR_PAGE_PARAM: string | undefined = undefined;
 
 type MessageInfiniteData = InfiniteData<MessagePage, string | undefined>;
 
@@ -161,7 +162,7 @@ export function useMessagesInfiniteQuery({
         cursor: pageParam,
       }),
     getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
-    initialPageParam: undefined as string | undefined,
+    initialPageParam: INITIAL_CURSOR_PAGE_PARAM,
     enabled: canFetchMessages,
   });
 
@@ -199,24 +200,7 @@ export function useSendDirectMessageMutation(
     Error
   >,
 ) {
-  const queryClient = useQueryClient();
-  const { data: currentUser } = useCurrentUserQuery();
-  const isSocketConnected = useSocketStore((state) => state.isConnected);
-
-  return useMutation({
-    mutationFn: messageService.sendDirectMessage,
-    ...options,
-    onSuccess: (message, variables, onMutateResult, context) => {
-      appendConversationMessageToCache(queryClient, message, {
-        userId: currentUser?.id,
-      });
-      if (!isSocketConnected)
-        void queryClient.invalidateQueries({
-          queryKey: conversationQueryKeys.lists(),
-        });
-      options?.onSuccess?.(message, variables, onMutateResult, context);
-    },
-  });
+  return useSendMessageMutation(messageService.sendDirectMessage, options);
 }
 
 export function useSendGroupMessageMutation(
@@ -226,12 +210,19 @@ export function useSendGroupMessageMutation(
     Error
   >,
 ) {
+  return useSendMessageMutation(messageService.sendGroupMessage, options);
+}
+
+function useSendMessageMutation<TVariables>(
+  mutationFn: (variables: TVariables) => Promise<MessageRecord>,
+  options?: UseMutationOptionsWrapper<TVariables, MessageRecord, Error>,
+) {
   const queryClient = useQueryClient();
   const { data: currentUser } = useCurrentUserQuery();
   const isSocketConnected = useSocketStore((state) => state.isConnected);
 
-  return useMutation({
-    mutationFn: messageService.sendGroupMessage,
+  return useMutation<MessageRecord, Error, TVariables>({
+    mutationFn,
     ...options,
     onSuccess: (message, variables, onMutateResult, context) => {
       appendConversationMessageToCache(queryClient, message, {

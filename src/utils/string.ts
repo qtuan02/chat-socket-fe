@@ -1,8 +1,7 @@
-export function parseToJson<T>(jsonString: string) {
+export function parseToJson<T>(jsonString: string): T | null {
   try {
     return JSON.parse(jsonString) as T;
   } catch {
-    console.error("Unable to parse json string.");
     return null;
   }
 }

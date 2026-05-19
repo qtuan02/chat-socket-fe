@@ -39,7 +39,7 @@ export function useSessionCheck() {
 
         setAccessToken(data.data.accessToken);
       } catch {
-        console.error("Refresh token failed. Please try again.");
+        // Keep unauthenticated state when refresh fails.
       }
 
       if (!ignore) setIsCheckingSession(false);

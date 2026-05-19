@@ -1,11 +1,10 @@
 import { SignUpTemplate } from "@/features/auth/templates/sign-up-template";
+import { AuthPageShell } from "@/pages/auth-page-shell";
 
 export function SignUpPage() {
   return (
-    <div className="bg-muted flex min-h-svh flex-col items-center justify-center p-6 md:p-10 absolute inset-0 z-0 bg-gradient-purple">
-      <div className="w-full max-w-sm md:max-w-4xl">
-        <SignUpTemplate />
-      </div>
-    </div>
+    <AuthPageShell>
+      <SignUpTemplate />
+    </AuthPageShell>
   );
 }
