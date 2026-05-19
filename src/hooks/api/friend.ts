@@ -15,7 +15,6 @@ import type {
   FriendRequestUser,
   FriendSendRequestPayload,
   FriendsPage,
-  FriendWithPresence,
 } from "@/types/friend";
 import { PresenceStatusEnum } from "@/types/user";
 
@@ -59,55 +58,6 @@ function getPresenceStatusFromOnlineUsers(
   return onlineUserIds.has(userId)
     ? PresenceStatusEnum.Online
     : PresenceStatusEnum.Offline;
-}
-
-function applyFriendsPresence(
-  data: FriendsPage | undefined,
-  onlineUserIds: ReadonlySet<string>,
-): FriendsPage | undefined {
-  if (!data) return data;
-
-  return {
-    ...data,
-    messages: data.messages.map(
-      (friend): FriendWithPresence => ({
-        ...friend,
-        presenceStatus: getPresenceStatusFromOnlineUsers(
-          friend.id,
-          onlineUserIds,
-        ),
-      }),
-    ),
-  };
-}
-
-export function useFriendsQuery(
-  params: FriendListParams = {},
-  options?: UseQueryOptionsWrapper<FriendsPage, Error>,
-) {
-  const { data: currentUser } = useCurrentUserQuery();
-  const onlineUsers = useSocketStore((state) => state.onlineUsers);
-  const onlineUserIds = React.useMemo(
-    () => new Set(onlineUsers),
-    [onlineUsers],
-  );
-
-  const query = useQuery({
-    ...options,
-    queryKey: friendQueryKeys.list(currentUser?.id ?? "", params),
-    queryFn: () => friendService.getFriends(params),
-    staleTime: 0,
-    enabled: !!currentUser?.id && (options?.enabled ?? true),
-  });
-  const data = React.useMemo(
-    () => applyFriendsPresence(query.data, onlineUserIds),
-    [onlineUserIds, query.data],
-  );
-
-  return {
-    ...query,
-    data,
-  };
 }
 
 export function useFriendsInfiniteQuery(

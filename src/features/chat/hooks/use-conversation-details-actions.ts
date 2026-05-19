@@ -14,7 +14,7 @@ import {
   useSendFriendRequestMutation,
 } from "@/hooks/api/friend";
 import { messageQueryKeys } from "@/hooks/api/message";
-import { useCurrentUserQuery } from "@/hooks/api/user";
+import { currentUserQueryKeys, useCurrentUserQuery } from "@/hooks/api/user";
 import {
   type Conversation,
   ConversationTypeEnum,
@@ -44,9 +44,12 @@ export function useConversationDetailsActions({
 
   const { mutate: sendFriendRequest, isPending: isSendingFriendRequest } =
     useSendFriendRequestMutation({
-      onSuccess: () => {
-        queryClient.invalidateQueries({
+      onSuccess: (_data, variables) => {
+        void queryClient.invalidateQueries({
           queryKey: friendRequestQueryKeys.all,
+        });
+        void queryClient.invalidateQueries({
+          queryKey: currentUserQueryKeys.info(variables.toUserId),
         });
         toast.success("Friend request sent.");
         setSendingFriendRequestId(null);

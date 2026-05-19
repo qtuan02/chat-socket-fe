@@ -31,7 +31,7 @@ type ConversationParticipantIdentity = Pick<
   | "lastReadAt"
 >;
 
-export interface ConversationParticipantDto {
+interface ConversationParticipantDto {
   userId: string;
   username?: string | null;
   firstName: string;
@@ -73,8 +73,12 @@ export interface Conversation {
   id: string;
   type: ConversationTypeEnum;
   title: string;
+  groupName: string | null;
+  createdById: string | null;
+  directUserAId: string | null;
+  directUserBId: string | null;
   lastMessage: string;
-  lastMessageAt: string;
+  lastMessageAt: string | null;
   lastMessageSenderId?: string;
   lastMessageSenderName?: string;
   participantCount: number;
@@ -83,8 +87,9 @@ export interface Conversation {
   members: ConversationMember[];
   directMember?: ConversationMember;
   currentUserId?: string;
-  lastMessageId?: string | null;
+  lastMessageId: string | null;
   onlineUsersCount?: number;
+  createdAt: string;
   updatedAt: string;
 }
 
@@ -129,7 +134,7 @@ export type GroupMembersRequest = {
   memberIds: string[];
 };
 
-export type ConversationMutationResponse = BaseResponse<ConversationDto>;
+type ConversationMutationResponse = BaseResponse<ConversationDto>;
 
 export type CreateGroupConversationResponse = ConversationMutationResponse;
 export type UpdateGroupResponse = ConversationMutationResponse;

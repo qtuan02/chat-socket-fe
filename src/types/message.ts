@@ -77,7 +77,7 @@ export type MessagePageResponse = BaseResponse<{
 
 export type MessageResponse = BaseResponse<MessageDto>;
 
-export type MessageSender = Pick<ConversationMember, "userId" | "displayName">;
+type MessageSender = Pick<ConversationMember, "userId" | "displayName">;
 
 export type UseMessagesInfiniteQueryParams = Omit<
   GetMessagesParams,

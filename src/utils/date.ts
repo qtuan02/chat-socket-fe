@@ -112,7 +112,7 @@ export function formatRelativeTime(
   });
 }
 
-export function formatRelativeDurationWithLabels(
+function formatRelativeDurationWithLabels(
   value?: string | null,
   labels?: RelativeDurationLabels,
 ) {
@@ -147,10 +147,12 @@ export function formatRelativeActivity(
   });
 }
 
-export function formatTimestamp(timestamp: string) {
+export function formatTimestamp(timestamp?: string | null, fallback = "-") {
+  if (!timestamp) return fallback;
+
   const messageDate = parseValidDate(timestamp);
 
-  if (!messageDate) return timestamp;
+  if (!messageDate) return fallback;
 
   const now = new Date();
   const diffInMs = now.getTime() - messageDate.getTime();
@@ -180,7 +182,7 @@ export function formatMessageDate(value: string) {
   return vietnamMessageDateWithYearFormatter.format(date);
 }
 
-export function formatDateTime(value?: string) {
+export function formatDateTime(value?: string | null) {
   if (!value) return "-";
 
   const parsed = parseValidDate(value);
