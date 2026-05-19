@@ -6,7 +6,7 @@ export function ProtectedRoute() {
   const { accessToken, isCheckingSession } = useSessionCheck();
 
   if (isCheckingSession) {
-    return <div className="flex h-screen items-center justify-center">...</div>;
+    return <div className="flex h-screen items-center justify-center">Loading...</div>;
   }
 
   if (!accessToken) return <Navigate to={APP_ROUTES.signIn} replace />;
