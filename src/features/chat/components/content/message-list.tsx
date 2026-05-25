@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { useLatestMessageRefetch } from "@/features/chat/hooks/use-latest-message-refetch";
 import { useMessageListAutoScroll } from "@/features/chat/hooks/use-message-list-auto-scroll";
 import { useMessageReadReceipts } from "@/features/chat/hooks/use-message-read-receipts";
-import { useMessagesInfiniteQuery } from "@/hooks/api/message";
+import { useMessagesView } from "@/features/chat/hooks/use-messages-view";
 import { useCurrentUserQuery } from "@/hooks/api/user";
 import type { Conversation } from "@/types/conversation";
 import type { Message } from "@/types/message";
@@ -105,7 +105,7 @@ function ConversationMessageList({
     isLoading,
     messages,
     refetch,
-  } = useMessagesInfiniteQuery({
+  } = useMessagesView({
     conversationId: conversation.id,
     members: conversation.members,
   });

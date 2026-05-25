@@ -1,7 +1,7 @@
 import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { FriendStatus } from "@/types/friend-status";
-import { getUserItemActionButtonLabel } from "./user-item-helpers";
+import { getUserItemActionButtonLabel } from "@/features/friends/components/user-item-helpers";
 
 type UserItemActionButtonProps = {
   userId: string;

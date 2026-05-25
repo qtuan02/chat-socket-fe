@@ -1,12 +1,12 @@
 import { ArrowLeft, CircleCheckBig, Columns2Icon } from "lucide-react";
 import * as React from "react";
-import { UserItemActionButton } from "@/components/shared/user-item-action-button";
-import { UserItemDialog } from "@/components/shared/user-item-dialog";
 import {
   getFriendPopupAction,
   getFriendStatusLabel,
   getPresenceStatusLabel,
-} from "@/components/shared/user-item-helpers";
+  UserItemActionButton,
+  UserItemDialog,
+} from "@/features/friends/templates/user-item-template";
 import { Button } from "@/components/ui/button";
 import { ConversationAvatar } from "@/components/shared/conversation-avatar";
 import type { Conversation, ConversationMember } from "@/types/conversation";

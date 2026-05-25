@@ -1,5 +1,5 @@
 import * as React from "react";
-import { useConversationsInfiniteQuery } from "@/hooks/api/conversation";
+import { useConversationsView } from "@/features/conversation/hooks/use-conversations-view";
 import {
   type Conversation,
   ConversationTypeEnum,
@@ -28,7 +28,7 @@ export function useConversationSidebar({
     isFetchingNextPage,
     isLoading,
     refetch,
-  } = useConversationsInfiniteQuery({
+  } = useConversationsView({
     type: getConversationTypeFilter(conversationFilter),
   });
 

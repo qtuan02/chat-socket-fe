@@ -8,10 +8,10 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Skeleton } from "@/components/ui/skeleton";
+import type { UserItemPopupAction } from "@/features/friends/components/user-item-helpers";
 import type { UserItemData } from "@/types/user";
 import { formatDateTime } from "@/utils/date";
 import { getDisplayName, getUsernameLabel } from "@/utils/display";
-import type { UserItemPopupAction } from "./user-item-helpers";
 
 type UserItemDialogProps = {
   isOpen: boolean;

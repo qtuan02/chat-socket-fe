@@ -1,6 +1,6 @@
-# Plan: Project-Wide Refactor (Wave 1)
+# Plan: Project-Wide Refactor (Wave 1 + Wave 2)
 
-> **Status:** Wave 1 executed 2026-05-26. Wave 2+ deferred.
+> **Status:** Wave 1 committed (`859d6ae`). Wave 2 implemented 2026-05-26 (uncommitted).
 
 ## §1 · Pre-Flight
 
@@ -65,19 +65,49 @@ Restore feature isolation and strict data-flow (Config → Service → Hook → 
 - [x] No HTTP in components
 - [x] No service imports in components/feature hooks
 - [x] No cross-feature component imports in `conversation-details-panel`
-- [ ] `chat-template` still imports `ConversationDetailsPanel` component (Wave 2: thin routes)
+- [x] No cross-feature component imports in `conversation-details-panel`
+- [x] `chat-template` uses `ConversationDetailsPanelTemplate` (Wave 2)
 
-## §7 · Verification
+## §7 · Verification (Wave 1)
 
-- [ ] `npx biome check src/`
-- [ ] `npx tsc --noEmit`
-- [ ] `gitnexus_detect_changes()`
+- [x] `npx biome check src/`
+- [x] `npx tsc --noEmit`
+- [x] `gitnexus_detect_changes()`
 - [ ] Manual smoke test
 
-## Wave 2 (deferred)
+## Wave 2
 
-- Thin routes (`FriendsPage`, `ProfilePage`)
-- `ChatTemplate` route split
-- `chat-socket-provider` → chat feature hook
-- `user-item-*` friend cluster move
-- API hook view-model split (`conversation.ts`, `message.ts`)
+### Phase 2A — thin routes + ChatTemplate split
+- [x] `FriendsPage`, `ProfilePage` thin route wrappers
+- [x] `ChatShellLayout` shared sidebar shell for non-chat routes
+- [x] `ChatTemplate` route branching removed (friends/profile)
+- [x] `ConversationDetailsPanelTemplate` composes group section
+
+### Phase 2B — socket provider extraction
+- [x] `useChatSocketSync` in chat feature
+- [x] `chat-socket-provider` thinned to hook call
+
+### Phase 2C — user-item friend cluster
+- [x] Moved to `features/friends/components/`
+- [x] Public surface: `features/friends/templates/user-item-template.tsx`
+- [x] Consumers updated via template imports (chat, group, friends)
+
+### Phase 2D — API view-model split
+- [x] `mapConversationToUiModel` → `features/conversation/utils/`
+- [x] `useConversationsView` wraps API hook + mapping
+- [x] `mapMessageToUiModel` → `features/chat/utils/`
+- [x] `useMessagesView` wraps API hook + mapping
+- [x] `hooks/api/conversation.ts` and `message.ts` return raw query data only
+
+## §7 · Verification (Wave 2)
+
+- [x] `npx biome check src/`
+- [x] `npx tsc --noEmit`
+- [ ] `gitnexus_detect_changes()` before commit
+- [ ] Manual smoke test
+
+## Wave 3 (deferred)
+
+- `forwardRef` in `skeleton.tsx`, `chat-current-user-trigger.tsx`
+- Inline Virtuoso Footer in `conversation-list.tsx`
+- Export convention nits (`axios.ts`, `useSocketStore.ts`)

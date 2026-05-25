@@ -1,17 +1,17 @@
 import * as React from "react";
+import { UserItemAvatar } from "@/components/shared/user-item-avatar";
 import { Button } from "@/components/ui/button";
-import type { FriendStatus } from "@/types/friend-status";
-import type { UserItemData } from "@/types/user";
-import { cn } from "@/utils/cn";
-import { getDisplayName, getUsernameLabel } from "@/utils/display";
-import { UserItemActionButton } from "./user-item-action-button";
-import { UserItemAvatar } from "./user-item-avatar";
-import { UserItemDialog } from "./user-item-dialog";
+import { UserItemActionButton } from "@/features/friends/components/user-item-action-button";
+import { UserItemDialog } from "@/features/friends/components/user-item-dialog";
 import {
   getFriendPopupAction,
   getFriendStatusLabel,
   getPresenceStatusLabel,
-} from "./user-item-helpers";
+} from "@/features/friends/components/user-item-helpers";
+import type { FriendStatus } from "@/types/friend-status";
+import type { UserItemData } from "@/types/user";
+import { cn } from "@/utils/cn";
+import { getDisplayName, getUsernameLabel } from "@/utils/display";
 
 type UserItemProps = {
   className?: string;
