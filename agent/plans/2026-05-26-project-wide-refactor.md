@@ -1,6 +1,6 @@
 # Plan: Project-Wide Refactor (Wave 1 + Wave 2)
 
-> **Status:** Wave 1 committed (`859d6ae`). Wave 2 implemented 2026-05-26 (uncommitted).
+> **Status:** Wave 1–3 committed (`859d6ae`, `914c161`, `6775345`).
 
 ## §1 · Pre-Flight
 
@@ -103,11 +103,25 @@ Restore feature isolation and strict data-flow (Config → Service → Hook → 
 
 - [x] `npx biome check src/`
 - [x] `npx tsc --noEmit`
-- [ ] `gitnexus_detect_changes()` before commit
+- [x] `gitnexus_detect_changes()` before commit
 - [ ] Manual smoke test
 
-## Wave 3 (deferred)
+## Wave 3
 
-- `forwardRef` in `skeleton.tsx`, `chat-current-user-trigger.tsx`
-- Inline Virtuoso Footer in `conversation-list.tsx`
-- Export convention nits (`axios.ts`, `useSocketStore.ts`)
+### Phase 3A — React 19 ref-as-prop
+- [x] `Skeleton` — drop `forwardRef`, use `ref` prop
+- [x] `CurrentUserTrigger` — drop `forwardRef`, use `ref` prop
+
+### Phase 3B — Virtuoso footer extraction
+- [x] `ConversationListLoadMoreFooter` extracted from inline Virtuoso `Footer`
+- [x] Stable Virtuoso `components` reference via module-level slot
+
+### Phase 3C — Named export conventions
+- [x] `axiosClient` — named export from `@/libs/axios`
+- [x] `useAuthStore` — named export (aligned with `useSocketStore`)
+
+## §7 · Verification (Wave 3)
+
+- [x] `npx biome check src/`
+- [x] `npx tsc --noEmit`
+- [ ] Manual smoke test
