@@ -1,11 +1,13 @@
 import { useQuery } from "@tanstack/react-query";
 
-import type { UseQueryOptionsWrapper } from "@/libs/query-key-factory";
+import { queryKeysFactory, type UseQueryOptionsWrapper } from "@/libs/query-key-factory";
 import { healthService } from "@/services/health-service";
 
+const healthQueryKeyFactory = queryKeysFactory<"health">("health");
+
 const healthQueryKeys = {
-  all: ["health"] as const,
-  check: () => [...healthQueryKeys.all, "check"] as const,
+  ...healthQueryKeyFactory,
+  check: () => healthQueryKeyFactory.detail("check"),
 };
 
 export function useBackendHealthQuery(
