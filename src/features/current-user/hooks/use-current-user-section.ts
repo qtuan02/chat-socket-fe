@@ -12,7 +12,7 @@ import useAuthStore from "@/stores/useAuthStore";
 import type { UpdateUserRequestPayload, User } from "@/types/user";
 import { getDisplayName, getDisplayNameInitials } from "@/utils/display";
 
-type ChatCurrentUserState = {
+type CurrentUserSectionState = {
   currentUser: User | undefined;
   isLoading: boolean;
   isError: boolean;
@@ -27,7 +27,7 @@ type ChatCurrentUserState = {
   displayInitials: string;
 };
 
-type ChatCurrentUserActions = {
+type CurrentUserSectionActions = {
   handleProfileDialogOpenChange: (nextOpen: boolean) => void;
   handleProfileInputChange: (
     field: keyof UpdateUserRequestPayload,
@@ -40,7 +40,7 @@ type ChatCurrentUserActions = {
   refetchProfile: () => void;
 };
 
-export function useChatCurrentUserSection() {
+export function useCurrentUserSection() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const clearAuthState = useAuthStore((state) => state.clearState);
@@ -176,7 +176,7 @@ export function useChatCurrentUserSection() {
       ? currentUserError.message
       : null;
 
-  const state: ChatCurrentUserState = {
+  const state: CurrentUserSectionState = {
     currentUser,
     isLoading: isCurrentUserLoading,
     isError: isCurrentUserError,
@@ -190,7 +190,7 @@ export function useChatCurrentUserSection() {
     displayName,
     displayInitials,
   };
-  const actions: ChatCurrentUserActions = {
+  const actions: CurrentUserSectionActions = {
     handleProfileDialogOpenChange,
     handleProfileInputChange,
     startEditingProfile,

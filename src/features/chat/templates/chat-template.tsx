@@ -6,12 +6,17 @@ import { MobileChatBottomNav } from "@/features/chat/components/mobile/mobile-ch
 import { MobileTopBackBar } from "@/features/chat/components/mobile/mobile-top-back-bar";
 import { ChatSidebar } from "@/features/chat/components/sidebar/chat-sidebar";
 import { useConversationAutoSeen } from "@/features/chat/hooks/use-conversation-auto-seen";
-import { useConversationDetailsActions } from "@/features/chat/hooks/use-conversation-details-actions";
 import { useDirectMessageDraft } from "@/features/chat/hooks/use-direct-message-draft";
-import { ChatProfileTemplate } from "@/features/chat/templates/chat-profile-template";
+import { useConversationDetailsPanel } from "@/features/conversation/hooks/use-conversation-details-panel";
+import { CurrentUserProfileTemplate } from "@/features/current-user/templates/current-user-profile-template";
 import { ConversationDetailsPanel } from "@/features/conversation/components/conversation-details-panel";
 import { FriendsTemplate } from "@/features/friends/templates/friends-template";
+import { useGroupConversationActions } from "@/features/group/hooks/use-group-conversation-actions";
+import { GroupDetailsSection } from "@/features/group/templates/group-details-section";
 import { useConversationsInfiniteQuery } from "@/hooks/api/conversation";
+import {
+  ConversationTypeEnum,
+} from "@/types/conversation";
 import { cn } from "@/utils/cn";
 import { EmptyConversationBanner } from "../components/content/empty-conversation-banner";
 import { WelcomeSkeleton } from "../components/skeleton/welcome-skeleton";
@@ -69,10 +74,11 @@ export function ChatTemplate() {
     isDraftConversation || isFriendsRoute || isProfileRoute
       ? ""
       : conversationId;
-  const detailsActions = useConversationDetailsActions({
+  const groupActions = useGroupConversationActions({
     conversation: activeConversation,
     onCloseDetails: closeDetails,
   });
+  const detailsPanelActions = useConversationDetailsPanel();
 
   useConversationAutoSeen({
     conversation: activeConversation,
@@ -106,9 +112,9 @@ export function ChatTemplate() {
         isDraft={isDraftConversation}
         onBack={showBackButton ? goToChatHome : undefined}
         onMessageSent={isDraftConversation ? handleDraftMessageSent : undefined}
-        onSendFriendRequest={detailsActions.onSendFriendRequest}
+        onSendFriendRequest={detailsPanelActions.onSendFriendRequest}
         onOpenDetails={isDraftConversation ? undefined : toggleDetails}
-        sendingFriendRequestId={detailsActions.sendingFriendRequestId}
+        sendingFriendRequestId={detailsPanelActions.sendingFriendRequestId}
         showBackButton={showBackButton}
       />
     );
@@ -132,7 +138,7 @@ export function ChatTemplate() {
       return (
         <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
           <MobileTopBackBar title="Profile" onBack={goToChatHome} />
-          <ChatProfileTemplate />
+          <CurrentUserProfileTemplate />
         </div>
       );
     }
@@ -149,7 +155,7 @@ export function ChatTemplate() {
 
   const renderDesktopContent = () => {
     if (isProfileRoute) {
-      return <ChatProfileTemplate />;
+      return <CurrentUserProfileTemplate />;
     }
 
     if (isFriendsRoute) {
@@ -197,8 +203,16 @@ export function ChatTemplate() {
               <ConversationDetailsPanel
                 conversation={activeConversation}
                 open={isDetailsOpen}
-                {...detailsActions}
                 onClose={closeDetails}
+                groupSection={
+                  activeConversation.type === ConversationTypeEnum.GROUP ? (
+                    <GroupDetailsSection
+                      conversation={activeConversation}
+                      {...groupActions}
+                      {...detailsPanelActions}
+                    />
+                  ) : undefined
+                }
               />
             ) : null}
           </div>

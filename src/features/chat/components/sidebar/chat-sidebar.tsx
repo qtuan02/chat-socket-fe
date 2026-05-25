@@ -2,22 +2,21 @@ import * as React from "react";
 import { useNavigate } from "react-router";
 import { toast } from "sonner";
 import { APP_ROUTES } from "@/config/routes";
-import { ConversationList } from "@/features/conversation/components/conversation-list";
-import { ConversationSidebarHeader } from "@/features/conversation/components/conversation-sidebar-header";
-import { CreateGroupDialog } from "@/features/group/components/create-group-dialog";
+import { CurrentUserSidebarSection } from "@/features/current-user/templates/current-user-sidebar-section";
 import {
-  useConversationsInfiniteQuery,
-  useCreateGroupConversationMutation,
-} from "@/hooks/api/conversation";
+  getDirectConversationIdByUserId,
+  useConversationSidebar,
+} from "@/features/conversation/hooks/use-conversation-sidebar";
+import { ConversationSidebarTemplate } from "@/features/conversation/templates/conversation-sidebar-template";
+import { CreateGroupDialogContainer } from "@/features/group/templates/create-group-dialog-container";
+import { useCreateGroupConversationMutation } from "@/hooks/api/conversation";
 import {
-  type Conversation,
   ConversationTypeEnum,
   type CreateGroupConversationRequest,
 } from "@/types/conversation";
 import type { DirectMessageUser } from "@/types/user";
 import { cn } from "@/utils/cn";
 import { getErrorMessage } from "@/utils/error";
-import { ChatCurrentUserSection } from "../../../current-user/components/chat-current-user-section";
 import { UserSearchList } from "./user-search-list";
 
 type ChatSidebarProps = {
@@ -28,24 +27,6 @@ type ChatSidebarProps = {
 };
 
 type SidebarView = "conversations" | "user-search";
-
-function getConversationTypeFilter(filter: ConversationTypeEnum | null) {
-  return filter ?? undefined;
-}
-
-function getDirectConversationIdByUserId(conversations: Conversation[]) {
-  const directConversationIds = new Map<string, string>();
-
-  for (const conversation of conversations) {
-    const directMemberId = conversation.directMember?.userId;
-
-    if (conversation.type === ConversationTypeEnum.DIRECT && directMemberId) {
-      directConversationIds.set(directMemberId, conversation.id);
-    }
-  }
-
-  return directConversationIds;
-}
 
 export function ChatSidebar({
   className,
@@ -63,14 +44,14 @@ export function ChatSidebar({
   const {
     conversations,
     error,
-    fetchNextPage,
-    hasNextPage,
     isError,
     isFetchingNextPage,
     isLoading,
+    handleLoadMoreConversations,
     refetch,
-  } = useConversationsInfiniteQuery({
-    type: getConversationTypeFilter(conversationFilter),
+  } = useConversationSidebar({
+    activeConversationId,
+    conversationFilter,
   });
   const createGroupMutation = useCreateGroupConversationMutation({
     onSuccess: (conversation) => {
@@ -105,10 +86,6 @@ export function ChatSidebar({
     setActiveView("conversations");
   };
 
-  const handleLoadMoreConversations = () => {
-    if (hasNextPage && !isFetchingNextPage) void fetchNextPage();
-  };
-
   const handleCreateGroup = (payload: CreateGroupConversationRequest) => {
     createGroupMutation.mutate(payload);
   };
@@ -120,12 +97,6 @@ export function ChatSidebar({
         className,
       )}
     >
-      <ConversationSidebarHeader
-        onCreateGroupClick={() => {
-          setIsCreateGroupOpen(true);
-        }}
-      />
-
       {activeView === "user-search" ? (
         <div className="min-h-0 flex-1 p-3 md:p-4">
           <UserSearchList
@@ -137,30 +108,33 @@ export function ChatSidebar({
           />
         </div>
       ) : (
-        <ConversationList
+        <ConversationSidebarTemplate
           activeConversationId={activeConversationId}
-          activeFilter={conversationFilter}
-          className="min-h-0 flex-1 overflow-hidden"
+          className="min-h-0 flex-1"
+          conversationFilter={conversationFilter}
           conversations={conversations}
           error={error}
           isError={isError}
           isFetchingNextPage={isFetchingNextPage}
           isLoading={isLoading}
+          onConversationFilterChange={setConversationFilter}
           onConversationSelect={handleSelectConversation}
-          onFilterChange={setConversationFilter}
-          onUserSearchOpen={() => {
-            setActiveView("user-search");
+          onCreateGroupClick={() => {
+            setIsCreateGroupOpen(true);
           }}
           onLoadMore={handleLoadMoreConversations}
           onRetry={() => {
             void refetch();
           }}
+          onUserSearchOpen={() => {
+            setActiveView("user-search");
+          }}
         />
       )}
 
-      <ChatCurrentUserSection />
+      <CurrentUserSidebarSection />
 
-      <CreateGroupDialog
+      <CreateGroupDialogContainer
         isOpen={isCreateGroupOpen}
         isSubmitting={createGroupMutation.isPending}
         onOpenChange={setIsCreateGroupOpen}

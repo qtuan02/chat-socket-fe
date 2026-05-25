@@ -1,16 +1,11 @@
 import { Loader2, Search, X } from "lucide-react";
-import * as React from "react";
 import { UserItemAvatar } from "@/components/shared/user-item-avatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Skeleton } from "@/components/ui/skeleton";
-import { useFriendsInfiniteQuery } from "@/hooks/api/friend";
+import { useGroupMemberPicker } from "@/features/group/hooks/use-group-member-picker";
 import type { Friend } from "@/types/friend";
 import { cn } from "@/utils/cn";
 import { getDisplayName, getUsernameLabel } from "@/utils/display";
-import { getErrorMessage } from "@/utils/error";
-
-const GROUP_MEMBER_PICKER_LIMIT = 25;
 
 type GroupMemberPickerProps = {
   disabledFriendIds?: ReadonlySet<string> | string[];
@@ -19,16 +14,6 @@ type GroupMemberPickerProps = {
   selectedFriendIds: readonly string[];
   onChange: (nextMemberIds: string[]) => void;
 };
-
-function getDisabledIdSet(disabledFriendIds: ReadonlySet<string> | string[]) {
-  return disabledFriendIds instanceof Set
-    ? disabledFriendIds
-    : new Set(disabledFriendIds);
-}
-
-function normalizeFriendIds(friendIds: readonly string[]) {
-  return new Set(friendIds);
-}
 
 function getMemberLabel(member: Friend) {
   return getDisplayName(member);
@@ -48,8 +33,8 @@ function SearchState({
   if (isLoading) {
     return (
       <div className="grid gap-2">
-        <Skeleton className="h-14 rounded-lg" />
-        <Skeleton className="h-14 rounded-lg" />
+        <div className="h-14 animate-pulse rounded-lg bg-muted" />
+        <div className="h-14 animate-pulse rounded-lg bg-muted" />
       </div>
     );
   }
@@ -181,122 +166,29 @@ export function GroupMemberPicker({
   selectedFriendIds,
   onChange,
 }: GroupMemberPickerProps) {
-  const searchInputId = React.useId();
-  const [searchTerm, setSearchTerm] = React.useState("");
-  const trimmedSearchTerm = searchTerm.trim();
-  const [selectedFriendsById, setSelectedFriendsById] = React.useState<
-    Map<string, Friend>
-  >(new Map());
-  const disabledIdSet = React.useMemo(() => {
-    if (!disabledFriendIds) return new Set<string>();
-    return getDisabledIdSet(disabledFriendIds);
-  }, [disabledFriendIds]);
-  const selectedIdSet = React.useMemo(
-    () => normalizeFriendIds(selectedFriendIds),
-    [selectedFriendIds],
-  );
   const {
+    searchInputId,
+    searchTerm,
     friends,
-    error: queryError,
-    fetchNextPage,
-    hasNextPage,
+    listRef,
+    selectedFriendsById,
+    disabledIdSet,
+    selectedIdSet,
+    isLoading,
     isError,
     isFetchingNextPage,
-    isLoading,
-    isRefetching,
+    searchErrorMessage,
+    visibleSelectedFriendIds,
+    handleSearchTermChange,
+    handleListScroll,
+    handleToggleMember,
+    handleRemoveSelected,
     refetch,
-  } = useFriendsInfiniteQuery({
-    search: trimmedSearchTerm || undefined,
-    limit: GROUP_MEMBER_PICKER_LIMIT,
+  } = useGroupMemberPicker({
+    disabledFriendIds,
+    selectedFriendIds,
+    onChange,
   });
-  const listRef = React.useRef<HTMLDivElement>(null);
-
-  React.useEffect(() => {
-    setSelectedFriendsById((currentMap) => {
-      const nextMap = new Map(currentMap);
-
-      for (const friend of friends) {
-        if (selectedIdSet.has(friend.id)) {
-          nextMap.set(friend.id, friend);
-        }
-      }
-
-      for (const memberId of currentMap.keys()) {
-        if (!selectedIdSet.has(memberId)) nextMap.delete(memberId);
-      }
-
-      return nextMap;
-    });
-  }, [friends, selectedIdSet]);
-
-  const handleSearchTermChange = (nextSearchTerm: string) => {
-    setSearchTerm(nextSearchTerm);
-  };
-
-  const handleListScroll = React.useCallback(
-    (event: React.UIEvent<HTMLDivElement>) => {
-      const target = event.currentTarget;
-      const remainingScroll =
-        target.scrollHeight - target.scrollTop - target.clientHeight;
-
-      if (
-        remainingScroll > 64 ||
-        !hasNextPage ||
-        isFetchingNextPage ||
-        isLoading ||
-        isError
-      )
-        return;
-
-      void fetchNextPage();
-    },
-    [fetchNextPage, hasNextPage, isError, isFetchingNextPage, isLoading],
-  );
-
-  const handleToggleMember = React.useCallback(
-    (friend: Friend) => {
-      const nextIds = new Set(selectedFriendIds);
-      if (nextIds.has(friend.id)) {
-        nextIds.delete(friend.id);
-      } else if (!disabledIdSet.has(friend.id)) {
-        nextIds.add(friend.id);
-      }
-
-      onChange(Array.from(nextIds));
-      setSelectedFriendsById((currentMap) => {
-        const nextMap = new Map(currentMap);
-
-        if (nextIds.has(friend.id)) nextMap.set(friend.id, friend);
-        else nextMap.delete(friend.id);
-
-        return nextMap;
-      });
-    },
-    [disabledIdSet, onChange, selectedFriendIds],
-  );
-
-  const handleRemoveSelected = React.useCallback(
-    (friendId: string) => {
-      const nextIds = selectedFriendIds.filter((id) => id !== friendId);
-
-      onChange(nextIds);
-      setSelectedFriendsById((currentMap) => {
-        const nextMap = new Map(currentMap);
-        nextMap.delete(friendId);
-        return nextMap;
-      });
-    },
-    [onChange, selectedFriendIds],
-  );
-
-  const visibleSelectedFriendIds = React.useMemo(
-    () => selectedFriendIds.filter((id) => !disabledIdSet.has(id)),
-    [disabledIdSet, selectedFriendIds],
-  );
-  const searchErrorMessage =
-    isError && queryError
-      ? getErrorMessage(queryError, "Failed to load friends.")
-      : null;
 
   return (
     <div className="grid gap-3">
@@ -354,7 +246,7 @@ export function GroupMemberPicker({
       <SearchState
         friends={friends}
         hasError={!!searchErrorMessage}
-        isLoading={isLoading || isRefetching}
+        isLoading={isLoading}
         searchTerm={searchTerm}
       />
 

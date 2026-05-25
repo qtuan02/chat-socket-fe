@@ -2,12 +2,12 @@ import { LogOut, PencilLine } from "lucide-react";
 import { DetailField } from "@/components/shared/detail-field";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { useChatCurrentUserSection } from "@/features/chat/hooks/use-chat-current-user";
 import { ChatCurrentUserProfileDialog } from "@/features/current-user/components/chat-current-user-profile-dialog";
 import {
   CurrentUserError,
   CurrentUserSkeleton,
 } from "@/features/current-user/components/chat-current-user-section-state";
+import { useCurrentUserSection } from "@/features/current-user/hooks/use-current-user-section";
 import { presenceStatusLabels } from "@/types/user";
 import { formatDateTime } from "@/utils/date";
 import { getUsernameLabel } from "@/utils/display";
@@ -37,7 +37,7 @@ function ProfileAvatar({
   );
 }
 
-export function ChatProfileTemplate() {
+export function CurrentUserProfileTemplate() {
   const {
     currentUser,
     errorMessage,
@@ -58,7 +58,7 @@ export function ChatProfileTemplate() {
     saveProfile,
     handleSignOut,
     refetchProfile,
-  } = useChatCurrentUserSection();
+  } = useCurrentUserSection();
 
   if (isLoading) {
     return <CurrentUserSkeleton />;

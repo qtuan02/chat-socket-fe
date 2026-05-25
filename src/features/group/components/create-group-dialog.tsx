@@ -1,9 +1,4 @@
-import { zodResolver } from "@hookform/resolvers/zod";
 import { Loader2 } from "lucide-react";
-import * as React from "react";
-import { type SubmitHandler, useForm } from "react-hook-form";
-import { toast } from "sonner";
-import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -14,25 +9,9 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { useCurrentUserQuery } from "@/hooks/api/user";
+import { useCreateGroupDialog } from "@/features/group/hooks/use-create-group-dialog";
 import type { CreateGroupConversationRequest } from "@/types/conversation";
 import { GroupMemberPicker } from "./group-member-picker";
-
-type CreateGroupFormValues = {
-  name: string;
-  memberIds: string[];
-};
-
-const createGroupSchema = z.object({
-  name: z
-    .string()
-    .trim()
-    .min(1, "Group name is required.")
-    .max(120, "Group name is too long."),
-  memberIds: z
-    .array(z.string())
-    .min(1, "Select at least one member to create a group."),
-});
 
 type CreateGroupDialogProps = {
   isSubmitting: boolean;
@@ -47,56 +26,18 @@ export function CreateGroupDialog({
   onOpenChange,
   onCreate,
 }: CreateGroupDialogProps) {
-  const { data: currentUser } = useCurrentUserQuery();
+  const {
+    form,
+    selectedMemberIds,
+    handleSelectedFriendIdsChange,
+    handleSubmitForm,
+  } = useCreateGroupDialog({ isOpen, onCreate });
+
   const {
     handleSubmit,
     register,
-    setValue,
-    watch,
     formState: { errors, isValid },
-    reset,
-  } = useForm<CreateGroupFormValues>({
-    resolver: zodResolver(createGroupSchema),
-    defaultValues: {
-      name: "",
-      memberIds: [],
-    },
-    mode: "onChange",
-  });
-
-  const selectedMemberIds = watch("memberIds");
-
-  React.useEffect(() => {
-    if (!isOpen) {
-      reset({
-        name: "",
-        memberIds: [],
-      });
-    }
-  }, [isOpen, reset]);
-
-  const handleSelectedFriendIdsChange = (nextMemberIds: string[]) => {
-    setValue("memberIds", nextMemberIds, {
-      shouldValidate: true,
-      shouldDirty: true,
-    });
-  };
-
-  const handleSubmitForm: SubmitHandler<CreateGroupFormValues> = (values) => {
-    if (!currentUser?.id) {
-      toast.error("You need to be signed in to create a group.");
-      return;
-    }
-
-    const trimmedName = values.name.trim();
-    const uniqueMemberIds = [...new Set(values.memberIds)];
-
-    onCreate({
-      type: "GROUP",
-      name: trimmedName,
-      memberIds: uniqueMemberIds,
-    });
-  };
+  } = form;
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>

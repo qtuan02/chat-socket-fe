@@ -10,6 +10,19 @@ import type {
   SignUpResponse,
 } from "@/types/auth";
 
+let refreshSessionPromise: ReturnType<typeof authService.refreshToken> | null =
+  null;
+
+export function refreshSessionOnce() {
+  if (!refreshSessionPromise) {
+    refreshSessionPromise = authService.refreshToken().finally(() => {
+      refreshSessionPromise = null;
+    });
+  }
+
+  return refreshSessionPromise;
+}
+
 export function useSignInMutation(
   options?: UseMutationOptionsWrapper<SignInPayload, SignInResponse, Error>,
 ) {

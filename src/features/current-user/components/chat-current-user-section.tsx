@@ -7,7 +7,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { APP_ROUTES } from "@/config/routes";
-import { useChatCurrentUserSection } from "@/features/chat/hooks/use-chat-current-user";
+import { useCurrentUserSection } from "@/features/current-user/hooks/use-current-user-section";
 import { cn } from "@/utils/cn";
 import { ChatCurrentUserProfileDialog } from "./chat-current-user-profile-dialog";
 import {
@@ -44,7 +44,7 @@ export function ChatCurrentUserSection({
     saveProfile,
     handleSignOut,
     refetchProfile,
-  } = useChatCurrentUserSection();
+  } = useCurrentUserSection();
 
   if (isLoading) {
     return <CurrentUserSkeleton className={className} />;

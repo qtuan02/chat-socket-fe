@@ -9,12 +9,8 @@ import {
   useRemoveGroupMemberMutation,
   useUpdateGroupMutation,
 } from "@/hooks/api/conversation";
-import {
-  friendRequestQueryKeys,
-  useSendFriendRequestMutation,
-} from "@/hooks/api/friend";
 import { messageQueryKeys } from "@/hooks/api/message";
-import { currentUserQueryKeys, useCurrentUserQuery } from "@/hooks/api/user";
+import { useCurrentUserQuery } from "@/hooks/api/user";
 import {
   type Conversation,
   ConversationTypeEnum,
@@ -23,38 +19,21 @@ import {
 } from "@/types/conversation";
 import { getErrorMessage } from "@/utils/error";
 
-type UseConversationDetailsActionsParams = {
+type UseGroupConversationActionsParams = {
   conversation?: Conversation;
   onCloseDetails: () => void;
 };
 
-export function useConversationDetailsActions({
+export function useGroupConversationActions({
   conversation,
   onCloseDetails,
-}: UseConversationDetailsActionsParams) {
+}: UseGroupConversationActionsParams) {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { data: currentUser } = useCurrentUserQuery();
   const [removingMemberId, setRemovingMemberId] = React.useState<string | null>(
     null,
   );
-  const [sendingFriendRequestId, setSendingFriendRequestId] = React.useState<
-    string | null
-  >(null);
-
-  const { mutate: sendFriendRequest, isPending: isSendingFriendRequest } =
-    useSendFriendRequestMutation({
-      onSuccess: (_data, variables) => {
-        void queryClient.invalidateQueries({
-          queryKey: friendRequestQueryKeys.all,
-        });
-        void queryClient.invalidateQueries({
-          queryKey: currentUserQueryKeys.info(variables.toUserId),
-        });
-        toast.success("Friend request sent.");
-        setSendingFriendRequestId(null);
-      },
-    });
 
   const { mutate: updateGroup, isPending: isRenameGroupSubmitting } =
     useUpdateGroupMutation({
@@ -158,28 +137,6 @@ export function useConversationDetailsActions({
     [conversation, removeGroupMember],
   );
 
-  const handleSendFriendRequest = React.useCallback(
-    (userId: string, message?: string) => {
-      if (isSendingFriendRequest) return;
-
-      setSendingFriendRequestId(userId);
-      sendFriendRequest(
-        {
-          toUserId: userId,
-          message: message?.trim() || undefined,
-        },
-        {
-          onSettled: () => {
-            setSendingFriendRequestId((currentId) =>
-              currentId === userId ? null : currentId,
-            );
-          },
-        },
-      );
-    },
-    [isSendingFriendRequest, sendFriendRequest],
-  );
-
   return {
     isAddMembersSubmitting,
     isLeaveGroupSubmitting,
@@ -188,8 +145,6 @@ export function useConversationDetailsActions({
     onLeaveGroup: handleLeaveGroup,
     onRemoveMember: handleRemoveMember,
     onRenameGroup: handleRenameGroup,
-    onSendFriendRequest: handleSendFriendRequest,
     removingMemberId,
-    sendingFriendRequestId,
   };
 }
