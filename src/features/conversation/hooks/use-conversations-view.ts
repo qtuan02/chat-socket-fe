@@ -9,9 +9,7 @@ type UseConversationsViewParams = Omit<GetConversationsParams, "cursor"> & {
   limit?: number;
 };
 
-export function useConversationsView(
-  params: UseConversationsViewParams = {},
-) {
+export function useConversationsView(params: UseConversationsViewParams = {}) {
   const { data: currentUser } = useCurrentUserQuery();
   const onlineUsers = useSocketStore((state) => state.onlineUsers);
   const onlineUserIds = React.useMemo(

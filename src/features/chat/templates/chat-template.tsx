@@ -111,8 +111,7 @@ export function ChatTemplate() {
     );
   };
 
-  const shouldShowDetailsPanel =
-    !!activeConversation && !isDraftConversation;
+  const shouldShowDetailsPanel = !!activeConversation && !isDraftConversation;
 
   return (
     <>

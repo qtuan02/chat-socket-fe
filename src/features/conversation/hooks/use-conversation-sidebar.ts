@@ -1,9 +1,6 @@
 import * as React from "react";
 import { useConversationsView } from "@/features/conversation/hooks/use-conversations-view";
-import {
-  type Conversation,
-  ConversationTypeEnum,
-} from "@/types/conversation";
+import { type Conversation, ConversationTypeEnum } from "@/types/conversation";
 
 type UseConversationSidebarParams = {
   activeConversationId: string;

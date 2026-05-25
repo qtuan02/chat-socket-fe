@@ -1,6 +1,6 @@
 import { ConversationDetailsPanel } from "@/features/conversation/components/conversation-details-panel";
-import { useConversationDetailsPanel } from "@/features/conversation/hooks/use-conversation-details-panel";
-import { useGroupConversationActions } from "@/features/group/hooks/use-group-conversation-actions";
+import type { useConversationDetailsPanel } from "@/features/conversation/hooks/use-conversation-details-panel";
+import type { useGroupConversationActions } from "@/features/group/hooks/use-group-conversation-actions";
 import { GroupDetailsSection } from "@/features/group/templates/group-details-section";
 import type { Conversation } from "@/types/conversation";
 import { ConversationTypeEnum } from "@/types/conversation";

@@ -19,7 +19,7 @@ import type {
   GroupMembersRequest,
   UpdateGroupRequest,
 } from "@/types/conversation";
-import { ConversationTypeEnum } from "@/types/conversation";
+import type { ConversationTypeEnum } from "@/types/conversation";
 
 const conversationQueryKeyFactory =
   queryKeysFactory<"conversation">("conversation");

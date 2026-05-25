@@ -8,6 +8,8 @@ type CreateGroupDialogContainerProps = {
   onCreate: (payload: CreateGroupConversationRequest) => void;
 };
 
-export function CreateGroupDialogContainer(props: CreateGroupDialogContainerProps) {
+export function CreateGroupDialogContainer(
+  props: CreateGroupDialogContainerProps,
+) {
   return <CreateGroupDialog {...props} />;
 }

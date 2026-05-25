@@ -73,7 +73,7 @@ Restore feature isolation and strict data-flow (Config → Service → Hook → 
 - [x] `npx biome check src/`
 - [x] `npx tsc --noEmit`
 - [x] `gitnexus_detect_changes()`
-- [ ] Manual smoke test
+- [x] Manual smoke test (2026-05-26 — `node scripts/smoke-test.mjs`, 11/11)
 
 ## Wave 2
 
@@ -104,7 +104,7 @@ Restore feature isolation and strict data-flow (Config → Service → Hook → 
 - [x] `npx biome check src/`
 - [x] `npx tsc --noEmit`
 - [x] `gitnexus_detect_changes()` before commit
-- [ ] Manual smoke test
+- [x] Manual smoke test (2026-05-26 — shared run with Wave 3)
 
 ## Wave 3
 
@@ -124,4 +124,24 @@ Restore feature isolation and strict data-flow (Config → Service → Hook → 
 
 - [x] `npx biome check src/`
 - [x] `npx tsc --noEmit`
-- [ ] Manual smoke test
+- [x] Manual smoke test (2026-05-26 — shared run with Wave 2)
+
+## Smoke test log (2026-05-26)
+
+Automated via `scripts/smoke-test.mjs` against `localhost:3000` + backend `localhost:8089`.
+
+| Check | Result |
+|-------|--------|
+| Backend health-check | PASS |
+| Dev server index | PASS |
+| Sign-in flow | PASS |
+| Chat home `/` | PASS |
+| Friends route `/friends` | PASS |
+| Profile route `/profile` (mobile back bar) | PASS |
+| CurrentUserTrigger dropdown (React 19 ref) | PASS |
+| Friends template render | PASS |
+| Session refresh (cookie-based) | PASS |
+| Conversation route | SKIP (new user, no conversations) |
+| Production build (`npm run build`) | PASS |
+
+**Not covered:** Virtuoso infinite-scroll footer (needs existing conversations + scroll), group details panel, socket reconnect under disconnect.

@@ -1,9 +1,6 @@
-import * as React from "react";
+import type * as React from "react";
 import { DetailField } from "@/components/shared/detail-field";
-import {
-  type Conversation,
-  ConversationTypeEnum,
-} from "@/types/conversation";
+import { type Conversation, ConversationTypeEnum } from "@/types/conversation";
 import { cn } from "@/utils/cn";
 import { ConversationDetailsPanelHeader } from "./conversation-details-panel-header";
 

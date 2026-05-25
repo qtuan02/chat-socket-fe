@@ -10,9 +10,9 @@ import {
 import { ConversationSidebarTemplate } from "@/features/conversation/templates/conversation-sidebar-template";
 import { CreateGroupDialogContainer } from "@/features/group/templates/create-group-dialog-container";
 import { useCreateGroupConversationMutation } from "@/hooks/api/conversation";
-import {
+import type {
   ConversationTypeEnum,
-  type CreateGroupConversationRequest,
+  CreateGroupConversationRequest,
 } from "@/types/conversation";
 import type { DirectMessageUser } from "@/types/user";
 import { cn } from "@/utils/cn";
