@@ -2,7 +2,7 @@ import axios, { type InternalAxiosRequestConfig } from "axios";
 import { env } from "@/config/env";
 import { APP_API } from "@/config/routes";
 import { queryClient } from "@/libs/query-client";
-import useAuthStore from "@/stores/useAuthStore";
+import { useAuthStore } from "@/stores/useAuthStore";
 import type { SignInResponse } from "@/types/auth";
 
 type RetryableRequestConfig = InternalAxiosRequestConfig & {
@@ -104,4 +104,4 @@ axiosClient.interceptors.response.use(
   },
 );
 
-export default axiosClient;
+export { axiosClient };

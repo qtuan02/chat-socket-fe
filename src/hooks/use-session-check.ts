@@ -1,6 +1,6 @@
 import * as React from "react";
 import { refreshSessionOnce } from "@/hooks/api/auth";
-import useAuthStore from "@/stores/useAuthStore";
+import { useAuthStore } from "@/stores/useAuthStore";
 
 export function useSessionCheck() {
   const accessToken = useAuthStore((state) => state.accessToken);

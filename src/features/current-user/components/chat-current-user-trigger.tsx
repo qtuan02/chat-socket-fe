@@ -1,25 +1,28 @@
 import { ChevronsUpDown } from "lucide-react";
-import * as React from "react";
+import type * as React from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/utils/cn";
 import { getUsernameLabel } from "@/utils/display";
 
 type CurrentUserTriggerProps = React.ComponentPropsWithoutRef<"button"> & {
+  ref?: React.Ref<HTMLButtonElement>;
   displayName: string;
   initials: string;
   avatarUrl?: string;
   username: string;
 };
 
-export const CurrentUserTrigger = React.forwardRef<
-  HTMLButtonElement,
-  CurrentUserTriggerProps
->(
-  (
-    { className, displayName, initials, avatarUrl, username, ...buttonProps },
-    ref,
-  ) => (
+export function CurrentUserTrigger({
+  className,
+  displayName,
+  initials,
+  avatarUrl,
+  username,
+  ref,
+  ...buttonProps
+}: CurrentUserTriggerProps) {
+  return (
     <Button
       ref={ref}
       type="button"
@@ -52,7 +55,5 @@ export const CurrentUserTrigger = React.forwardRef<
       </div>
       <ChevronsUpDown className="size-4 text-muted-foreground" />
     </Button>
-  ),
-);
-
-CurrentUserTrigger.displayName = "CurrentUserTrigger";
+  );
+}

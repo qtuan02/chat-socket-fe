@@ -6,7 +6,7 @@ interface AuthStore {
   clearState: () => void;
 }
 
-const useAuthStore = create<AuthStore>((set) => ({
+export const useAuthStore = create<AuthStore>((set) => ({
   accessToken: null,
   setAccessToken: (accessToken) => {
     set({ accessToken });
@@ -16,4 +16,3 @@ const useAuthStore = create<AuthStore>((set) => ({
   },
 }));
 
-export default useAuthStore;

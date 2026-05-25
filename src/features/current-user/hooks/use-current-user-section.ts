@@ -8,7 +8,7 @@ import {
   useCurrentUserQuery,
   useUpdateCurrentUserMutation,
 } from "@/hooks/api/user";
-import useAuthStore from "@/stores/useAuthStore";
+import { useAuthStore } from "@/stores/useAuthStore";
 import type { UpdateUserRequestPayload, User } from "@/types/user";
 import { getDisplayName, getDisplayNameInitials } from "@/utils/display";
 
