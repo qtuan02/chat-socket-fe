@@ -18,3 +18,11 @@ dist/
 # Environment
 .env
 .env.local
+
+#
+.gitnexus
+.gitnexus/*
+.cursor
+.cursor/*
+.claude
+.claude/*

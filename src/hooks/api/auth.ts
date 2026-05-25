@@ -30,7 +30,6 @@ export function useSignUpMutation(
     onError: (error) => {
       toast.error(error?.message || "Sign up failed. Please try again.");
     },
-
     ...options,
   });
 }
