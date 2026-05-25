@@ -2,7 +2,7 @@ import { Button } from "@/components/ui/button";
 import type { Conversation } from "@/types/conversation";
 import { cn } from "@/utils/cn";
 import { formatTimestamp } from "@/utils/date";
-import { ConversationAvatar } from "./conversation-avatar";
+import { ConversationAvatar } from "@/components/shared/conversation-avatar";
 
 type ConversationListItemProps = {
   activeConversationId: string;

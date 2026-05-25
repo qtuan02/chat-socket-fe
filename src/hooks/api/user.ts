@@ -11,7 +11,7 @@ import {
   type UseQueryOptionsWrapper,
 } from "@/libs/query-key-factory";
 import { userService } from "@/services/user-service";
-import useAuthStore from "@/stores/useAuthStore";
+import { useAuthStore } from "@/stores/useAuthStore";
 import type { PaginationRequest, PaginationResponse } from "@/types/base";
 import type {
   UpdateUserRequestPayload,

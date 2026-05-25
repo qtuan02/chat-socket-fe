@@ -1,10 +1,5 @@
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useQueryClient } from "@tanstack/react-query";
 import { Loader2 } from "lucide-react";
-import { useState } from "react";
-import { type SubmitHandler, useForm } from "react-hook-form";
-import { Link, useNavigate } from "react-router";
-import { toast } from "sonner";
+import { Link } from "react-router";
 import { Button } from "@/components/ui/button";
 import {
   Field,
@@ -15,86 +10,31 @@ import {
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { APP_ROUTES } from "@/config/routes";
-import { useSignInMutation, useSignUpMutation } from "@/hooks/api/auth";
-import useAuthStore from "@/stores/useAuthStore";
+import { useSignUpFlow } from "@/features/auth/hooks/use-sign-up-flow";
 import { cn } from "@/utils/cn";
-import { getErrorMessage } from "@/utils/error";
-import { type SignUpFormValues, signUpFormSchema } from "../types/sign-up-form";
 
 type SignUpFormProps = {
   className?: string;
 };
 
-type CreatedCredentials = Pick<SignUpFormValues, "username" | "password">;
-
 export function SignUpForm({ className }: SignUpFormProps) {
-  const navigate = useNavigate();
-  const queryClient = useQueryClient();
-  const { setAccessToken } = useAuthStore();
-  const [createdCredentials, setCreatedCredentials] =
-    useState<CreatedCredentials | null>(null);
-
   const {
-    isError: isSignUpError,
-    error: signUpError,
-    isPending: isSignUpPending,
-    isSuccess: isSignUpSuccess,
-    mutateAsync: signUp,
-  } = useSignUpMutation();
-
-  const {
-    isError: isSignInError,
-    error: signInError,
-    isPending: isSignInPending,
-    mutateAsync: signIn,
-  } = useSignInMutation({
-    onSuccess: (data) => {
-      queryClient.clear();
-      setCreatedCredentials(null);
-      setAccessToken(data.data.accessToken);
-      toast.success(data?.message || "Sign in successful.");
-      navigate(APP_ROUTES.chat, { replace: true });
-    },
-  });
-
+    form,
+    isSignUpPending,
+    isSignUpSuccess,
+    isSignInPending,
+    submitError,
+    signInSubmitError,
+    onSubmit,
+    handleAutoSignIn,
+  } = useSignUpFlow();
   const {
     handleSubmit,
     register,
     formState: { errors },
-  } = useForm<SignUpFormValues>({
-    resolver: zodResolver(signUpFormSchema),
-    defaultValues: {
-      email: "",
-      firstName: "",
-      lastName: "",
-      username: "",
-      password: "",
-    },
-  });
+  } = form;
 
-  const onSubmit: SubmitHandler<SignUpFormValues> = async (values) => {
-    await signUp(values);
-    setCreatedCredentials({
-      username: values.username,
-      password: values.password,
-    });
-  };
-
-  const submitError = isSignUpError
-    ? getErrorMessage(signUpError, "Unable to sign up. Please try again.")
-    : null;
-
-  const signInSubmitError = isSignInError
-    ? getErrorMessage(signInError, "Unable to sign in. Please try again.")
-    : null;
-
-  const handleAutoSignIn = () => {
-    if (!createdCredentials) return;
-
-    void signIn(createdCredentials).catch(() => undefined);
-  };
-
-  if (isSignUpSuccess && createdCredentials) {
+  if (isSignUpSuccess) {
     return (
       <div
         className={cn(

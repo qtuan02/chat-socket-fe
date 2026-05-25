@@ -2,7 +2,7 @@ import { Client, type IMessage } from "@stomp/stompjs";
 import { create } from "zustand";
 import { env } from "@/config/env";
 import { parseToJson } from "@/utils/string";
-import useAuthStore from "./useAuthStore";
+import { useAuthStore } from "./useAuthStore";
 
 interface SocketStore {
   client: Client | null;

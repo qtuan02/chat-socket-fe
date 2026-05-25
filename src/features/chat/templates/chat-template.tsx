@@ -1,28 +1,26 @@
 import * as React from "react";
-import { useLocation, useNavigate, useParams } from "react-router";
+import { useNavigate, useParams } from "react-router";
 import { APP_ROUTES } from "@/config/routes";
 import { ChatConversationContent } from "@/features/chat/components/content/chat-conversation-content";
+import { EmptyConversationBanner } from "@/features/chat/components/content/empty-conversation-banner";
 import { MobileChatBottomNav } from "@/features/chat/components/mobile/mobile-chat-bottom-nav";
 import { MobileTopBackBar } from "@/features/chat/components/mobile/mobile-top-back-bar";
 import { ChatSidebar } from "@/features/chat/components/sidebar/chat-sidebar";
+import { WelcomeSkeleton } from "@/features/chat/components/skeleton/welcome-skeleton";
 import { useConversationAutoSeen } from "@/features/chat/hooks/use-conversation-auto-seen";
-import { useConversationDetailsActions } from "@/features/chat/hooks/use-conversation-details-actions";
 import { useDirectMessageDraft } from "@/features/chat/hooks/use-direct-message-draft";
-import { ChatProfileTemplate } from "@/features/chat/templates/chat-profile-template";
-import { ConversationDetailsPanel } from "@/features/conversation/components/conversation-details-panel";
-import { FriendsTemplate } from "@/features/friends/templates/friends-template";
-import { useConversationsInfiniteQuery } from "@/hooks/api/conversation";
+import { useConversationDetailsPanel } from "@/features/conversation/hooks/use-conversation-details-panel";
+import { ConversationDetailsPanelTemplate } from "@/features/conversation/templates/conversation-details-panel-template";
+import { useGroupConversationActions } from "@/features/group/hooks/use-group-conversation-actions";
+import { useConversationsView } from "@/features/conversation/hooks/use-conversations-view";
 import { cn } from "@/utils/cn";
-import { EmptyConversationBanner } from "../components/content/empty-conversation-banner";
-import { WelcomeSkeleton } from "../components/skeleton/welcome-skeleton";
 
 export function ChatTemplate() {
   const { conversationId = "" } = useParams();
   const navigate = useNavigate();
-  const location = useLocation();
   const [isDetailsOpen, setIsDetailsOpen] = React.useState(false);
   const { conversations, isLoading: isConversationsLoading } =
-    useConversationsInfiniteQuery();
+    useConversationsView();
 
   const activeConversation = React.useMemo(
     () =>
@@ -30,9 +28,8 @@ export function ChatTemplate() {
     [conversationId, conversations],
   );
   const isConversationRoute = Boolean(conversationId);
-  const isChatHomeRoute = location.pathname === APP_ROUTES.chat;
-  const isFriendsRoute = location.pathname === APP_ROUTES.friends;
-  const isProfileRoute = location.pathname === APP_ROUTES.profile;
+  const isChatHomeRoute = !isConversationRoute;
+
   const closeDetails = React.useCallback(() => {
     setIsDetailsOpen(false);
   }, []);
@@ -42,6 +39,7 @@ export function ChatTemplate() {
   const goToChatHome = React.useCallback(() => {
     navigate(APP_ROUTES.chat);
   }, [navigate]);
+
   const {
     clearDraftConversation,
     draftConversation,
@@ -53,30 +51,29 @@ export function ChatTemplate() {
     activeConversation,
     conversationId,
     isChatHomeRoute,
-    isFriendsRoute,
-    isProfileRoute,
-    onCloseDetails: closeDetails,
-  });
-  const displayedConversation = isChatHomeRoute
-    ? draftConversation
-    : isConversationRoute
-      ? (activeConversation ??
-        (sentDraftConversation?.id === conversationId
-          ? sentDraftConversation
-          : null))
-      : null;
-  const sidebarActiveConversationId =
-    isDraftConversation || isFriendsRoute || isProfileRoute
-      ? ""
-      : conversationId;
-  const detailsActions = useConversationDetailsActions({
-    conversation: activeConversation,
+    isFriendsRoute: false,
+    isProfileRoute: false,
     onCloseDetails: closeDetails,
   });
 
+  const displayedConversation = isChatHomeRoute
+    ? draftConversation
+    : (activeConversation ??
+      (sentDraftConversation?.id === conversationId
+        ? sentDraftConversation
+        : null));
+
+  const sidebarActiveConversationId = isDraftConversation ? "" : conversationId;
+
+  const groupActions = useGroupConversationActions({
+    conversation: activeConversation,
+    onCloseDetails: closeDetails,
+  });
+  const detailsPanelActions = useConversationDetailsPanel();
+
   useConversationAutoSeen({
     conversation: activeConversation,
-    isEnabled: !isDraftConversation && !isFriendsRoute && !isProfileRoute,
+    isEnabled: !isDraftConversation && Boolean(activeConversation),
   });
 
   const handleConversationSelect = React.useCallback(() => {
@@ -106,64 +103,15 @@ export function ChatTemplate() {
         isDraft={isDraftConversation}
         onBack={showBackButton ? goToChatHome : undefined}
         onMessageSent={isDraftConversation ? handleDraftMessageSent : undefined}
-        onSendFriendRequest={detailsActions.onSendFriendRequest}
+        onSendFriendRequest={detailsPanelActions.onSendFriendRequest}
         onOpenDetails={isDraftConversation ? undefined : toggleDetails}
-        sendingFriendRequestId={detailsActions.sendingFriendRequestId}
+        sendingFriendRequestId={detailsPanelActions.sendingFriendRequestId}
         showBackButton={showBackButton}
       />
     );
   };
 
-  const renderMobileRouteContent = () => {
-    if (displayedConversation || isConversationRoute) {
-      return renderConversationContent(true);
-    }
-
-    if (isFriendsRoute) {
-      return (
-        <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
-          <MobileTopBackBar title="Friends" onBack={goToChatHome} />
-          <FriendsTemplate />
-        </div>
-      );
-    }
-
-    if (isProfileRoute) {
-      return (
-        <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
-          <MobileTopBackBar title="Profile" onBack={goToChatHome} />
-          <ChatProfileTemplate />
-        </div>
-      );
-    }
-
-    return (
-      <ChatSidebar
-        activeConversationId={sidebarActiveConversationId}
-        className="h-full pb-16"
-        onConversationSelect={handleConversationSelect}
-        onDirectMessageDraftSelect={openDraftConversation}
-      />
-    );
-  };
-
-  const renderDesktopContent = () => {
-    if (isProfileRoute) {
-      return <ChatProfileTemplate />;
-    }
-
-    if (isFriendsRoute) {
-      return <FriendsTemplate />;
-    }
-
-    return renderConversationContent();
-  };
-
-  const shouldShowDetailsPanel =
-    !!activeConversation &&
-    !isDraftConversation &&
-    !isFriendsRoute &&
-    !isProfileRoute;
+  const shouldShowDetailsPanel = !!activeConversation && !isDraftConversation;
 
   return (
     <>
@@ -186,19 +134,29 @@ export function ChatTemplate() {
 
             <section className="flex h-full min-h-0 min-w-0 flex-1 flex-col border-l border-border md:border-l-0">
               <div className="flex min-h-0 flex-1 flex-col overflow-hidden pb-16 md:hidden">
-                {renderMobileRouteContent()}
+                {displayedConversation || isConversationRoute ? (
+                  renderConversationContent(true)
+                ) : (
+                  <ChatSidebar
+                    activeConversationId={sidebarActiveConversationId}
+                    className="h-full"
+                    onConversationSelect={handleConversationSelect}
+                    onDirectMessageDraftSelect={openDraftConversation}
+                  />
+                )}
               </div>
               <div className="hidden min-h-0 min-w-0 flex-1 flex-col overflow-hidden md:flex">
-                {renderDesktopContent()}
+                {renderConversationContent()}
               </div>
             </section>
 
-            {shouldShowDetailsPanel ? (
-              <ConversationDetailsPanel
+            {shouldShowDetailsPanel && activeConversation ? (
+              <ConversationDetailsPanelTemplate
                 conversation={activeConversation}
                 open={isDetailsOpen}
-                {...detailsActions}
                 onClose={closeDetails}
+                groupActions={groupActions}
+                detailsPanelActions={detailsPanelActions}
               />
             ) : null}
           </div>

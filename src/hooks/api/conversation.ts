@@ -6,15 +6,11 @@ import {
   useMutation,
   useQueryClient,
 } from "@tanstack/react-query";
-import * as React from "react";
 import { useCurrentUserQuery } from "@/hooks/api/user";
 import { queryKeysFactory } from "@/libs/query-key-factory";
 import { conversationService } from "@/services/conversation-service";
-import { useSocketStore } from "@/stores/useSocketStore";
 import type {
-  Conversation,
   ConversationEvent,
-  ConversationMember,
   ConversationPage,
   ConversationRecord,
   ConversationSeenEvent,
@@ -23,8 +19,7 @@ import type {
   GroupMembersRequest,
   UpdateGroupRequest,
 } from "@/types/conversation";
-import { ConversationTypeEnum } from "@/types/conversation";
-import { PresenceStatusEnum } from "@/types/user";
+import type { ConversationTypeEnum } from "@/types/conversation";
 
 const conversationQueryKeyFactory =
   queryKeysFactory<"conversation">("conversation");
@@ -57,78 +52,6 @@ export const conversationQueryKeys = {
 };
 
 const CONVERSATIONS_DEFAULT_LIMIT = 30;
-
-function mapConversationToUiModel(
-  conversation: ConversationRecord,
-  currentUserId: string,
-  onlineUserIds: ReadonlySet<string>,
-): Conversation {
-  const members: ConversationMember[] = conversation.participants.map(
-    (participant) => ({
-      userId: participant.userId,
-      id: participant.userId,
-      firstName: participant.firstName,
-      lastName: participant.lastName,
-      displayName:
-        [participant.firstName, participant.lastName]
-          .filter(Boolean)
-          .join(" ") ||
-        participant.username ||
-        "Unknown user",
-      username: participant.username ?? undefined,
-      avatarUrl: participant.avatarUrl ?? undefined,
-      bio: participant.bio,
-      presenceStatus: onlineUserIds.has(participant.userId)
-        ? PresenceStatusEnum.Online
-        : PresenceStatusEnum.Offline,
-      role: participant.role,
-      joinedAt: participant.joinedAt,
-      lastReadMessageId: participant.lastReadMessageId ?? null,
-      lastReadAt: participant.lastReadAt ?? null,
-    }),
-  );
-
-  const isGroup = conversation.type === ConversationTypeEnum.GROUP;
-  const otherParticipant = members.find(
-    (member) => member.userId !== currentUserId,
-  );
-  const lastMessageSenderId = conversation.lastMessage?.senderId;
-  const lastMessageSender = conversation.lastMessage
-    ? members.find((member) => member.userId === lastMessageSenderId)
-    : undefined;
-
-  return {
-    id: conversation.id,
-    type: conversation.type,
-    title: isGroup
-      ? conversation.groupName || "Group conversation"
-      : otherParticipant?.displayName || "Direct message",
-    groupName: conversation.groupName,
-    createdById: conversation.createdById,
-    directUserAId: conversation.directUserAId,
-    directUserBId: conversation.directUserBId,
-    lastMessage:
-      conversation.lastMessage?.content?.trim() || "No messages yet.",
-    lastMessageAt: conversation.lastMessageAt,
-    lastMessageSenderId: conversation.lastMessage?.senderId,
-    lastMessageSenderName: lastMessageSender?.displayName,
-    participantCount: members.length,
-    unreadCount: conversation.unreadCount,
-    members,
-    directMember: isGroup ? undefined : otherParticipant,
-    currentUserId: currentUserId || undefined,
-    lastMessageId: conversation.lastMessageId,
-    avatarUrl:
-      isGroup || !otherParticipant?.avatarUrl
-        ? undefined
-        : otherParticipant.avatarUrl,
-    onlineUsersCount: members.filter(
-      (member) => member.presenceStatus === PresenceStatusEnum.Online,
-    ).length,
-    createdAt: conversation.createdAt,
-    updatedAt: conversation.updatedAt,
-  };
-}
 
 function hasConversation(
   data: ConversationInfiniteData | undefined,
@@ -437,11 +360,6 @@ export function useConversationsInfiniteQuery(
 ) {
   const { type, limit = CONVERSATIONS_DEFAULT_LIMIT } = params;
   const { data: currentUser } = useCurrentUserQuery();
-  const onlineUsers = useSocketStore((state) => state.onlineUsers);
-  const onlineUserIds = React.useMemo(
-    () => new Set(onlineUsers),
-    [onlineUsers],
-  );
 
   const query = useInfiniteQuery<
     ConversationPage,
@@ -465,24 +383,7 @@ export function useConversationsInfiniteQuery(
     enabled: !!currentUser?.id,
   });
 
-  const conversations = React.useMemo(() => {
-    return (
-      query.data?.pages.flatMap((page) =>
-        page.items.map((conversation) =>
-          mapConversationToUiModel(
-            conversation,
-            currentUser?.id ?? "",
-            onlineUserIds,
-          ),
-        ),
-      ) ?? []
-    );
-  }, [currentUser?.id, onlineUserIds, query.data?.pages]);
-
-  return {
-    ...query,
-    conversations,
-  };
+  return query;
 }
 
 export function useMarkConversationAsSeenMutation() {

@@ -16,12 +16,14 @@ import { APP_ROUTES } from "@/config/routes";
 import { useBackendHealthQuery } from "@/hooks/api/health";
 import { queryClient } from "@/libs/query-client";
 import { ChatPage } from "@/pages/chat-page";
+import { FriendsPage } from "@/pages/friends-page";
+import { ProfilePage } from "@/pages/profile-page";
 import { SignInPage } from "@/pages/sign-in-page";
 import { SignUpPage } from "@/pages/sign-up-page";
 import { ChatSocketProvider } from "@/providers/chat-socket-provider";
 import { GuestRoute } from "@/providers/guest-route";
 import { ProtectedRoute } from "@/providers/protected-route";
-import useAuthStore from "@/stores/useAuthStore";
+import { useAuthStore } from "@/stores/useAuthStore";
 import { useSocketStore } from "@/stores/useSocketStore";
 import { isDraftConversationId } from "@/utils/conversation";
 
@@ -98,9 +100,9 @@ function AppRoutes() {
         <Route element={<ProtectedRoute />}>
           <Route element={<ChatSocketRouteBoundary />}>
             <Route path={APP_ROUTES.chat} element={<ChatPage />} />
-            <Route path={APP_ROUTES.friends} element={<ChatPage />} />
+            <Route path={APP_ROUTES.friends} element={<FriendsPage />} />
             <Route path={APP_ROUTES.chatConversation} element={<ChatPage />} />
-            <Route path={APP_ROUTES.profile} element={<ChatPage />} />
+            <Route path={APP_ROUTES.profile} element={<ProfilePage />} />
           </Route>
         </Route>
       </Routes>

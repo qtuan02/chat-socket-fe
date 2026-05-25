@@ -1,5 +1,5 @@
 import { APP_API } from "@/config/routes";
-import axiosClient from "@/libs/axios";
+import { axiosClient } from "@/libs/axios";
 import type {
   UpdateUserRequestPayload,
   User,

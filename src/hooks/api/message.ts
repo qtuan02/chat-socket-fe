@@ -5,11 +5,7 @@ import {
   useMutation,
   useQueryClient,
 } from "@tanstack/react-query";
-import * as React from "react";
-import {
-  MESSAGE_LIST_FIRST_ITEM_INDEX,
-  MESSAGES_DEFAULT_LIMIT,
-} from "@/config/constant";
+import { MESSAGES_DEFAULT_LIMIT } from "@/config/constant";
 import { conversationQueryKeys } from "@/hooks/api/conversation";
 import { useCurrentUserQuery } from "@/hooks/api/user";
 import {
@@ -19,14 +15,12 @@ import {
 import { messageService } from "@/services/message-service";
 import { useSocketStore } from "@/stores/useSocketStore";
 import type {
-  Message,
   MessagePage,
   MessageRecord,
   SendDirectMessageRequest,
   SendGroupMessageRequest,
   UseMessagesInfiniteQueryParams,
 } from "@/types/message";
-import { MessageStatus } from "@/types/message";
 import { isDraftConversationId } from "@/utils/conversation";
 
 const messageQueryKeyFactory = queryKeysFactory<"message">("message");
@@ -41,24 +35,6 @@ export const messageQueryKeys = {
   messages: (userId: string, conversationId: string, limit = 50) =>
     messageQueryKeyFactory.detail(conversationId, { userId, limit }),
 };
-
-function mapMessageToUiModel(
-  message: MessageRecord,
-  senderNameById: Map<string, string>,
-): Message {
-  return {
-    id: message.id,
-    conversationId: message.conversationId,
-    senderId: message.senderId,
-    senderName: senderNameById.get(message.senderId) ?? "Unknown user",
-    content: message.content,
-    attachmentUrl: message.attachmentUrl ?? null,
-    type: message.type,
-    messageStatus: MessageStatus.Sent,
-    createdAt: message.createdAt,
-    updatedAt: message.updatedAt,
-  };
-}
 
 function appendMessageToInfiniteData(
   data: MessageInfiniteData | undefined,
@@ -131,7 +107,6 @@ export function appendConversationMessageToCache(
 export function useMessagesInfiniteQuery({
   conversationId,
   enabled = true,
-  members,
   limit = MESSAGES_DEFAULT_LIMIT,
 }: UseMessagesInfiniteQueryParams) {
   const { data: currentUser } = useCurrentUserQuery();
@@ -166,31 +141,7 @@ export function useMessagesInfiniteQuery({
     enabled: canFetchMessages,
   });
 
-  const senderNameById = React.useMemo(() => {
-    return new Map(
-      members.map((member) => [member.userId, member.displayName]),
-    );
-  }, [members]);
-
-  const messages = React.useMemo(() => {
-    const orderedPages = [...(query.data?.pages ?? [])].reverse();
-
-    return orderedPages.flatMap((page) =>
-      page.items.map((message) => mapMessageToUiModel(message, senderNameById)),
-    );
-  }, [query.data?.pages, senderNameById]);
-
-  const olderMessageCount =
-    query.data?.pages
-      .slice(1)
-      .reduce((count, page) => count + page.items.length, 0) ?? 0;
-  const firstItemIndex = MESSAGE_LIST_FIRST_ITEM_INDEX - olderMessageCount;
-
-  return {
-    ...query,
-    firstItemIndex,
-    messages,
-  };
+  return query;
 }
 
 export function useSendDirectMessageMutation(

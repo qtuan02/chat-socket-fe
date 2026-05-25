@@ -1,19 +1,6 @@
 import * as React from "react";
-import { authService } from "@/services/auth-service";
-import useAuthStore from "@/stores/useAuthStore";
-
-let refreshSessionPromise: ReturnType<typeof authService.refreshToken> | null =
-  null;
-
-function refreshSessionOnce() {
-  if (!refreshSessionPromise) {
-    refreshSessionPromise = authService.refreshToken().finally(() => {
-      refreshSessionPromise = null;
-    });
-  }
-
-  return refreshSessionPromise;
-}
+import { refreshSessionOnce } from "@/hooks/api/auth";
+import { useAuthStore } from "@/stores/useAuthStore";
 
 export function useSessionCheck() {
   const accessToken = useAuthStore((state) => state.accessToken);

@@ -1,5 +1,5 @@
 import { Loader2 } from "lucide-react";
-import { UserItem } from "@/components/shared/user-item";
+import { UserItem } from "@/features/friends/templates/user-item-template";
 import { Button } from "@/components/ui/button";
 import {
   type ConversationMember,

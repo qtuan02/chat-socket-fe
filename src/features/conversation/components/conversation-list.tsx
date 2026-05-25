@@ -1,11 +1,11 @@
 import { Virtuoso } from "react-virtuoso";
 import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
 import type { Conversation, ConversationTypeEnum } from "@/types/conversation";
 import { cn } from "@/utils/cn";
 import { getErrorMessage } from "@/utils/error";
 import { ConversationListFilter } from "./conversation-list-filter";
 import { ConversationListItem } from "./conversation-list-item";
+import { ConversationListLoadMoreFooter } from "./conversation-list-load-more-footer";
 import { ConversationListSkeleton } from "./conversation-list-skeleton";
 import { UserSearchTrigger } from "./user-search-trigger";
 
@@ -44,6 +44,20 @@ function ConversationListError({
   );
 }
 
+const conversationListVirtuosoComponents = {
+  Footer: function ConversationListVirtuosoFooter() {
+    return (
+      <ConversationListLoadMoreFooter
+        isFetchingNextPage={conversationListFooterState.isFetchingNextPage}
+      />
+    );
+  },
+};
+
+const conversationListFooterState = {
+  isFetchingNextPage: false,
+};
+
 export function ConversationList({
   className,
   activeConversationId,
@@ -59,6 +73,8 @@ export function ConversationList({
   onLoadMore,
   onRetry,
 }: ConversationListProps) {
+  conversationListFooterState.isFetchingNextPage = isFetchingNextPage;
+
   return (
     <section className={cn("flex flex-col bg-background/60", className)}>
       <div className="px-3 pt-3 md:px-4 md:pt-4">
@@ -95,14 +111,7 @@ export function ConversationList({
                 onSelectConversation={onConversationSelect}
               />
             )}
-            components={{
-              Footer: () =>
-                isFetchingNextPage ? (
-                  <div className="px-1 pb-2 pt-3">
-                    <Skeleton className="mx-auto h-3 w-32 rounded-full" />
-                  </div>
-                ) : null,
-            }}
+            components={conversationListVirtuosoComponents}
           />
         ) : null}
       </div>
