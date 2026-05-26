@@ -7,8 +7,6 @@ description: Safe, structured refactoring for this React 19 / TypeScript / Zusta
 
 Refactoring changes **structure** without changing **behaviour**. Every step below is a hard gate. Do not skip or collapse steps.
 
----
-
 ## Phase 0 — Hard Pre-Flight (MANDATORY before any edit)
 
 ### 0.1 · Impact Analysis
