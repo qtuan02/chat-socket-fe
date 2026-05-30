@@ -1,22 +1,9 @@
-import * as React from "react";
-import { useNavigate } from "react-router";
-import { toast } from "sonner";
-import { APP_ROUTES } from "@/config/routes";
-import { CurrentUserSidebarSection } from "@/features/current-user/templates/current-user-sidebar-section";
-import {
-  getDirectConversationIdByUserId,
-  useConversationSidebar,
-} from "@/features/conversation/hooks/use-conversation-sidebar";
+import { useChatSidebar } from "@/features/chat/hooks/use-chat-sidebar";
 import { ConversationSidebarTemplate } from "@/features/conversation/templates/conversation-sidebar-template";
+import { CurrentUserSidebarSection } from "@/features/current-user/templates/current-user-sidebar-section";
 import { CreateGroupDialogContainer } from "@/features/group/templates/create-group-dialog-container";
-import { useCreateGroupConversationMutation } from "@/hooks/api/conversation";
-import type {
-  ConversationTypeEnum,
-  CreateGroupConversationRequest,
-} from "@/types/conversation";
 import type { DirectMessageUser } from "@/types/user";
 import { cn } from "@/utils/cn";
-import { getErrorMessage } from "@/utils/error";
 import { UserSearchList } from "./user-search-list";
 
 type ChatSidebarProps = {
@@ -26,69 +13,36 @@ type ChatSidebarProps = {
   onDirectMessageDraftSelect?: (user: DirectMessageUser) => void;
 };
 
-type SidebarView = "conversations" | "user-search";
-
 export function ChatSidebar({
   className,
   activeConversationId,
   onConversationSelect,
   onDirectMessageDraftSelect,
 }: ChatSidebarProps) {
-  const navigate = useNavigate();
-  const [activeView, setActiveView] =
-    React.useState<SidebarView>("conversations");
-  const [isCreateGroupOpen, setIsCreateGroupOpen] = React.useState(false);
-  const [conversationFilter, setConversationFilter] =
-    React.useState<ConversationTypeEnum | null>(null);
-
   const {
+    activeView,
+    conversationFilter,
     conversations,
+    createGroupMutation,
+    directConversationIdByUserId,
     error,
+    handleCreateGroup,
+    handleLoadMoreConversations,
+    handleSelectConversation,
+    handleSelectUser,
+    isCreateGroupOpen,
     isError,
     isFetchingNextPage,
     isLoading,
-    handleLoadMoreConversations,
     refetch,
-  } = useConversationSidebar({
+    setActiveView,
+    setConversationFilter,
+    setIsCreateGroupOpen,
+  } = useChatSidebar({
     activeConversationId,
-    conversationFilter,
+    onConversationSelect,
+    onDirectMessageDraftSelect,
   });
-  const createGroupMutation = useCreateGroupConversationMutation({
-    onSuccess: (conversation) => {
-      setIsCreateGroupOpen(false);
-      toast.success("Group conversation created.");
-      navigate(APP_ROUTES.conversationById(conversation.id));
-    },
-    onError: (error) => {
-      toast.error(getErrorMessage(error, "Failed to create group."));
-    },
-  });
-
-  const directConversationIdByUserId = React.useMemo(
-    () => getDirectConversationIdByUserId(conversations),
-    [conversations],
-  );
-
-  const handleSelectConversation = (conversationId: string) => {
-    navigate(APP_ROUTES.conversationById(conversationId));
-    onConversationSelect?.();
-  };
-
-  const handleSelectUser = (user: DirectMessageUser) => {
-    const conversationId = directConversationIdByUserId.get(user.id);
-
-    if (conversationId) {
-      handleSelectConversation(conversationId);
-    } else {
-      onDirectMessageDraftSelect?.(user);
-    }
-
-    setActiveView("conversations");
-  };
-
-  const handleCreateGroup = (payload: CreateGroupConversationRequest) => {
-    createGroupMutation.mutate(payload);
-  };
 
   return (
     <aside

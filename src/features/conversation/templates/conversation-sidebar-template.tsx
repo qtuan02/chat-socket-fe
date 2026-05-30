@@ -1,7 +1,6 @@
 import { ConversationList } from "@/features/conversation/components/conversation-list";
 import { ConversationSidebarHeader } from "@/features/conversation/components/conversation-sidebar-header";
-import type { Conversation } from "@/types/conversation";
-import type { ConversationTypeEnum } from "@/types/conversation";
+import type { Conversation, ConversationTypeEnum } from "@/types/conversation";
 import { cn } from "@/utils/cn";
 
 type ConversationSidebarTemplateProps = {

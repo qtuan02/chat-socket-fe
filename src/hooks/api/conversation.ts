@@ -14,12 +14,12 @@ import type {
   ConversationPage,
   ConversationRecord,
   ConversationSeenEvent,
+  ConversationTypeEnum,
   CreateGroupConversationRequest,
   GetConversationsParams,
   GroupMembersRequest,
   UpdateGroupRequest,
 } from "@/types/conversation";
-import type { ConversationTypeEnum } from "@/types/conversation";
 
 const conversationQueryKeyFactory =
   queryKeysFactory<"conversation">("conversation");
