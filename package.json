@@ -26,6 +26,7 @@
     "@stomp/stompjs": "^7.3.0",
     "@tanstack/react-query": "^5.100.10",
     "@tanstack/react-query-devtools": "^5.100.10",
+    "@rsbuild/plugin-tailwindcss": "2.0.0",
     "axios": "^1.16.1",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",

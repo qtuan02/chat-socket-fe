@@ -1,6 +1,6 @@
 import { MessageCircle } from "lucide-react";
-import { UserItem } from "@/features/friends/templates/user-item-template";
 import { Button } from "@/components/ui/button";
+import { UserItem } from "@/features/friends/templates/user-item-template";
 import type { FriendWithPresence } from "@/types/friend";
 import { FriendStatus } from "@/types/friend-status";
 import type { UserInfo } from "@/types/user";

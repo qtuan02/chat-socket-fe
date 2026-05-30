@@ -1,6 +1,6 @@
-import { type SubmitHandler, useForm } from "react-hook-form";
-import * as React from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
+import * as React from "react";
+import { type SubmitHandler, useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
 import { useCurrentUserQuery } from "@/hooks/api/user";

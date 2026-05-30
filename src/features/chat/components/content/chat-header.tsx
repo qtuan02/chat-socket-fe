@@ -1,22 +1,13 @@
 import { ArrowLeft, CircleCheckBig, Columns2Icon } from "lucide-react";
-import * as React from "react";
+import { ConversationAvatar } from "@/components/shared/conversation-avatar";
+import { Button } from "@/components/ui/button";
+import { useChatHeader } from "@/features/chat/hooks/use-chat-header";
 import {
-  getFriendPopupAction,
-  getFriendStatusLabel,
-  getPresenceStatusLabel,
   UserItemActionButton,
   UserItemDialog,
 } from "@/features/friends/templates/user-item-template";
-import { Button } from "@/components/ui/button";
-import { ConversationAvatar } from "@/components/shared/conversation-avatar";
 import type { Conversation, ConversationMember } from "@/types/conversation";
-import { ConversationTypeEnum } from "@/types/conversation";
 import type { UserInfo } from "@/types/user";
-import {
-  formatDirectConversationStatus,
-  formatGroupActiveCount,
-  getDisplayName,
-} from "@/utils/display";
 
 type ChatHeaderProps = {
   conversation: Conversation;
@@ -43,50 +34,25 @@ export function ChatHeader({
   showBackButton,
   onBack,
 }: ChatHeaderProps) {
-  const [isDirectUserDialogOpen, setIsDirectUserDialogOpen] =
-    React.useState(false);
-  const isGroup = conversation.type === ConversationTypeEnum.GROUP;
-  const statusLabel = isGroup
-    ? formatGroupActiveCount(conversation)
-    : formatDirectConversationStatus(conversation);
-  const canOpenDirectUserDialog = !isGroup && !!directMember;
-  const fallbackDialogUser = directMember
-    ? {
-        id: directMember.userId,
-        displayName: directMember.displayName,
-        firstName: directMember.firstName,
-        lastName: directMember.lastName,
-        username: directMember.username ?? undefined,
-        avatarUrl: directMember.avatarUrl ?? undefined,
-        bio: directMember.bio ?? undefined,
-        joinedAt: directMember.joinedAt,
-        presenceStatus: directMember.presenceStatus,
-      }
-    : null;
-  const dialogUser = fallbackDialogUser
-    ? directUserInfo
-      ? {
-          ...fallbackDialogUser,
-          ...directUserInfo,
-          displayName: getDisplayName(directUserInfo),
-          avatarUrl:
-            directUserInfo.avatarUrl ?? fallbackDialogUser.avatarUrl ?? null,
-          bio: directUserInfo.bio ?? fallbackDialogUser.bio ?? null,
-          phone: directUserInfo.phone ?? null,
-          email: directUserInfo.email ?? null,
-          joinedAt: directUserInfo.joinedAt ?? fallbackDialogUser.joinedAt,
-        }
-      : fallbackDialogUser
-    : null;
-  const friendStatus = directUserInfo?.statusFriend;
-  const friendStatusLabel = getFriendStatusLabel(friendStatus);
-  const popupAction = getFriendPopupAction(friendStatus);
-  const canSendFriendRequest = !!directUserInfo && !!onSendFriendRequest;
-  const presenceStatusLabel = getPresenceStatusLabel(
-    dialogUser?.presenceStatus,
-  );
-  const isSendingFriendRequest =
-    !!directMember && sendingFriendRequestId === directMember.userId;
+  const {
+    canOpenDirectUserDialog,
+    canSendFriendRequest,
+    dialogUser,
+    friendStatus,
+    friendStatusLabel,
+    isDirectUserDialogOpen,
+    isSendingFriendRequest,
+    popupAction,
+    presenceStatusLabel,
+    setIsDirectUserDialogOpen,
+    statusLabel,
+  } = useChatHeader({
+    conversation,
+    directMember,
+    directUserInfo,
+    onSendFriendRequest,
+    sendingFriendRequestId,
+  });
 
   return (
     <>
