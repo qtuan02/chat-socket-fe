@@ -97,6 +97,22 @@ export function useChatSidebar({
     [createGroupMutation],
   );
 
+  const handleOpenCreateGroup = React.useCallback(() => {
+    setIsCreateGroupOpen(true);
+  }, []);
+
+  const handleShowConversations = React.useCallback(() => {
+    setActiveView("conversations");
+  }, []);
+
+  const handleOpenUserSearch = React.useCallback(() => {
+    setActiveView("user-search");
+  }, []);
+
+  const handleRetryConversations = React.useCallback(() => {
+    void refetch();
+  }, [refetch]);
+
   return {
     activeView,
     conversationFilter,
@@ -106,14 +122,16 @@ export function useChatSidebar({
     error,
     handleCreateGroup,
     handleLoadMoreConversations,
+    handleOpenCreateGroup,
+    handleOpenUserSearch,
+    handleRetryConversations,
     handleSelectConversation,
     handleSelectUser,
+    handleShowConversations,
     isCreateGroupOpen,
     isError,
     isFetchingNextPage,
     isLoading,
-    refetch,
-    setActiveView,
     setConversationFilter,
     setIsCreateGroupOpen,
   };

@@ -1,5 +1,6 @@
 import { useChatSidebar } from "@/features/chat/hooks/use-chat-sidebar";
-import { ConversationSidebarTemplate } from "@/features/conversation/templates/conversation-sidebar-template";
+import { ConversationList } from "@/features/conversation/components/conversation-list";
+import { ConversationSidebarHeader } from "@/features/conversation/components/conversation-sidebar-header";
 import { CurrentUserSidebarSection } from "@/features/current-user/templates/current-user-sidebar-section";
 import { CreateGroupDialogContainer } from "@/features/group/templates/create-group-dialog-container";
 import type { DirectMessageUser } from "@/types/user";
@@ -28,14 +29,16 @@ export function ChatSidebar({
     error,
     handleCreateGroup,
     handleLoadMoreConversations,
+    handleOpenCreateGroup,
+    handleOpenUserSearch,
+    handleRetryConversations,
     handleSelectConversation,
     handleSelectUser,
+    handleShowConversations,
     isCreateGroupOpen,
     isError,
     isFetchingNextPage,
     isLoading,
-    refetch,
-    setActiveView,
     setConversationFilter,
     setIsCreateGroupOpen,
   } = useChatSidebar({
@@ -51,43 +54,39 @@ export function ChatSidebar({
         className,
       )}
     >
-      {activeView === "user-search" ? (
-        <div className="min-h-0 flex-1 p-3 md:p-4">
-          <UserSearchList
-            conversationIdByUserId={directConversationIdByUserId}
-            onBack={() => {
-              setActiveView("conversations");
-            }}
-            onSelectUser={handleSelectUser}
+      <div className="flex min-h-0 flex-1 flex-col">
+        <ConversationSidebarHeader onCreateGroupClick={handleOpenCreateGroup} />
+
+        {activeView === "user-search" ? (
+          <div className="min-h-0 flex-1 p-3 md:p-4">
+            <UserSearchList
+              conversationIdByUserId={directConversationIdByUserId}
+              onBack={handleShowConversations}
+              onSelectUser={handleSelectUser}
+            />
+          </div>
+        ) : null}
+
+        {activeView === "conversations" ? (
+          <ConversationList
+            activeConversationId={activeConversationId}
+            activeFilter={conversationFilter}
+            className="min-h-0 flex-1 overflow-hidden"
+            conversations={conversations}
+            error={error}
+            isError={isError}
+            isFetchingNextPage={isFetchingNextPage}
+            isLoading={isLoading}
+            onConversationSelect={handleSelectConversation}
+            onFilterChange={setConversationFilter}
+            onLoadMore={handleLoadMoreConversations}
+            onRetry={handleRetryConversations}
+            onUserSearchOpen={handleOpenUserSearch}
           />
-        </div>
-      ) : (
-        <ConversationSidebarTemplate
-          activeConversationId={activeConversationId}
-          className="min-h-0 flex-1"
-          conversationFilter={conversationFilter}
-          conversations={conversations}
-          error={error}
-          isError={isError}
-          isFetchingNextPage={isFetchingNextPage}
-          isLoading={isLoading}
-          onConversationFilterChange={setConversationFilter}
-          onConversationSelect={handleSelectConversation}
-          onCreateGroupClick={() => {
-            setIsCreateGroupOpen(true);
-          }}
-          onLoadMore={handleLoadMoreConversations}
-          onRetry={() => {
-            void refetch();
-          }}
-          onUserSearchOpen={() => {
-            setActiveView("user-search");
-          }}
-        />
-      )}
+        ) : null}
+      </div>
 
       <CurrentUserSidebarSection />
-
       <CreateGroupDialogContainer
         isOpen={isCreateGroupOpen}
         isSubmitting={createGroupMutation.isPending}

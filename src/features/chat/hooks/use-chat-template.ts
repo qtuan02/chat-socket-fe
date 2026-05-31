@@ -3,9 +3,38 @@ import { useNavigate, useParams } from "react-router";
 import { APP_ROUTES } from "@/config/routes";
 import { useConversationAutoSeen } from "@/features/chat/hooks/use-conversation-auto-seen";
 import { useDirectMessageDraft } from "@/features/chat/hooks/use-direct-message-draft";
-import { cn } from "@/utils/cn";
 import { useConversationDetailsPanel } from "@/features/conversation/hooks/use-conversation-details-panel";
 import { useConversationsView } from "@/features/conversation/hooks/use-conversations-view";
+import type { Conversation } from "@/types/conversation";
+import { cn } from "@/utils/cn";
+
+function resolveDisplayedConversation({
+  activeConversation,
+  conversationId,
+  draftConversation,
+  isChatHomeRoute,
+  sentDraftConversation,
+}: {
+  activeConversation?: Conversation;
+  conversationId: string;
+  draftConversation: Conversation | null;
+  isChatHomeRoute: boolean;
+  sentDraftConversation: Conversation | null;
+}): Conversation | null {
+  if (isChatHomeRoute) {
+    return draftConversation;
+  }
+
+  if (activeConversation) {
+    return activeConversation;
+  }
+
+  if (sentDraftConversation?.id === conversationId) {
+    return sentDraftConversation;
+  }
+
+  return null;
+}
 
 export function useChatTemplate() {
   const { conversationId = "" } = useParams();
@@ -48,15 +77,17 @@ export function useChatTemplate() {
     onCloseDetails: closeDetails,
   });
 
-  const displayedConversation = isChatHomeRoute
-    ? draftConversation
-    : (activeConversation ??
-      (sentDraftConversation?.id === conversationId
-        ? sentDraftConversation
-        : null));
+  const displayedConversation = resolveDisplayedConversation({
+    activeConversation,
+    conversationId,
+    draftConversation,
+    isChatHomeRoute,
+    sentDraftConversation,
+  });
 
   const sidebarActiveConversationId = isDraftConversation ? "" : conversationId;
   const detailsPanelActions = useConversationDetailsPanel();
+  const shouldShowDetailsPanel = !!activeConversation && !isDraftConversation;
 
   useConversationAutoSeen({
     conversation: activeConversation,
@@ -68,10 +99,8 @@ export function useChatTemplate() {
     closeDetails();
   }, [clearDraftConversation, closeDetails]);
 
-  const shouldShowDetailsPanel = !!activeConversation && !isDraftConversation;
-
   const detailsPanelGridClass = cn(
-    activeConversation && !isDraftConversation && isDetailsOpen
+    shouldShowDetailsPanel && isDetailsOpen
       ? "md:grid-cols-[320px_minmax(0,1fr)_320px]"
       : "md:grid-cols-[320px_minmax(0,1fr)]",
   );

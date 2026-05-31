@@ -1,78 +1,96 @@
-import * as React from "react";
+import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useUserInfoQuery } from "@/hooks/api/user";
-import type { Conversation, ConversationMember } from "@/types/conversation";
-import { ConversationTypeEnum } from "@/types/conversation";
-import { FriendStatus } from "@/types/friend-status";
+import { Skeleton } from "@/components/ui/skeleton";
+import { MessageListSkeleton } from "@/features/chat/components/skeleton/message-list-skeleton";
+import { useDirectConversationFriendStatus } from "@/features/chat/hooks/use-direct-conversation-friend-status";
+import type { Conversation } from "@/types/conversation";
 import type { MessageRecord } from "@/types/message";
-import { getDirectConversationMember } from "@/utils/display";
-import { getErrorMessage } from "@/utils/error";
 import { ChatHeader } from "./chat-header";
+import { DirectConversationFriendStatusRow } from "./direct-conversation-friend-status-row";
 import { MessageComposer } from "./message-composer";
 import { MessageList } from "./message-list";
 
-type ChatConversationContentProps = {
+type ChatConversationContentBaseProps = {
+  onBack?: () => void;
+  showBackButton?: boolean;
+};
+
+type ChatConversationContentLoadingProps = ChatConversationContentBaseProps & {
+  isConversationLoading: true;
+};
+
+type ChatConversationContentLoadedProps = ChatConversationContentBaseProps & {
   conversation: Conversation;
   isDraft: boolean;
-  onBack?: () => void;
+  isConversationLoading?: false;
   onMessageSent?: (message: MessageRecord) => void;
   onSendFriendRequest?: (userId: string, message?: string) => void;
   onOpenDetails?: () => void;
   sendingFriendRequestId?: string | null;
+};
+
+export type ChatConversationContentProps =
+  | ChatConversationContentLoadingProps
+  | ChatConversationContentLoadedProps;
+
+type ChatConversationContentLoadingViewProps = {
+  onBack?: () => void;
   showBackButton?: boolean;
 };
 
-type DirectConversationFriendStatusRowProps = {
-  statusFriend?: FriendStatus;
-  isLoading: boolean;
-  isSendingFriendRequest: boolean;
-  onAddFriend: () => void;
-};
-
-function DirectConversationFriendStatusRow({
-  statusFriend,
-  isLoading,
-  isSendingFriendRequest,
-  onAddFriend,
-}: DirectConversationFriendStatusRowProps) {
-  if (isLoading) return null;
-  if (!statusFriend) return null;
-  if (
-    statusFriend === FriendStatus.FRIEND ||
-    statusFriend === FriendStatus.SELF
-  ) {
-    return null;
-  }
-
-  if (statusFriend === FriendStatus.NONE) {
-    return (
-      <div className="flex items-center justify-between gap-2 border-b border-border bg-muted/30 px-3 py-2 md:px-4">
-        <p className="truncate text-xs text-muted-foreground">
-          You are not friends yet.
-        </p>
-        <Button
-          type="button"
-          size="sm"
-          className="h-7 px-2.5 text-xs"
-          onClick={onAddFriend}
-          disabled={isSendingFriendRequest}
-        >
-          {isSendingFriendRequest ? "Sending..." : "Add friend"}
-        </Button>
-      </div>
-    );
-  }
-
+function ChatConversationContentLoadingView({
+  onBack,
+  showBackButton,
+}: ChatConversationContentLoadingViewProps) {
   return (
-    <div className="border-b border-border bg-muted/30 px-3 py-2 text-xs text-muted-foreground md:px-4">
-      {statusFriend === FriendStatus.SENT
-        ? "Friend request pending."
-        : "This user sent you a friend request."}
-    </div>
+    <>
+      <header className="h-14 border-b border-border bg-background px-3 py-2 md:h-16 md:px-4 md:py-2">
+        <div className="flex h-full min-w-0 items-center gap-3">
+          {showBackButton && onBack ? (
+            <Button
+              type="button"
+              variant="outline"
+              size="icon-sm"
+              onClick={onBack}
+              className="md:hidden"
+              aria-label="Go back to conversations"
+            >
+              <ArrowLeft className="size-4" />
+            </Button>
+          ) : null}
+          <Skeleton className="size-9 shrink-0 rounded-full md:size-10" />
+          <div className="min-w-0 flex-1 space-y-1.5">
+            <Skeleton className="h-4 w-36 max-w-full md:h-5" />
+            <Skeleton className="h-3 w-24 max-w-full md:h-3.5" />
+          </div>
+        </div>
+      </header>
+      <MessageListSkeleton />
+      <div className="border-t border-border p-3 pb-1 md:p-4">
+        <Skeleton className="mb-3 h-20 w-full rounded-md" />
+        <div className="flex items-center justify-between gap-2">
+          <Skeleton className="size-9 rounded-md" />
+          <Skeleton className="h-9 w-20 rounded-md" />
+        </div>
+      </div>
+    </>
   );
 }
 
-export function ChatConversationContent({
+export function ChatConversationContent(props: ChatConversationContentProps) {
+  if (props.isConversationLoading) {
+    return (
+      <ChatConversationContentLoadingView
+        onBack={props.onBack}
+        showBackButton={props.showBackButton}
+      />
+    );
+  }
+
+  return <ChatConversationContentLoadedView {...props} />;
+}
+
+function ChatConversationContentLoadedView({
   conversation,
   isDraft,
   onBack,
@@ -81,37 +99,28 @@ export function ChatConversationContent({
   onOpenDetails,
   sendingFriendRequestId,
   showBackButton,
-}: ChatConversationContentProps) {
-  const isDirectConversation =
-    conversation.type === ConversationTypeEnum.DIRECT;
-  const directMember: ConversationMember | undefined = isDirectConversation
-    ? getDirectConversationMember(conversation)
-    : undefined;
-  const directUserId = directMember?.userId ?? null;
-  const directUserInfoQuery = useUserInfoQuery(directUserId, {
-    enabled: isDirectConversation && !!directUserId,
+}: ChatConversationContentLoadedProps) {
+  const {
+    directMember,
+    directUserInfo,
+    directUserInfoErrorMessage,
+    handleAddFriend,
+    isDirectConversation,
+    isDirectUserInfoLoading,
+    isSendingFriendRequest,
+    statusFriend,
+  } = useDirectConversationFriendStatus({
+    conversation,
+    onSendFriendRequest,
+    sendingFriendRequestId,
   });
-  const statusFriend = directUserInfoQuery.data?.statusFriend;
-  const isSendingFriendRequest =
-    !!directUserId && sendingFriendRequestId === directUserId;
-  const isDirectUserInfoLoading =
-    directUserInfoQuery.isLoading || directUserInfoQuery.isFetching;
-  const directUserInfoErrorMessage = directUserInfoQuery.error
-    ? getErrorMessage(directUserInfoQuery.error, "Unable to load user details.")
-    : null;
-
-  const handleAddFriend = React.useCallback(() => {
-    if (!directUserId || isSendingFriendRequest) return;
-
-    onSendFriendRequest?.(directUserId);
-  }, [directUserId, isSendingFriendRequest, onSendFriendRequest]);
 
   return (
     <>
       <ChatHeader
         conversation={conversation}
         directMember={directMember}
-        directUserInfo={directUserInfoQuery.data}
+        directUserInfo={directUserInfo}
         directUserInfoErrorMessage={directUserInfoErrorMessage}
         isDirectUserInfoLoading={isDirectUserInfoLoading}
         onBack={onBack}

@@ -1,9 +1,6 @@
-import { ChatConversationContent } from "@/features/chat/components/content/chat-conversation-content";
-import { EmptyConversationBanner } from "@/features/chat/components/content/empty-conversation-banner";
+import { ChatConversationPanel } from "@/features/chat/components/content/chat-conversation-panel";
 import { MobileChatBottomNav } from "@/features/chat/components/mobile/mobile-chat-bottom-nav";
-import { MobileTopBackBar } from "@/features/chat/components/mobile/mobile-top-back-bar";
 import { ChatSidebar } from "@/features/chat/components/sidebar/chat-sidebar";
-import { WelcomeSkeleton } from "@/features/chat/components/skeleton/welcome-skeleton";
 import { useChatTemplate } from "@/features/chat/hooks/use-chat-template";
 import { ConversationDetailsPanelTemplate } from "@/features/conversation/templates/conversation-details-panel-template";
 import { cn } from "@/utils/cn";
@@ -19,7 +16,6 @@ export function ChatTemplate() {
     handleConversationSelect,
     handleDraftMessageSent,
     isConversationRoute,
-    isConversationsLoading,
     isDetailsOpen,
     isDraftConversation,
     openDraftConversation,
@@ -28,34 +24,20 @@ export function ChatTemplate() {
     toggleDetails,
   } = useChatTemplate();
 
-  const renderConversationContent = (showBackButton = false) => {
-    if (!displayedConversation) {
-      return (
-        <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
-          {showBackButton ? (
-            <MobileTopBackBar title="Conversations" onBack={goToChatHome} />
-          ) : null}
-          {isConversationsLoading ? (
-            <WelcomeSkeleton />
-          ) : (
-            <EmptyConversationBanner />
-          )}
-        </div>
-      );
-    }
+  const conversationPanelProps = {
+    conversation: displayedConversation,
+    detailsPanelActions,
+    isConversationRoute,
+    isDraftConversation,
+    onBack: goToChatHome,
+    onDraftMessageSent: handleDraftMessageSent,
+    onOpenDetails: toggleDetails,
+  };
 
-    return (
-      <ChatConversationContent
-        conversation={displayedConversation}
-        isDraft={isDraftConversation}
-        onBack={showBackButton ? goToChatHome : undefined}
-        onMessageSent={isDraftConversation ? handleDraftMessageSent : undefined}
-        onSendFriendRequest={detailsPanelActions.onSendFriendRequest}
-        onOpenDetails={isDraftConversation ? undefined : toggleDetails}
-        sendingFriendRequestId={detailsPanelActions.sendingFriendRequestId}
-        showBackButton={showBackButton}
-      />
-    );
+  const sidebarProps = {
+    activeConversationId: sidebarActiveConversationId,
+    onConversationSelect: handleConversationSelect,
+    onDirectMessageDraftSelect: openDraftConversation,
   };
 
   return (
@@ -69,27 +51,24 @@ export function ChatTemplate() {
             )}
           >
             <ChatSidebar
-              activeConversationId={sidebarActiveConversationId}
+              {...sidebarProps}
               className="hidden md:flex md:w-[320px] md:border-r"
-              onConversationSelect={handleConversationSelect}
-              onDirectMessageDraftSelect={openDraftConversation}
             />
 
             <section className="flex h-full min-h-0 min-w-0 flex-1 flex-col border-l border-border md:border-l-0">
               <div className="flex min-h-0 flex-1 flex-col overflow-hidden pb-16 md:hidden">
                 {displayedConversation || isConversationRoute ? (
-                  renderConversationContent(true)
-                ) : (
-                  <ChatSidebar
-                    activeConversationId={sidebarActiveConversationId}
-                    className="h-full"
-                    onConversationSelect={handleConversationSelect}
-                    onDirectMessageDraftSelect={openDraftConversation}
+                  <ChatConversationPanel
+                    {...conversationPanelProps}
+                    showBackButton
                   />
+                ) : (
+                  <ChatSidebar {...sidebarProps} className="h-full" />
                 )}
               </div>
+
               <div className="hidden min-h-0 min-w-0 flex-1 flex-col overflow-hidden md:flex">
-                {renderConversationContent()}
+                <ChatConversationPanel {...conversationPanelProps} />
               </div>
             </section>
 
