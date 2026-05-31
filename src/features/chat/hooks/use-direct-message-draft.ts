@@ -1,15 +1,18 @@
 import * as React from "react";
 import { useLocation, useNavigate } from "react-router";
 import { APP_ROUTES } from "@/config/routes";
+import {
+  createDirectMessageDraftConversation,
+  getDraftUserFromLocationState,
+  getPendingConversationFromLocationState,
+} from "@/features/chat/utils/direct-message-draft";
 import { useCurrentUserQuery } from "@/hooks/api/user";
 import { useSocketStore } from "@/stores/useSocketStore";
-import type { Conversation, ConversationMember } from "@/types/conversation";
+import type { Conversation } from "@/types/conversation";
 import { ConversationTypeEnum } from "@/types/conversation";
 import type { MessageRecord } from "@/types/message";
-import type { DirectMessageUser, User } from "@/types/user";
+import type { DirectMessageUser } from "@/types/user";
 import { PresenceStatusEnum } from "@/types/user";
-import { createDraftConversationId } from "@/utils/conversation";
-import { getDisplayName } from "@/utils/display";
 
 type UseDirectMessageDraftParams = {
   activeConversation?: Conversation;
@@ -19,104 +22,6 @@ type UseDirectMessageDraftParams = {
   isProfileRoute: boolean;
   onCloseDetails: () => void;
 };
-
-function isDirectMessageUser(value: unknown): value is DirectMessageUser {
-  if (!isRecord(value)) return false;
-
-  const user = value;
-  const hasValidAvatarUrl =
-    user.avatarUrl === undefined ||
-    user.avatarUrl === null ||
-    typeof user.avatarUrl === "string";
-
-  return (
-    typeof user.id === "string" &&
-    typeof user.username === "string" &&
-    typeof user.firstName === "string" &&
-    typeof user.lastName === "string" &&
-    typeof user.joinedAt === "string" &&
-    hasValidAvatarUrl
-  );
-}
-
-function getDraftUserFromLocationState(state: unknown) {
-  if (!isRecord(state)) return null;
-
-  const locationState = state;
-  const draftUser = locationState.directMessageDraftUser;
-
-  return isDirectMessageUser(draftUser) ? draftUser : null;
-}
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return !!value && typeof value === "object";
-}
-
-function createDirectMessageDraftConversation({
-  currentUser,
-  user,
-  presenceStatus,
-}: {
-  currentUser?: User;
-  user: DirectMessageUser;
-  presenceStatus: PresenceStatusEnum;
-}): Conversation {
-  const now = new Date().toISOString();
-  const userDisplayName = getDisplayName(user);
-  const directMember: ConversationMember = {
-    id: user.id,
-    userId: user.id,
-    firstName: user.firstName ?? "",
-    lastName: user.lastName ?? "",
-    displayName: userDisplayName,
-    username: user.username,
-    avatarUrl: user.avatarUrl,
-    joinedAt: user.joinedAt,
-    lastReadMessageId: null,
-    lastReadAt: null,
-    presenceStatus,
-  };
-  const currentUserMember: ConversationMember | null = currentUser
-    ? {
-        id: currentUser.id,
-        userId: currentUser.id,
-        firstName: currentUser.firstName,
-        lastName: currentUser.lastName,
-        displayName: getDisplayName(currentUser),
-        username: currentUser.username,
-        avatarUrl: currentUser.avatarUrl,
-        bio: currentUser.bio,
-        joinedAt: currentUser.createdAt ?? now,
-        lastReadMessageId: null,
-        lastReadAt: null,
-        presenceStatus: PresenceStatusEnum.Online,
-      }
-    : null;
-  const members = currentUserMember
-    ? [currentUserMember, directMember]
-    : [directMember];
-
-  return {
-    id: createDraftConversationId(user.id),
-    type: ConversationTypeEnum.DIRECT,
-    title: userDisplayName,
-    groupName: null,
-    createdById: currentUser?.id ?? null,
-    directUserAId: currentUser?.id ?? null,
-    directUserBId: user.id,
-    lastMessage: "No messages yet.",
-    lastMessageAt: null,
-    participantCount: members.length,
-    unreadCount: 0,
-    avatarUrl: user.avatarUrl ?? undefined,
-    members,
-    directMember,
-    currentUserId: currentUser?.id,
-    lastMessageId: null,
-    createdAt: now,
-    updatedAt: now,
-  };
-}
 
 export function useDirectMessageDraft({
   activeConversation,
@@ -130,15 +35,21 @@ export function useDirectMessageDraft({
   const navigate = useNavigate();
   const { data: currentUser } = useCurrentUserQuery();
   const onlineUsers = useSocketStore((state) => state.onlineUsers);
+
   const locationDraftUser = React.useMemo(
     () => getDraftUserFromLocationState(location.state),
     [location.state],
   );
+  const locationPendingConversation = React.useMemo(
+    () => getPendingConversationFromLocationState(location.state),
+    [location.state],
+  );
+
   const [draftUser, setDraftUser] = React.useState<DirectMessageUser | null>(
     () => locationDraftUser,
   );
   const [sentDraftConversation, setSentDraftConversation] =
-    React.useState<Conversation | null>(null);
+    React.useState<Conversation | null>(() => locationPendingConversation);
 
   const draftConversation = React.useMemo(() => {
     if (!draftUser) return null;
@@ -153,12 +64,20 @@ export function useDirectMessageDraft({
       presenceStatus,
     });
   }, [currentUser, draftUser, onlineUsers]);
+
   const isDraftConversation = isChatHomeRoute && !!draftConversation;
 
   React.useEffect(() => {
-    if (!locationDraftUser) return;
+    if (!locationDraftUser && !locationPendingConversation) return;
 
-    setDraftUser(locationDraftUser);
+    if (locationDraftUser) {
+      setDraftUser(locationDraftUser);
+    }
+
+    if (locationPendingConversation) {
+      setSentDraftConversation(locationPendingConversation);
+    }
+
     navigate(
       {
         pathname: location.pathname,
@@ -172,6 +91,7 @@ export function useDirectMessageDraft({
     location.pathname,
     location.search,
     locationDraftUser,
+    locationPendingConversation,
     navigate,
   ]);
 
@@ -196,8 +116,9 @@ export function useDirectMessageDraft({
       activeConversation.id !== conversationId ||
       activeConversation.type !== ConversationTypeEnum.DIRECT ||
       activeConversation.directMember?.userId !== draftUser.id
-    )
+    ) {
       return;
+    }
 
     setDraftUser(null);
   }, [
@@ -231,21 +152,27 @@ export function useDirectMessageDraft({
 
   const handleDraftMessageSent = React.useCallback(
     (message: MessageRecord) => {
-      if (draftConversation) {
-        setSentDraftConversation({
-          ...draftConversation,
-          id: message.conversationId,
-          lastMessage: message.content.trim() || "No messages yet.",
-          lastMessageAt: message.createdAt,
-          lastMessageId: message.id,
-          lastMessageSenderId: message.senderId,
-          updatedAt: message.updatedAt,
-        });
+      const pendingConversation = draftConversation
+        ? {
+            ...draftConversation,
+            id: message.conversationId,
+            lastMessage: message.content.trim() || "No messages yet.",
+            lastMessageAt: message.createdAt,
+            lastMessageId: message.id,
+            lastMessageSenderId: message.senderId,
+            updatedAt: message.updatedAt,
+          }
+        : null;
+
+      if (pendingConversation) {
+        setSentDraftConversation(pendingConversation);
       }
 
       setDraftUser(null);
       onCloseDetails();
-      navigate(APP_ROUTES.conversationById(message.conversationId));
+      navigate(APP_ROUTES.conversationById(message.conversationId), {
+        state: pendingConversation ? { pendingConversation } : undefined,
+      });
     },
     [draftConversation, navigate, onCloseDetails],
   );

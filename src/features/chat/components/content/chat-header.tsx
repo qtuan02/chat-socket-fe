@@ -22,6 +22,47 @@ type ChatHeaderProps = {
   onBack?: () => void;
 };
 
+type ChatHeaderIdentityProps = {
+  conversation: Conversation;
+  statusLabel: string;
+  onOpenProfile?: () => void;
+};
+
+function ChatHeaderIdentity({
+  conversation,
+  statusLabel,
+  onOpenProfile,
+}: ChatHeaderIdentityProps) {
+  const identity = (
+    <div className="flex min-w-0 flex-1 items-center gap-3">
+      <ConversationAvatar conversation={conversation} size="md" />
+      <div className="min-w-0 flex-1">
+        <h1 className="truncate text-sm font-semibold leading-tight md:text-lg">
+          {conversation.title}
+        </h1>
+        <p className="truncate text-[11px] text-muted-foreground md:text-sm">
+          {statusLabel}
+        </p>
+      </div>
+    </div>
+  );
+
+  if (!onOpenProfile) {
+    return identity;
+  }
+
+  return (
+    <Button
+      type="button"
+      variant="ghost"
+      className="h-auto min-w-0 flex-1 justify-start p-0 text-left whitespace-normal hover:bg-transparent"
+      onClick={onOpenProfile}
+    >
+      {identity}
+    </Button>
+  );
+}
+
 export function ChatHeader({
   conversation,
   directMember,
@@ -54,6 +95,12 @@ export function ChatHeader({
     sendingFriendRequestId,
   });
 
+  const handleOpenProfile = canOpenDirectUserDialog
+    ? () => {
+        setIsDirectUserDialogOpen(true);
+      }
+    : undefined;
+
   return (
     <>
       <header className="h-14 border-b border-border bg-background px-3 py-2 md:h-16 md:px-4 md:py-2">
@@ -71,40 +118,11 @@ export function ChatHeader({
                 <ArrowLeft className="size-4" />
               </Button>
             ) : null}
-            {canOpenDirectUserDialog ? (
-              <Button
-                type="button"
-                variant="ghost"
-                className="h-auto min-w-0 flex-1 justify-start p-0 text-left whitespace-normal hover:bg-transparent"
-                onClick={() => {
-                  setIsDirectUserDialogOpen(true);
-                }}
-              >
-                <div className="flex min-w-0 flex-1 items-center gap-3">
-                  <ConversationAvatar conversation={conversation} size="md" />
-                  <div className="min-w-0 flex-1">
-                    <h1 className="truncate text-sm font-semibold leading-tight md:text-lg">
-                      {conversation.title}
-                    </h1>
-                    <p className="truncate text-[11px] text-muted-foreground md:text-sm">
-                      {statusLabel}
-                    </p>
-                  </div>
-                </div>
-              </Button>
-            ) : (
-              <div className="flex min-w-0 flex-1 items-center gap-3">
-                <ConversationAvatar conversation={conversation} size="md" />
-                <div className="min-w-0 flex-1">
-                  <h1 className="truncate text-sm font-semibold leading-tight md:text-lg">
-                    {conversation.title}
-                  </h1>
-                  <p className="truncate text-[11px] text-muted-foreground md:text-sm">
-                    {statusLabel}
-                  </p>
-                </div>
-              </div>
-            )}
+            <ChatHeaderIdentity
+              conversation={conversation}
+              statusLabel={statusLabel}
+              onOpenProfile={handleOpenProfile}
+            />
           </div>
           <div className="flex shrink-0 items-center gap-2">
             {conversation.unreadCount > 0 ? (
