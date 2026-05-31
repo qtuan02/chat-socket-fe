@@ -4,6 +4,16 @@ import { defineConfig } from "@rsbuild/core";
 import { pluginReact } from "@rsbuild/plugin-react";
 import { pluginTailwindcss } from "@rsbuild/plugin-tailwindcss";
 
+function loadEnv(envs: string[]) {
+  const missing = envs.filter((env) => !process.env[env]);
+  if (missing.length > 0) {
+    throw new Error(
+      `BUILD FAILED: Missing required environment variables: ${missing.join(", ")}`,
+    );
+  }
+}
+loadEnv(["PUBLIC_API_BASE_URL", "PUBLIC_SOCKET_URL"]);
+
 const rootDir = dirname(fileURLToPath(import.meta.url));
 
 // Docs: https://rsbuild.rs/config/
