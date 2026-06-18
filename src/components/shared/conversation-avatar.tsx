@@ -52,7 +52,7 @@ function PresenceIndicator({
       className={cn(
         "absolute -bottom-0.5 -right-0.5 rounded-full border-background",
         avatarSizeClassNames[size].presence,
-        isOnline === true && "bg-emerald-500",
+        isOnline === true && "bg-online",
         isOnline === false && "bg-muted-foreground/40",
         isOnline === undefined && "bg-muted-foreground/20",
       )}
@@ -72,12 +72,7 @@ function ConversationMemberAvatar({
     : getDisplayNameInitials(fallbackName);
 
   return (
-    <Avatar
-      className={cn(
-        "border border-border bg-muted text-muted-foreground shadow-sm",
-        className,
-      )}
-    >
+    <Avatar className={cn("bg-muted text-muted-foreground", className)}>
       {member?.avatarUrl ? (
         <AvatarImage
           alt={label}

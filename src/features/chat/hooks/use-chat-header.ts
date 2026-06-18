@@ -3,7 +3,7 @@ import {
   getFriendPopupAction,
   getFriendStatusLabel,
   getPresenceStatusLabel,
-} from "@/features/friends/templates/user-item-template";
+} from "@/components/shared/user-item-helpers";
 import type { Conversation, ConversationMember } from "@/types/conversation";
 import { ConversationTypeEnum } from "@/types/conversation";
 import type { UserInfo } from "@/types/user";

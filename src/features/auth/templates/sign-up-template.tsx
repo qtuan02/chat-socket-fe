@@ -9,7 +9,7 @@ type SignUpTemplateProps = HTMLAttributes<HTMLDivElement>;
 export function SignUpTemplate({ className, ...props }: SignUpTemplateProps) {
   return (
     <main className={cn("flex flex-col gap-6", className)} {...props}>
-      <Card className="overflow-hidden p-0">
+      <Card className="overflow-hidden rounded-2xl p-0 shadow-xl">
         <CardContent className="grid p-0 md:grid-cols-2 min-h-[70dvh]">
           <SignUpForm />
           <div className="relative hidden bg-muted md:block">

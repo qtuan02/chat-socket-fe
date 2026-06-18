@@ -51,10 +51,10 @@ export function UserSearchListItem({
     <li>
       <Button
         type="button"
-        variant="outline"
+        variant="ghost"
         className={cn(
-          "h-auto min-w-0 w-full justify-start overflow-hidden rounded-lg border-border/80 bg-background p-2 text-left whitespace-normal shadow-none",
-          "hover:border-primary/50 hover:bg-muted/50",
+          "h-auto min-w-0 w-full justify-start overflow-hidden rounded-xl p-2 text-left whitespace-normal",
+          "hover:bg-accent",
         )}
         disabled={user.statusFriend === FriendStatus.SELF}
         onClick={() => {

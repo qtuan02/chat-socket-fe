@@ -25,7 +25,7 @@ export function UserItemAvatar({
     <span className="relative inline-flex shrink-0">
       <Avatar
         className={cn(
-          "border border-border bg-muted text-muted-foreground shadow-sm",
+          "bg-muted text-muted-foreground",
           resolvedAvatarSizeClassName,
         )}
       >
@@ -45,7 +45,7 @@ export function UserItemAvatar({
           className={cn(
             "absolute bottom-0 right-0 rounded-full border-2 border-background",
             compact ? "size-2.5" : "size-3",
-            presenceStatus === PresenceStatusEnum.Online && "bg-emerald-500",
+            presenceStatus === PresenceStatusEnum.Online && "bg-online",
             presenceStatus === PresenceStatusEnum.Offline &&
               "bg-muted-foreground/50",
             presenceStatus === PresenceStatusEnum.Checking &&

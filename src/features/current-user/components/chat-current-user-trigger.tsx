@@ -26,15 +26,15 @@ export function CurrentUserTrigger({
     <Button
       ref={ref}
       type="button"
-      variant="outline"
+      variant="ghost"
       className={cn(
-        "h-auto w-full justify-between rounded-xl border bg-background px-3 py-2 text-left whitespace-normal shadow-none hover:border-primary/30 hover:bg-primary/5",
+        "h-auto w-full justify-between rounded-xl px-3 py-2 text-left whitespace-normal hover:bg-accent border",
         className,
       )}
       {...buttonProps}
     >
       <div className="flex min-w-0 items-center gap-2.5">
-        <Avatar className="size-9 border bg-muted">
+        <Avatar className="size-9 bg-muted">
           {avatarUrl ? (
             <AvatarImage
               alt={displayName}

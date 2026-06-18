@@ -100,7 +100,7 @@ export function RenameGroupDialog({
         <DialogFooter>
           <Button
             type="button"
-            variant="outline"
+            variant="ghost"
             onClick={() => {
               onOpenChange(false);
             }}

@@ -41,17 +41,17 @@ export function FriendRequestSection({
       <div className="min-h-0 flex-1 overflow-y-auto p-3 md:p-4">
         {isLoading ? (
           <div className="grid gap-2">
-            <Skeleton className="h-14 rounded-lg" />
-            <Skeleton className="h-14 rounded-lg" />
+            <Skeleton className="h-14 rounded-xl" />
+            <Skeleton className="h-14 rounded-xl" />
           </div>
         ) : null}
 
         {isError ? (
-          <div className="rounded-lg border border-destructive/30 bg-destructive/5 px-3 py-2.5 text-xs">
+          <div className="rounded-xl bg-destructive/5 px-3 py-2.5 text-xs">
             <p className="m-0 mb-2 text-destructive">
               {getErrorMessage(error, "Unable to load friend requests.")}
             </p>
-            <Button type="button" size="sm" variant="outline" onClick={onRetry}>
+            <Button type="button" size="sm" variant="ghost" onClick={onRetry}>
               Retry
             </Button>
           </div>

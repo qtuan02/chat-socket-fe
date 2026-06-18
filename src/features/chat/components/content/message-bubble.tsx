@@ -10,14 +10,32 @@ import { cn } from "@/utils/cn";
 import { formatTime } from "@/utils/date";
 import { getDisplayNameInitials } from "@/utils/display";
 
+export type MessageGroupPosition = "single" | "first" | "middle" | "last";
+
 type MessageBubbleProps = {
   isOwnMessage: boolean;
   message: Message;
+  position: MessageGroupPosition;
   readReceipts?: ConversationMember[];
   showSenderName: boolean;
 };
 
 const MAX_VISIBLE_READERS = 3;
+
+const bubbleCornerClasses = {
+  own: {
+    single: "rounded-2xl",
+    first: "rounded-2xl rounded-br-md",
+    middle: "rounded-2xl rounded-r-md",
+    last: "rounded-2xl rounded-tr-md",
+  },
+  other: {
+    single: "rounded-2xl",
+    first: "rounded-2xl rounded-bl-md",
+    middle: "rounded-2xl rounded-l-md",
+    last: "rounded-2xl rounded-tl-md",
+  },
+} as const;
 
 function MessageStatusLabel({ message }: { message: Message }) {
   if (message.messageStatus === MessageStatus.Sending) {
@@ -98,9 +116,13 @@ function MessageReadReceipt({ readers }: { readers: ConversationMember[] }) {
 export function MessageBubble({
   isOwnMessage,
   message,
+  position,
   readReceipts = [],
   showSenderName,
 }: MessageBubbleProps) {
+  const cornerClass =
+    bubbleCornerClasses[isOwnMessage ? "own" : "other"][position];
+
   return (
     <div
       className={cn(
@@ -109,16 +131,17 @@ export function MessageBubble({
       )}
     >
       {!isOwnMessage && showSenderName ? (
-        <p className="m-0 px-1 text-xs text-muted-foreground">
+        <p className="m-0 mb-0.5 px-3 text-xs text-muted-foreground">
           {message.senderName}
         </p>
       ) : null}
       <div
         className={cn(
-          "min-w-0 rounded-lg border px-2 py-1 text-sm shadow-sm [overflow-wrap:anywhere] md:max-w-[50vw] max-w-[70vw]",
+          "min-w-0 px-3 py-2 text-sm [overflow-wrap:anywhere] md:max-w-[50vw] max-w-[75vw]",
+          cornerClass,
           isOwnMessage
-            ? "border-primary/40 bg-primary text-primary-foreground"
-            : "border-border bg-muted text-foreground",
+            ? "bg-primary text-primary-foreground"
+            : "bg-muted text-foreground",
         )}
       >
         <p className="m-0 whitespace-pre-wrap break-words leading-relaxed">
@@ -126,9 +149,9 @@ export function MessageBubble({
         </p>
         <p
           className={cn(
-            "m-0 flex items-center gap-2 text-[10px]",
+            "m-0 mt-0.5 flex items-center gap-2 text-[10px]",
             isOwnMessage
-              ? "justify-end text-white/85"
+              ? "justify-end text-primary-foreground/70"
               : "justify-start text-muted-foreground",
           )}
         >

@@ -228,7 +228,7 @@ export function ChatCurrentUserProfileDialog({
             <>
               <Button
                 type="button"
-                variant="outline"
+                variant="ghost"
                 onClick={cancelEditingProfile}
                 disabled={isUpdateProfilePending}
               >

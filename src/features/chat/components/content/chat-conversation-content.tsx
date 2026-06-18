@@ -49,10 +49,10 @@ function ChatConversationContentLoadingView({
           {showBackButton && onBack ? (
             <Button
               type="button"
-              variant="outline"
+              variant="ghost"
               size="icon-sm"
               onClick={onBack}
-              className="md:hidden"
+              className="rounded-full text-primary md:hidden"
               aria-label="Go back to conversations"
             >
               <ArrowLeft className="size-4" />
@@ -66,11 +66,11 @@ function ChatConversationContentLoadingView({
         </div>
       </header>
       <MessageListSkeleton />
-      <div className="border-t border-border p-3 pb-1 md:p-4">
-        <Skeleton className="mb-3 h-20 w-full rounded-md" />
-        <div className="flex items-center justify-between gap-2">
-          <Skeleton className="size-9 rounded-md" />
-          <Skeleton className="h-9 w-20 rounded-md" />
+      <div className="border-t border-border p-3 md:p-4">
+        <div className="flex items-end gap-2">
+          <Skeleton className="size-9 shrink-0 rounded-full" />
+          <Skeleton className="h-10 flex-1 rounded-3xl" />
+          <Skeleton className="size-9 shrink-0 rounded-full" />
         </div>
       </div>
     </>

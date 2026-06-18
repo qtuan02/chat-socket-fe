@@ -30,10 +30,7 @@ export function FriendsTemplate() {
             hasNextPage={friends.hasNextPage}
             isError={friends.isError}
             error={friends.error}
-            friendInfoError={friendDetails.error}
             friends={friends.messages}
-            selectedFriendInfo={friendDetails.selectedFriendInfo}
-            selectedFriendInfoId={friendDetails.selectedFriendInfoId}
             searchTerm={friends.searchTerm}
             onSearchChange={friends.setSearchTerm}
             onLoadMore={() => {
@@ -43,8 +40,6 @@ export function FriendsTemplate() {
               void friends.refetch();
             }}
             processingFriendId={friendDetails.processingFriendId}
-            isFriendInfoLoading={friendDetails.isLoading}
-            onOpenFriendDetails={friendDetails.open}
             onMessageFriend={friendDetails.message}
             onUnfriend={friendDetails.unfriend}
           />

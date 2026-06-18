@@ -1,6 +1,5 @@
 import { Button } from "@/components/ui/button";
 import { ConversationTypeEnum } from "@/types/conversation";
-import { cn } from "@/utils/cn";
 
 type ConversationFilterTab = {
   label: string;
@@ -28,24 +27,26 @@ export function ConversationListFilter({
       aria-label="Conversation filters"
       className="flex items-center gap-2"
     >
-      {conversationFilterTabs.map((tab) => (
-        <Button
-          key={tab.label}
-          type="button"
-          role="tab"
-          size="sm"
-          aria-selected={activeFilter === tab.value}
-          variant="outline"
-          className={cn(
-            activeFilter === tab.value && "bg-primary/20! text-primary",
-          )}
-          onClick={() => {
-            onFilterChange(tab.value);
-          }}
-        >
-          {tab.label}
-        </Button>
-      ))}
+      {conversationFilterTabs.map((tab) => {
+        const isActive = activeFilter === tab.value;
+
+        return (
+          <Button
+            key={tab.label}
+            type="button"
+            role="tab"
+            size="sm"
+            variant={isActive ? "default" : "secondary"}
+            aria-selected={isActive}
+            className="rounded-full"
+            onClick={() => {
+              onFilterChange(tab.value);
+            }}
+          >
+            {tab.label}
+          </Button>
+        );
+      })}
     </div>
   );
 }

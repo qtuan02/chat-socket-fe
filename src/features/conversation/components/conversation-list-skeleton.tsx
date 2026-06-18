@@ -12,12 +12,9 @@ const conversationSkeletonItems = [
 
 export function ConversationListSkeleton() {
   return (
-    <div className="space-y-2 px-1 pt-2">
+    <div className="space-y-1">
       {conversationSkeletonItems.map((item) => (
-        <div
-          key={item.id}
-          className="rounded-lg border border-border/80 bg-background p-3"
-        >
+        <div key={item.id} className="rounded-xl p-2">
           <div className="flex items-start gap-3">
             <Skeleton className="size-10 rounded-full" />
             <div className="min-w-0 flex-1 space-y-2">

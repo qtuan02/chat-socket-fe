@@ -1,4 +1,4 @@
-import { Loader2, Search, X } from "lucide-react";
+import { Loader2, Plus, Search, X } from "lucide-react";
 import { UserItemAvatar } from "@/components/shared/user-item-avatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -33,15 +33,15 @@ function SearchState({
   if (isLoading) {
     return (
       <div className="grid gap-2">
-        <div className="h-14 animate-pulse rounded-lg bg-muted" />
-        <div className="h-14 animate-pulse rounded-lg bg-muted" />
+        <div className="h-14 animate-pulse rounded-xl bg-muted" />
+        <div className="h-14 animate-pulse rounded-xl bg-muted" />
       </div>
     );
   }
 
   if (hasError) {
     return (
-      <p className="rounded-lg border border-destructive/30 bg-destructive/5 px-3 py-2 text-xs text-destructive">
+      <p className="rounded-xl bg-destructive/5 px-3 py-2 text-xs text-destructive">
         {searchTerm
           ? `Unable to search friends with "${searchTerm}".`
           : "Unable to load friends."}
@@ -51,7 +51,7 @@ function SearchState({
 
   if (friends.length === 0) {
     return (
-      <p className="rounded-lg border border-dashed border-border/80 bg-muted/40 px-3 py-2.5 text-sm text-muted-foreground">
+      <p className="rounded-xl bg-muted/40 px-3 py-2.5 text-sm text-muted-foreground">
         {searchTerm ? "No friends match this search." : "No friends found."}
       </p>
     );
@@ -71,7 +71,7 @@ function SelectedFriendChip({
   const displayName = getDisplayName(friend);
 
   return (
-    <span className="inline-flex items-center gap-1 rounded-full border border-border bg-muted/50 px-2 py-1 text-xs">
+    <span className="inline-flex items-center gap-1 rounded-full bg-muted px-2 py-1 text-xs">
       <UserItemAvatar
         compact
         displayName={displayName}
@@ -117,8 +117,8 @@ function FriendListItem({
     <li>
       <div
         className={cn(
-          "rounded-md border border-border/80 bg-background px-2 py-1.5",
-          isSelected && "border-primary/40 bg-primary/5",
+          "rounded-xl px-2 py-1.5 transition-colors hover:bg-accent",
+          isSelected && "bg-primary/10 hover:bg-primary/10",
           isDisabled && "opacity-80",
         )}
       >
@@ -141,17 +141,22 @@ function FriendListItem({
           </div>
           <Button
             type="button"
-            size="sm"
-            variant={
-              isDisabled ? "outline" : isSelected ? "secondary" : "outline"
-            }
-            className="h-7 shrink-0 px-2 text-xs"
+            size="icon-sm"
+            variant={isSelected ? "secondary" : "default"}
+            className="shrink-0 rounded-full"
             onClick={() => {
               onToggle(friend);
             }}
             disabled={isDisabled || isSubmitting}
+            aria-label={
+              isSelected ? `Remove ${displayName}` : `Add ${displayName}`
+            }
           >
-            {isSelected ? "Remove" : "Add"}
+            {isSelected ? (
+              <X className="size-4" />
+            ) : (
+              <Plus className="size-4" />
+            )}
           </Button>
         </div>
       </div>
@@ -198,7 +203,7 @@ export function GroupMemberPicker({
       >
         <span className="text-sm font-medium">Search friends</span>
         <div className="relative text-muted-foreground">
-          <Search className="pointer-events-none absolute left-3 top-2.5 size-4" />
+          <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2" />
           <Input
             id={`group-member-search-${searchInputId}`}
             value={searchTerm}
@@ -207,14 +212,14 @@ export function GroupMemberPicker({
             }}
             placeholder="Search by name or username"
             type="search"
-            className="h-9 pl-9 pr-9"
+            className="h-10 rounded-full border-transparent bg-muted pl-9 pr-9"
             disabled={isSubmitting}
           />
         </div>
       </label>
 
       {error ? (
-        <p className="rounded-lg border border-destructive/30 bg-destructive/5 px-3 py-2 text-xs text-destructive">
+        <p className="rounded-xl bg-destructive/5 px-3 py-2 text-xs text-destructive">
           {error}
         </p>
       ) : null}
@@ -260,7 +265,7 @@ export function GroupMemberPicker({
             <Button
               type="button"
               size="sm"
-              variant="outline"
+              variant="ghost"
               className="mx-auto w-full sm:w-auto"
               onClick={() => {
                 void refetch();

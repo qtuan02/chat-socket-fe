@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import { DetailField } from "@/components/shared/detail-field";
+import type { UserItemPopupAction } from "@/components/shared/user-item-helpers";
 import {
   Dialog,
   DialogContent,
@@ -8,7 +9,6 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Skeleton } from "@/components/ui/skeleton";
-import type { UserItemPopupAction } from "@/features/friends/components/user-item-helpers";
 import type { UserItemData } from "@/types/user";
 import { formatDateTime } from "@/utils/date";
 import { getDisplayName, getUsernameLabel } from "@/utils/display";
@@ -55,12 +55,12 @@ export function UserItemDialog({
         <div className="grid gap-3">
           {isDetailLoading ? (
             <div className="grid gap-2">
-              <Skeleton className="h-12 rounded-lg" />
-              <Skeleton className="h-12 rounded-lg" />
-              <Skeleton className="h-12 rounded-lg" />
+              <Skeleton className="h-12 rounded-xl" />
+              <Skeleton className="h-12 rounded-xl" />
+              <Skeleton className="h-12 rounded-xl" />
             </div>
           ) : detailErrorMessage ? (
-            <p className="rounded-lg border border-destructive/30 bg-destructive/5 px-3 py-2 text-xs text-destructive">
+            <p className="rounded-xl bg-destructive/5 px-3 py-2 text-xs text-destructive">
               {detailErrorMessage}
             </p>
           ) : (

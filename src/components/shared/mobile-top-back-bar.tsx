@@ -11,9 +11,10 @@ export function MobileTopBackBar({ onBack, title }: MobileTopBackBarProps) {
     <header className="flex h-14 items-center gap-2 border-b border-border px-3">
       <Button
         type="button"
-        variant="outline"
+        variant="ghost"
         size="icon-sm"
         onClick={onBack}
+        className="rounded-full text-primary"
         aria-label="Back to conversations"
       >
         <ArrowLeft className="size-4" />

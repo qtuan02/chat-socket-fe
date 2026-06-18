@@ -47,7 +47,7 @@ function UserSearchResults({
 }: UserSearchResultsProps) {
   if (!hasSearchTerm) {
     return (
-      <p className="m-0 rounded-lg border border-dashed border-border/80 bg-muted/40 px-3 py-2.5 text-sm text-muted-foreground">
+      <p className="m-0 rounded-xl bg-muted/40 px-3 py-2.5 text-sm text-muted-foreground">
         Search users by name or username to start a direct message.
       </p>
     );
@@ -56,20 +56,20 @@ function UserSearchResults({
   if (isLoading) {
     return (
       <div className="grid gap-2">
-        <Skeleton className="h-14 rounded-lg" />
-        <Skeleton className="h-14 rounded-lg" />
-        <Skeleton className="h-14 rounded-lg" />
+        <Skeleton className="h-14 rounded-xl" />
+        <Skeleton className="h-14 rounded-xl" />
+        <Skeleton className="h-14 rounded-xl" />
       </div>
     );
   }
 
   if (isError) {
     return (
-      <div className="rounded-lg border border-destructive/30 bg-destructive/5 px-3 py-2.5 text-xs">
+      <div className="rounded-xl bg-destructive/5 px-3 py-2.5 text-xs">
         <p className="m-0 mb-2 text-destructive">
           {getErrorMessage(error, "Unable to search users.")}
         </p>
-        <Button type="button" size="sm" variant="outline" onClick={onRetry}>
+        <Button type="button" size="sm" variant="ghost" onClick={onRetry}>
           Retry
         </Button>
       </div>
@@ -78,7 +78,7 @@ function UserSearchResults({
 
   if (users.length === 0) {
     return (
-      <p className="m-0 rounded-lg border border-dashed border-border/80 bg-muted/40 px-3 py-2.5 text-sm text-muted-foreground">
+      <p className="m-0 rounded-xl bg-muted/40 px-3 py-2.5 text-sm text-muted-foreground">
         No users match this search.
       </p>
     );
@@ -100,7 +100,7 @@ function UserSearchResults({
       {hasNextPage ? (
         <Button
           type="button"
-          variant="outline"
+          variant="ghost"
           size="sm"
           className="w-full"
           disabled={isFetchingNextPage}
@@ -139,7 +139,7 @@ export function UserSearchList({
       <label className="mb-3 block" htmlFor={`user-search-${searchInputId}`}>
         <span className="sr-only">Search users</span>
         <div className="relative text-muted-foreground">
-          <Search className="pointer-events-none absolute left-3 top-2 size-4" />
+          <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2" />
           <Input
             id={`user-search-${searchInputId}`}
             value={searchTerm}
@@ -154,7 +154,7 @@ export function UserSearchList({
             placeholder="Search by name or username"
             type="search"
             autoFocus
-            className="h-9 pl-9 pr-3"
+            className="h-10 rounded-full border-transparent bg-muted pl-9 pr-3"
           />
         </div>
       </label>

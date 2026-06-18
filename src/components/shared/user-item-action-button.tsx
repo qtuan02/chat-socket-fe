@@ -1,6 +1,6 @@
 import { Loader2 } from "lucide-react";
+import { getUserItemActionButtonLabel } from "@/components/shared/user-item-helpers";
 import { Button } from "@/components/ui/button";
-import { getUserItemActionButtonLabel } from "@/features/friends/components/user-item-helpers";
 import { FriendStatus } from "@/types/friend-status";
 
 type UserItemActionButtonProps = {
@@ -33,7 +33,7 @@ export function UserItemActionButton({
 
   if (normalized === FriendStatus.RECEIVED) {
     return (
-      <Button type="button" variant="outline" className="w-full" disabled>
+      <Button type="button" variant="ghost" className="w-full" disabled>
         {buttonLabel}
       </Button>
     );
@@ -45,7 +45,7 @@ export function UserItemActionButton({
     normalized === FriendStatus.FRIEND
       ? "destructive"
       : normalized === FriendStatus.SENT
-        ? "outline"
+        ? "ghost"
         : "default";
 
   const handleAction = () => {

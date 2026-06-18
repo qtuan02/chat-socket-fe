@@ -11,12 +11,12 @@ export function UserSearchTrigger({ onOpen }: UserSearchTriggerProps) {
 
   return (
     <label
-      className="mb-4 block"
+      className="mb-3 block"
       htmlFor={`conversation-search-${searchInputId}`}
     >
       <span className="sr-only">Search users</span>
       <div className="relative text-muted-foreground">
-        <Search className="pointer-events-none absolute left-3 top-2 size-4" />
+        <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2" />
         <Input
           id={`conversation-search-${searchInputId}`}
           readOnly
@@ -24,7 +24,7 @@ export function UserSearchTrigger({ onOpen }: UserSearchTriggerProps) {
           onClick={onOpen}
           placeholder="Search users"
           type="search"
-          className="h-9 cursor-text pl-9 pr-3"
+          className="h-10 cursor-text rounded-full border-transparent bg-muted pl-9 pr-3"
         />
       </div>
     </label>

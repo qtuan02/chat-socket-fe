@@ -101,8 +101,8 @@ export function ChatCurrentUserSection({
             onSelect={handleSignOut}
             disabled={isSignOutPending}
           >
-            <LogOut className="mr-2 size-4 text-red-500" />
-            <span className="text-red-500">
+            <LogOut className="mr-2 size-4 text-destructive" />
+            <span className="text-destructive">
               {isSignOutPending ? "Signing out..." : "Sign out"}
             </span>
           </DropdownMenuItem>
