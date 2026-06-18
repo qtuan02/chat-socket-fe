@@ -4,7 +4,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { FriendWithPresence } from "@/types/friend";
-import type { UserInfo } from "@/types/user";
 import { getErrorMessage } from "@/utils/error";
 import { FriendList } from "./friend-list";
 
@@ -14,24 +13,19 @@ type FriendsSectionProps = {
   hasNextPage: boolean;
   isError: boolean;
   error: unknown;
-  friendInfoError: unknown;
   friends: FriendWithPresence[];
-  selectedFriendInfo?: UserInfo;
-  selectedFriendInfoId: string | null;
   searchTerm: string;
   onSearchChange: (value: string) => void;
   onLoadMore: () => void;
   onRetry: () => void;
-  onOpenFriendDetails: (friendId: string) => void;
   onMessageFriend: (friend: FriendWithPresence) => void;
-  isFriendInfoLoading: boolean;
   processingFriendId: string | null;
   onUnfriend: (friendId: string) => void;
 };
 
 function FriendsEmptyState({ hasSearchTerm }: { hasSearchTerm: boolean }) {
   return (
-    <p className="m-0 rounded-lg border border-dashed border-border/80 bg-muted/40 px-3 py-2.5 text-sm text-muted-foreground">
+    <p className="m-0 rounded-xl bg-muted/40 px-3 py-2.5 text-sm text-muted-foreground">
       {hasSearchTerm
         ? "No matching friends in this list."
         : "No friends added yet."}
@@ -45,17 +39,12 @@ export function FriendsSection({
   hasNextPage,
   isError,
   error,
-  friendInfoError,
   friends,
-  selectedFriendInfo,
-  selectedFriendInfoId,
   searchTerm,
   onSearchChange,
   onLoadMore,
   onRetry,
-  onOpenFriendDetails,
   onMessageFriend,
-  isFriendInfoLoading,
   processingFriendId,
   onUnfriend,
 }: FriendsSectionProps) {
@@ -103,7 +92,7 @@ export function FriendsSection({
         <label className="block" htmlFor={`friends-search-${searchInputId}`}>
           <span className="sr-only">Search friends</span>
           <div className="relative text-muted-foreground">
-            <Search className="pointer-events-none absolute left-3 top-2 size-4" />
+            <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2" />
             <Input
               id={`friends-search-${searchInputId}`}
               value={searchTerm}
@@ -112,7 +101,7 @@ export function FriendsSection({
               }}
               placeholder="Search by name or username"
               type="search"
-              className="h-9 pl-9 pr-3"
+              className="h-10 rounded-full border-transparent bg-muted pl-9 pr-3"
             />
           </div>
         </label>
@@ -124,17 +113,17 @@ export function FriendsSection({
       >
         {isLoading ? (
           <div className="grid gap-2">
-            <Skeleton className="h-14 rounded-lg" />
-            <Skeleton className="h-14 rounded-lg" />
+            <Skeleton className="h-14 rounded-xl" />
+            <Skeleton className="h-14 rounded-xl" />
           </div>
         ) : null}
 
         {isError ? (
-          <div className="rounded-lg border border-destructive/30 bg-destructive/5 px-3 py-2.5 text-xs">
+          <div className="rounded-xl bg-destructive/5 px-3 py-2.5 text-xs">
             <p className="m-0 mb-2 text-destructive">
               {getErrorMessage(error, "Unable to load friends.")}
             </p>
-            <Button type="button" size="sm" variant="outline" onClick={onRetry}>
+            <Button type="button" size="sm" variant="ghost" onClick={onRetry}>
               Retry
             </Button>
           </div>
@@ -146,22 +135,17 @@ export function FriendsSection({
 
         {!isLoading && !isError && friends.length > 0 ? (
           <FriendList
-            friendInfoError={friendInfoError}
             friends={friends}
-            isFriendInfoLoading={isFriendInfoLoading}
             processingFriendId={processingFriendId}
-            selectedFriendInfo={selectedFriendInfo}
-            selectedFriendInfoId={selectedFriendInfoId}
             onMessageFriend={onMessageFriend}
-            onOpenFriendDetails={onOpenFriendDetails}
             onUnfriend={onUnfriend}
           />
         ) : null}
 
         {isFetchingNextPage ? (
           <div className="mt-3 grid gap-2">
-            <Skeleton className="h-14 rounded-lg" />
-            <Skeleton className="h-14 rounded-lg" />
+            <Skeleton className="h-14 rounded-xl" />
+            <Skeleton className="h-14 rounded-xl" />
           </div>
         ) : null}
       </div>

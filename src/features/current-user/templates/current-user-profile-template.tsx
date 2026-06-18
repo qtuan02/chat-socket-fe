@@ -22,7 +22,7 @@ function ProfileAvatar({
   initials: string;
 }) {
   return (
-    <Avatar className="size-10 border bg-muted">
+    <Avatar className="size-10 bg-muted">
       {avatarUrl ? (
         <AvatarImage
           alt={displayName}
@@ -96,7 +96,8 @@ export function CurrentUserProfileTemplate() {
           <Button
             type="button"
             size="icon"
-            variant="outline"
+            variant="ghost"
+            className="rounded-full text-primary hover:bg-accent"
             onClick={() => {
               handleProfileDialogOpenChange(true);
               startEditingProfile();
@@ -139,8 +140,8 @@ export function CurrentUserProfileTemplate() {
 
         <Button
           type="button"
-          variant="outline"
-          className="mt-2 border-destructive/40 text-destructive"
+          variant="ghost"
+          className="mt-2 text-destructive hover:bg-destructive/10 hover:text-destructive"
           onClick={handleSignOut}
           disabled={isSignOutPending}
         >

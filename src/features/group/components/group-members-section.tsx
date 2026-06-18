@@ -1,12 +1,11 @@
-import { Loader2 } from "lucide-react";
+import { Loader2, UserMinus } from "lucide-react";
+import { UserItem } from "@/components/shared/user-item";
 import { Button } from "@/components/ui/button";
-import { UserItem } from "@/features/friends/templates/user-item-template";
 import {
   type ConversationMember,
   ParticipantRole,
   participantRoleLabels,
 } from "@/types/conversation";
-import { getMemberPresenceLabel } from "@/utils/display";
 
 type GroupMembersSectionProps = {
   members: ConversationMember[];
@@ -29,15 +28,15 @@ export function GroupMembersSection({
 }: GroupMembersSectionProps) {
   return (
     <div className="grid gap-2">
-      <p className="text-xs uppercase tracking-wide text-muted-foreground">
-        Group members
+      <p className="px-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+        Members · {members.length}
       </p>
       {members.length === 0 ? (
-        <p className="text-sm text-muted-foreground">
+        <p className="rounded-xl bg-muted/40 px-3 py-2.5 text-sm text-muted-foreground">
           No member list available.
         </p>
       ) : (
-        <ul className="grid gap-2">
+        <ul className="grid gap-0.5 rounded-xl bg-muted/40 p-1">
           {members.map((member) => {
             const isSelf = member.userId === currentUserId;
             const isRemovable =
@@ -48,8 +47,9 @@ export function GroupMembersSection({
             const removeAction = isRemovable ? (
               <Button
                 type="button"
-                size="sm"
-                variant="outline"
+                size="icon-sm"
+                variant="ghost"
+                className="rounded-full text-destructive hover:bg-destructive/10 hover:text-destructive"
                 onClick={() => {
                   onRemoveMember?.(member.id);
                 }}
@@ -57,12 +57,9 @@ export function GroupMembersSection({
                 aria-label={`Remove ${member.displayName} from group`}
               >
                 {isRemoving ? (
-                  <>
-                    <Loader2 className="size-4 animate-spin" />
-                    Removing...
-                  </>
+                  <Loader2 className="size-4 animate-spin" />
                 ) : (
-                  "Remove"
+                  <UserMinus className="size-4" />
                 )}
               </Button>
             ) : null;
@@ -88,7 +85,7 @@ export function GroupMembersSection({
                 }}
                 compact
                 onSendFriendRequest={onSendFriendRequest}
-                subtitle={`${roleLabel} - ${getMemberPresenceLabel(member)}`}
+                subtitle={roleLabel}
               />
             );
           })}

@@ -22,10 +22,10 @@ export function ConversationDetailsPanelHeader({
       {onClose ? (
         <Button
           type="button"
-          variant="outline"
+          variant="ghost"
           size="icon-sm"
           onClick={onClose}
-          className="md:hidden"
+          className="rounded-full md:hidden"
           aria-label="Close conversation info"
         >
           <X className="size-4" />

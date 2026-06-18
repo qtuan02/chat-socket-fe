@@ -47,7 +47,7 @@ function MessageListError({
       )}
     >
       <p className="m-0 text-destructive">{errorMessage}</p>
-      <Button type="button" size="sm" variant="outline" onClick={onRetry}>
+      <Button type="button" size="sm" variant="ghost" onClick={onRetry}>
         Retry
       </Button>
     </section>

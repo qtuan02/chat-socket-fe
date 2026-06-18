@@ -1,6 +1,6 @@
+import { MobileTopBackBar } from "@/components/shared/mobile-top-back-bar";
 import { ChatConversationContent } from "@/features/chat/components/content/chat-conversation-content";
 import { EmptyConversationBanner } from "@/features/chat/components/content/empty-conversation-banner";
-import { MobileTopBackBar } from "@/features/chat/components/mobile/mobile-top-back-bar";
 import type { useConversationDetailsPanel } from "@/features/conversation/hooks/use-conversation-details-panel";
 import type { Conversation } from "@/types/conversation";
 import type { MessageRecord } from "@/types/message";

@@ -1,29 +1,28 @@
 import * as React from "react";
+import { UserItemActionButton } from "@/components/shared/user-item-action-button";
 import { UserItemAvatar } from "@/components/shared/user-item-avatar";
-import { Button } from "@/components/ui/button";
-import { UserItemActionButton } from "@/features/friends/components/user-item-action-button";
-import { UserItemDialog } from "@/features/friends/components/user-item-dialog";
+import { UserItemDialog } from "@/components/shared/user-item-dialog";
 import {
   getFriendPopupAction,
   getFriendStatusLabel,
   getPresenceStatusLabel,
-} from "@/features/friends/components/user-item-helpers";
+} from "@/components/shared/user-item-helpers";
+import { Button } from "@/components/ui/button";
+import { useUserInfoQuery } from "@/hooks/api/user";
 import type { FriendStatus } from "@/types/friend-status";
 import type { UserItemData } from "@/types/user";
 import { cn } from "@/utils/cn";
 import { getDisplayName, getUsernameLabel } from "@/utils/display";
+import { getErrorMessage } from "@/utils/error";
 
 type UserItemProps = {
   className?: string;
   user: UserItemData;
-  detailUser?: UserItemData | null;
   subtitle?: string;
   action?: React.ReactNode;
   dialogAction?: React.ReactNode;
-  detailErrorMessage?: string | null;
   compact?: boolean;
   friendStatus?: FriendStatus;
-  isDetailLoading?: boolean;
   isActionLoading?: boolean;
   actionPayload?: string;
   onOpenDetails?: (userId: string) => void;
@@ -35,14 +34,11 @@ type UserItemProps = {
 export function UserItem({
   className,
   user,
-  detailUser,
   subtitle,
   action,
   dialogAction,
-  detailErrorMessage,
   compact = false,
   friendStatus,
-  isDetailLoading = false,
   isActionLoading = false,
   actionPayload,
   onOpenDetails,
@@ -51,29 +47,33 @@ export function UserItem({
   onUnfriend,
 }: UserItemProps) {
   const [isPopupOpen, setIsPopupOpen] = React.useState(false);
+  const infoQuery = useUserInfoQuery(user.id, { enabled: isPopupOpen });
   const displayName = getDisplayName(user);
-  const dialogUser = detailUser ?? user;
-  const friendStatusLabel = getFriendStatusLabel(friendStatus);
-  const presenceStatusLabel = getPresenceStatusLabel(dialogUser.presenceStatus);
-  const popupAction = getFriendPopupAction(friendStatus);
+  const resolvedFriendStatus = infoQuery.data?.statusFriend ?? friendStatus;
+  const dialogUser: UserItemData = { ...user, ...infoQuery.data };
+  const friendStatusLabel = getFriendStatusLabel(resolvedFriendStatus);
+  const presenceStatusLabel = getPresenceStatusLabel(user.presenceStatus);
+  const popupAction = getFriendPopupAction(resolvedFriendStatus);
+  const detailErrorMessage = infoQuery.error
+    ? getErrorMessage(infoQuery.error, "Unable to load user details.")
+    : null;
 
   return (
     <>
       <li
         className={cn(
-          "border border-border/80 bg-background list-none",
-          "transition",
-          "hover:border-primary/50 hover:bg-muted/50 focus-within:border-primary/50 focus-within:ring-2 focus-within:ring-primary/30 focus-within:ring-offset-2",
-          compact ? "rounded-md p-2" : "rounded-lg p-2.5",
+          "list-none transition-colors",
+          "hover:bg-accent focus-within:bg-accent",
+          compact ? "rounded-xl p-2" : "rounded-xl p-2.5",
           className,
         )}
       >
-        <div className={cn("relative grid", compact ? "gap-1.5" : "gap-2.5")}>
+        <div className="relative flex items-center gap-1">
           <Button
             type="button"
             variant="ghost"
             className={cn(
-              "h-auto w-full p-0 text-left whitespace-normal hover:bg-transparent",
+              "h-auto min-w-0 flex-1 p-0 text-left whitespace-normal hover:bg-transparent",
               compact
                 ? "flex items-center justify-between gap-2"
                 : "grid grid-cols-[auto,1fr] gap-2.5",
@@ -123,13 +123,15 @@ export function UserItem({
                     : "mt-0.5 space-y-1 text-[12px]",
                 )}
               >
-                <p className="truncate">{friendStatusLabel}</p>
+                {friendStatus !== undefined ? (
+                  <p className="truncate">{friendStatusLabel}</p>
+                ) : null}
                 {subtitle && <p className="truncate">{subtitle}</p>}
               </div>
             </div>
           </Button>
 
-          {action && <div className="relative shrink-0 pt-0.5">{action}</div>}
+          {action && <div className="shrink-0">{action}</div>}
         </div>
       </li>
 
@@ -143,7 +145,7 @@ export function UserItem({
         actionButton={
           <UserItemActionButton
             userId={user.id}
-            friendStatus={friendStatus}
+            friendStatus={resolvedFriendStatus}
             actionPayload={actionPayload}
             isActionLoading={isActionLoading}
             onSendFriendRequest={onSendFriendRequest}
@@ -153,7 +155,7 @@ export function UserItem({
         }
         dialogAction={dialogAction}
         detailErrorMessage={detailErrorMessage}
-        isDetailLoading={isDetailLoading}
+        isDetailLoading={infoQuery.isLoading}
       />
     </>
   );

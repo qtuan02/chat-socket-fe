@@ -9,14 +9,14 @@ export function ConversationSidebarHeader({
   onCreateGroupClick,
 }: ConversationSidebarHeaderProps) {
   return (
-    <div className="flex h-16 items-center gap-2 border-b px-4">
-      <MessageCircle className="size-7 text-primary" />
-      <h1 className="text-2xl font-semibold">Conversations</h1>
+    <div className="flex h-16 items-center gap-2 px-4">
+      <MessageCircle className="size-6 text-primary" />
+      <h1 className="text-xl font-bold">Conversations</h1>
       <Button
         type="button"
-        variant="outline"
+        variant="ghost"
         size="icon-sm"
-        className="ml-auto"
+        className="ml-auto rounded-full bg-muted hover:bg-accent"
         onClick={onCreateGroupClick}
       >
         <UsersRound className="size-4" />

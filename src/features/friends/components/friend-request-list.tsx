@@ -63,7 +63,7 @@ function FriendRequestActions({
       <Button
         type="button"
         size="icon-sm"
-        variant="outline"
+        variant="ghost"
         className="size-7"
         onClick={() => {
           onCancel?.(requestId);
@@ -140,7 +140,7 @@ export function FriendRequestList({
       </p>
 
       {requests.length === 0 ? (
-        <p className="rounded-md border border-dashed border-border/80 bg-muted/40 px-3 py-2 text-sm text-muted-foreground">
+        <p className="rounded-xl bg-muted/40 px-3 py-2 text-sm text-muted-foreground">
           {emptyMessage}
         </p>
       ) : (
@@ -157,8 +157,8 @@ export function FriendRequestList({
               <li
                 key={request.id}
                 className={cn(
-                  "list-none rounded-md border border-border/80 bg-background p-2",
-                  "transition hover:border-primary/50 hover:bg-muted/40",
+                  "list-none rounded-xl p-2",
+                  "transition-colors hover:bg-accent",
                 )}
               >
                 <div className="flex min-w-0 items-center justify-between gap-2">

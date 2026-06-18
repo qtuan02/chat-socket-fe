@@ -2,7 +2,7 @@ import type { ConversationMember } from "@/types/conversation";
 import type { Message } from "@/types/message";
 import { cn } from "@/utils/cn";
 import { formatMessageDate } from "@/utils/date";
-import { MessageBubble } from "./message-bubble";
+import { MessageBubble, type MessageGroupPosition } from "./message-bubble";
 
 type MessageRowProps = {
   currentUserId?: string;
@@ -22,19 +22,39 @@ function getMessageRowMeta({
 }: Omit<MessageRowProps, "readReceipts">) {
   const arrayIndex = messageIndex - firstItemIndex;
   const previousMessage = messages[arrayIndex - 1];
+  const nextMessage = messages[arrayIndex + 1];
   const dateLabel = formatMessageDate(message.createdAt);
   const previousDateLabel = previousMessage
     ? formatMessageDate(previousMessage.createdAt)
     : null;
   const isOwnMessage = message.senderId === currentUserId;
 
+  const showDateDivider = arrayIndex === 0 || dateLabel !== previousDateLabel;
+  const nextStartsNewDate = nextMessage
+    ? formatMessageDate(nextMessage.createdAt) !== dateLabel
+    : true;
+
+  const isFirstInGroup =
+    showDateDivider || previousMessage?.senderId !== message.senderId;
+  const isLastInGroup =
+    nextStartsNewDate || nextMessage?.senderId !== message.senderId;
+
+  const position: MessageGroupPosition =
+    isFirstInGroup && isLastInGroup
+      ? "single"
+      : isFirstInGroup
+        ? "first"
+        : isLastInGroup
+          ? "last"
+          : "middle";
+
   return {
     dateLabel,
+    isLastInGroup,
     isOwnMessage,
-    showDateDivider: arrayIndex === 0 || dateLabel !== previousDateLabel,
-    showSenderName:
-      !isOwnMessage &&
-      (arrayIndex === 0 || previousMessage?.senderId !== message.senderId),
+    position,
+    showDateDivider,
+    showSenderName: !isOwnMessage && isFirstInGroup,
   };
 }
 
@@ -56,14 +76,20 @@ export function MessageRow({
   messages,
   readReceipts,
 }: MessageRowProps) {
-  const { dateLabel, isOwnMessage, showDateDivider, showSenderName } =
-    getMessageRowMeta({
-      currentUserId,
-      firstItemIndex,
-      message,
-      messageIndex,
-      messages,
-    });
+  const {
+    dateLabel,
+    isLastInGroup,
+    isOwnMessage,
+    position,
+    showDateDivider,
+    showSenderName,
+  } = getMessageRowMeta({
+    currentUserId,
+    firstItemIndex,
+    message,
+    messageIndex,
+    messages,
+  });
 
   return (
     <>
@@ -71,7 +97,8 @@ export function MessageRow({
 
       <div
         className={cn(
-          "flex min-w-0 pb-1",
+          "flex min-w-0",
+          isLastInGroup ? "pb-2" : "pb-0.5",
           isOwnMessage
             ? "justify-end mr-3 md:mr-4"
             : "justify-start ml-3 md:ml-4",
@@ -80,6 +107,7 @@ export function MessageRow({
         <MessageBubble
           message={message}
           isOwnMessage={isOwnMessage}
+          position={position}
           readReceipts={readReceipts}
           showSenderName={showSenderName}
         />

@@ -1,11 +1,9 @@
 import { ArrowLeft, CircleCheckBig, Columns2Icon } from "lucide-react";
 import { ConversationAvatar } from "@/components/shared/conversation-avatar";
+import { UserItemActionButton } from "@/components/shared/user-item-action-button";
+import { UserItemDialog } from "@/components/shared/user-item-dialog";
 import { Button } from "@/components/ui/button";
 import { useChatHeader } from "@/features/chat/hooks/use-chat-header";
-import {
-  UserItemActionButton,
-  UserItemDialog,
-} from "@/features/friends/templates/user-item-template";
 import type { Conversation, ConversationMember } from "@/types/conversation";
 import type { UserInfo } from "@/types/user";
 
@@ -109,10 +107,10 @@ export function ChatHeader({
             {showBackButton && onBack ? (
               <Button
                 type="button"
-                variant="outline"
+                variant="ghost"
                 size="icon-sm"
                 onClick={onBack}
-                className="md:hidden"
+                className="rounded-full text-primary md:hidden"
                 aria-label="Go back to conversations"
               >
                 <ArrowLeft className="size-4" />
@@ -134,9 +132,10 @@ export function ChatHeader({
             {onOpenDetails ? (
               <Button
                 type="button"
-                variant="outline"
-                size="icon-xs"
+                variant="ghost"
+                size="icon-sm"
                 onClick={onOpenDetails}
+                className="rounded-full text-primary hover:bg-accent"
                 aria-label="Toggle conversation info"
               >
                 <Columns2Icon className="size-4" />

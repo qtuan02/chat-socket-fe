@@ -33,11 +33,11 @@ function ConversationListError({
   onRetry: () => void;
 }) {
   return (
-    <div className="rounded-lg border border-destructive/30 bg-destructive/5 px-3 py-2.5 text-xs">
+    <div className="rounded-xl bg-destructive/5 px-3 py-2.5 text-xs">
       <p className="m-0 mb-2 text-destructive">
         {getErrorMessage(error, "Unable to load conversations.")}
       </p>
-      <Button type="button" size="sm" variant="outline" onClick={onRetry}>
+      <Button type="button" size="sm" variant="ghost" onClick={onRetry}>
         Retry
       </Button>
     </div>

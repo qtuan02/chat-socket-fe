@@ -1,4 +1,4 @@
-import { Loader2 } from "lucide-react";
+import { Loader2, MessageCircle } from "lucide-react";
 import { Link } from "react-router";
 import { Button } from "@/components/ui/button";
 import {
@@ -32,6 +32,10 @@ export function SignInForm({ className }: SignInFormProps) {
       onSubmit={handleSubmit(onSubmit)}
     >
       <div className="flex flex-col items-center gap-2 text-center">
+        <span className="mb-1 inline-flex items-center gap-2 text-primary">
+          <MessageCircle className="size-6" />
+          <span className="text-lg font-bold tracking-tight">Chat</span>
+        </span>
         <h1 className="text-2xl font-bold">Welcome back</h1>
         <p className="text-balance text-muted-foreground">
           Login to your Chat application
@@ -94,7 +98,13 @@ export function SignInForm({ className }: SignInFormProps) {
         ) : null}
       </FieldGroup>
       <FieldDescription className="text-center">
-        Don&apos;t have an account? <Link to={APP_ROUTES.signUp}>Sign up</Link>
+        Don&apos;t have an account?{" "}
+        <Link
+          to={APP_ROUTES.signUp}
+          className="font-medium text-primary hover:underline"
+        >
+          Sign up
+        </Link>
       </FieldDescription>
     </form>
   );

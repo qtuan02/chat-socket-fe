@@ -20,22 +20,22 @@ export function GroupConversationActions({
         Group actions
       </p>
       <div className="grid gap-2 sm:grid-cols-2">
-        <Button type="button" variant="outline" onClick={onRenameGroupClick}>
+        <Button type="button" variant="secondary" onClick={onRenameGroupClick}>
           <PencilLine className="size-4" />
           Rename group
         </Button>
 
-        <Button type="button" variant="outline" onClick={onAddMembersClick}>
+        <Button type="button" variant="secondary" onClick={onAddMembersClick}>
           <UserPlus className="size-4" />
           Add members
         </Button>
 
         <Button
           type="button"
-          variant="outline"
+          variant="ghost"
           onClick={onLeaveGroupClick}
           disabled={isLeaveGroupSubmitting}
-          className="border-destructive/40 text-destructive hover:bg-destructive/10 hover:text-destructive sm:col-span-2 sm:justify-center"
+          className="text-destructive hover:bg-destructive/10 hover:text-destructive sm:col-span-2 sm:justify-center"
         >
           <LogOut className="size-4" />
           {isLeaveGroupSubmitting ? "Leaving..." : "Leave group"}

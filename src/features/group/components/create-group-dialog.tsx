@@ -85,7 +85,7 @@ export function CreateGroupDialog({
         <DialogFooter>
           <Button
             type="button"
-            variant="outline"
+            variant="ghost"
             onClick={() => {
               onOpenChange(false);
             }}

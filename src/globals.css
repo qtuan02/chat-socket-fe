@@ -28,6 +28,7 @@
   --color-chart-3: var(--chart-3);
   --color-chart-4: var(--chart-4);
   --color-chart-5: var(--chart-5);
+  --color-online: var(--online);
   --radius-sm: calc(var(--radius) * 0.6);
   --radius-md: calc(var(--radius) * 0.8);
   --radius-lg: var(--radius);
@@ -71,6 +72,8 @@
   --chart-3: oklch(0.55 0.12 250);
   --chart-4: oklch(0.75 0.15 80);
   --chart-5: oklch(0.6 0.2 25);
+  /* Online presence indicator (Messenger-style green) */
+  --online: oklch(0.7 0.17 155);
   /* Sidebar: slightly tinted */
   --sidebar: oklch(0.98 0.005 180);
   --sidebar-foreground: oklch(0.17 0.015 260);
@@ -106,6 +109,7 @@
   --chart-3: oklch(0.65 0.16 250);
   --chart-4: oklch(0.75 0.15 80);
   --chart-5: oklch(0.65 0.2 25);
+  --online: oklch(0.75 0.18 155);
   --sidebar: oklch(0.16 0.012 260);
   --sidebar-foreground: oklch(0.96 0.005 180);
   --sidebar-primary: oklch(0.65 0.16 175);

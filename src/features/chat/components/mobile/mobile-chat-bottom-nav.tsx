@@ -35,13 +35,13 @@ export function MobileChatBottomNav() {
               end={item.href === APP_ROUTES.chat}
               className={({ isActive }) =>
                 cn(
-                  "flex flex-1 items-center justify-center gap-2 text-[11px] font-medium text-muted-foreground transition-colors active:text-foreground/85",
+                  "flex flex-1 flex-col items-center justify-center gap-1 text-[11px] font-medium text-muted-foreground transition-colors active:text-foreground/85",
                   isActive && "text-primary",
                 )
               }
               aria-label={item.label}
             >
-              <Icon className="size-4 md:size-5" />
+              <Icon className="size-5" />
               <span>{item.label}</span>
             </NavLink>
           );

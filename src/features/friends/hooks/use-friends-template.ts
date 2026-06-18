@@ -7,7 +7,6 @@ import {
   useFriendRequestsQuery,
   useFriendsInfiniteQuery,
 } from "@/hooks/api/friend";
-import { currentUserQueryKeys, useUserInfoQuery } from "@/hooks/api/user";
 import { useDebounce } from "@/hooks/use-debounce";
 import { useFriendRequestActions } from "./use-friend-request-actions";
 import { useOpenDirectConversation } from "./use-open-direct-conversation";
@@ -25,9 +24,6 @@ export function useFriendsTemplate() {
   );
   const isDebouncingFriendSearch =
     trimmedFriendSearchInput !== debouncedFriendSearchTerm;
-  const [selectedFriendInfoId, setSelectedFriendInfoId] = React.useState<
-    string | null
-  >(null);
   const [processingFriendId, setProcessingFriendId] = React.useState<
     string | null
   >(null);
@@ -37,7 +33,6 @@ export function useFriendsTemplate() {
     search: debouncedFriendSearchTerm || undefined,
   });
   const friendRequestsQuery = useFriendRequestsQuery();
-  const friendInfoQuery = useUserInfoQuery(selectedFriendInfoId);
   const friendRequests = useFriendRequestActions();
   const openDirectConversation = useOpenDirectConversation();
 
@@ -47,13 +42,6 @@ export function useFriendsTemplate() {
       toast.success("Friend removed.");
     },
   });
-
-  const handleOpenFriendDetails = (friendId: string) => {
-    setSelectedFriendInfoId(friendId);
-    void queryClient.invalidateQueries({
-      queryKey: currentUserQueryKeys.info(friendId),
-    });
-  };
 
   const handleUnfriend = (friendId: string) => {
     if (deleteFriendMutation.isPending) return;
@@ -82,12 +70,7 @@ export function useFriendsTemplate() {
       refetch: friendsQuery.refetch,
     },
     friendDetails: {
-      error: friendInfoQuery.error,
-      isLoading: friendInfoQuery.isLoading || friendInfoQuery.isFetching,
-      selectedFriendInfo: friendInfoQuery.data,
-      selectedFriendInfoId,
       processingFriendId,
-      open: handleOpenFriendDetails,
       message: openDirectConversation,
       unfriend: handleUnfriend,
     },

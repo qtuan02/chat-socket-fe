@@ -1,6 +1,6 @@
 import { useNavigate } from "react-router";
+import { MobileTopBackBar } from "@/components/shared/mobile-top-back-bar";
 import { APP_ROUTES } from "@/config/routes";
-import { MobileTopBackBar } from "@/features/chat/components/mobile/mobile-top-back-bar";
 import { ChatShellLayout } from "@/features/chat/templates/chat-shell-layout";
 import { FriendsTemplate } from "@/features/friends/templates/friends-template";
 
